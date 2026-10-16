@@ -10,6 +10,7 @@ import (
 
 	"github.com/sovchinnikov/krot/internal/awg"
 	"github.com/sovchinnikov/krot/internal/errs"
+	"github.com/sovchinnikov/krot/internal/ipalloc"
 )
 
 // Action — действие (SPEC 4.2).
@@ -355,25 +356,6 @@ func checkOnePerFamily(flag string, ps []netip.Prefix) error {
 	return nil
 }
 
-// IsNetworkOrBroadcast сообщает, является ли адрес префикса адресом сети (IPv4 и IPv6)
-// или broadcast (IPv4) — такие адреса не выдаются и не назначаются (SPEC 6.5).
-func IsNetworkOrBroadcast(p netip.Prefix) bool {
-	a := p.Addr()
-	if a == p.Masked().Addr() {
-		return true
-	}
-	return a.Is4() && a == lastAddr(p)
-}
-
-func lastAddr(p netip.Prefix) netip.Addr {
-	b := p.Masked().Addr().AsSlice()
-	for i := p.Bits(); i < len(b)*8; i++ {
-		b[i/8] |= 0x80 >> (i % 8)
-	}
-	a, _ := netip.AddrFromSlice(b)
-	return a
-}
-
 // create: адреса сервера, не более одного на семейство, не адрес сети/broadcast.
 func parseServerIPs(s string) ([]netip.Prefix, error) {
 	ps, err := parsePrefixes("--ip", s)
@@ -384,7 +366,7 @@ func parseServerIPs(s string) ([]netip.Prefix, error) {
 		return nil, err
 	}
 	for _, p := range ps {
-		if IsNetworkOrBroadcast(p) {
+		if ipalloc.IsNetworkOrBroadcast(p) {
 			return nil, errs.Invalidf("invalid --ip %s: network or broadcast address cannot be used for the server", p)
 		}
 	}
