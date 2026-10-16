@@ -1,0 +1,10 @@
+[Interface]
+PrivateKey = EJAGa3eJNbC7SSXj2xUcW0JK18Y73DB60R9+hxrmW3o=
+Address = 10.9.0.2/32
+MTU = 1420
+
+[Peer]
+PublicKey = KpK3NE4RLLvCwWdLQTpaNTmal44Uq8QN/Ta0r/viQmQ=
+Endpoint = vpn.example.com:51820
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25

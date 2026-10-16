@@ -1,0 +1,23 @@
+[Interface]
+PrivateKey = aOZ4P0+96RtuuItzpI7SR9vliC4leWg0MsG/xSVFSl0=
+Address = 10.8.0.4/32, fd00:8::3/128
+DNS = 1.1.1.1, 9.9.9.9
+MTU = 1376
+Jc = 6
+Jmin = 64
+Jmax = 512
+S1 = 43
+S2 = 117
+S3 = 31
+S4 = 12
+H1 = 194847201-195371488
+H2 = 905128442-905652729
+H3 = 1503002211-1503526498
+H4 = 2001009901-2001534188
+
+[Peer]
+PublicKey = mMqaauppLdJ2q0ZYiBm/T79t01GPCw87B7ohAJpoeRg=
+PresharedKey = DNhydNZwhMqvDg02yEltt/71X+DhJXUKpgjV4g/8LRI=
+Endpoint = vpn.example.com:51820
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25

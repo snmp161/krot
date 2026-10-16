@@ -83,6 +83,9 @@ func checkClient(t *testing.T, server *conf.Config, client *conf.Config, id stri
 	cp := peers[0]
 	spriv, _ := keys.ParseKey(sifc.Get("PrivateKey"))
 	spub, _ := spriv.Public()
+	if cpub == spub {
+		t.Fatal("client key equals the server key")
+	}
 	if cp.PublicKey() != spub.String() || cp.Get("Endpoint") != endpoint || strings.Join(cp.AllowedIPs(), ",") != allowed ||
 		cp.Get("PersistentKeepalive") != "25" {
 		t.Fatalf("client [Peer] = %+v", cp.Keys)
@@ -141,8 +144,8 @@ func TestAddClientLive(t *testing.T) {
 		t.Fatalf("psk temp file %q not removed", pskFile)
 	}
 	assertOnlyPeerOps(t, e, "awg", "awg0")
-	golden(t, "add_client_awg2.golden", e.stdout.String())
-	golden(t, "add_client_awg2_server.golden", e.read(path))
+	golden(t, "add_client_live.golden", e.stdout.String())
+	golden(t, "add_client_live_server.golden", e.read(path))
 }
 
 // SPEC 6.5: интерфейс не поднят — только запись в конфиг.
@@ -164,6 +167,7 @@ func TestAddClientTypes(t *testing.T) {
 	for _, typ := range []string{"wg", "awg", "awg_i1", "awg2", "awg3"} {
 		t.Run(typ, func(t *testing.T) {
 			e := newEnv(t)
+			e.app.Rand = seededRand(2) // фикстуры сгенерированы с seed 1: ключ клиента должен отличаться
 			name := "awg0"
 			path := e.awgConf(name)
 			tool := "awg"
