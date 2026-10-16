@@ -302,8 +302,8 @@ func (c *Command) fill(v map[string]string) error {
 }
 
 func validateI1(s string) error {
-	if s == "" {
-		return errs.Invalidf("invalid --i1: must not be empty")
+	if err := awg.ValidateCPS(s); err != nil {
+		return errs.Invalidf("invalid --i1: %v", err)
 	}
 	return nil
 }
