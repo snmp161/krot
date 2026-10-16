@@ -116,6 +116,10 @@ func (a *App) run(args []string) error {
 		return a.lockClient(cmd)
 	case cli.ActUnlockClient:
 		return a.unlockClient(cmd)
+	case cli.ActList:
+		return a.list(cmd)
+	case cli.ActListClient:
+		return a.listClient(cmd)
 	}
 	return errs.New(errs.Internal, "action --%s is not implemented", cmd.Action)
 }

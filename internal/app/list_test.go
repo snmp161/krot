@@ -54,7 +54,9 @@ func listEnv(t *testing.T) *env {
 	e := newEnv(t)
 	e.write(e.awgConf("awg0"), fixture(t, "awg0_two_clients.conf"))
 	e.write(e.wgConf("wg0"), fixture(t, "wg0_empty.conf"))
-	e.write(e.wgConf("office"), setPortAddr(fixture(t, "foreign_wg.conf"), "51822", "10.11.0.1/24, fd00:11::1/64"))
+	office := strings.NewReplacer("ListenPort = 51821", "ListenPort = 51822",
+		"Address = 10.9.0.1/24", "Address = 10.11.0.1/24", "Address = fd00:9::1/64", "Address = fd00:11::1/64")
+	e.write(e.wgConf("office"), office.Replace(fixture(t, "foreign_wg.conf")))
 	e.write(e.awgConf("compat0"), setPortAddr(stripMeta(fixture(t, "wg0_empty.conf")), "51823", "10.12.0.1/24"))
 	e.write(e.awgConf("awg9"), setPortAddr(fixture(t, "create_awg3.golden"), "51824", "10.13.0.1/24"))
 	e.write(e.awgConf("awg30"), awg30)

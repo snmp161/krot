@@ -1,0 +1,9 @@
+INTERFACE  TYPE  VERSION  ADDRESS                     PORT   STATUS  CLIENTS
+awg0       awg2  2.0      10.8.0.1/24,fd00:8::1/64    51820  up      2 (1 locked)
+awg30      awg3  3.0      10.14.0.1/24                51825  down    0
+awg9       awg3  3.1      10.13.0.1/24                51824  up      0
+compat0    awg   compat   10.12.0.1/24                51823  down    0
+legacy10   awg   1.0      10.16.0.1/24                51827  down    0
+legacy15   awg   1.5      10.15.0.1/24                51826  down    0
+office     wg    -        10.11.0.1/24,fd00:11::1/64  51822  up      2
+wg0        wg    -        10.9.0.1/24                 51821  down    0

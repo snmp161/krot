@@ -1,0 +1,100 @@
+[
+  {
+    "interface": "awg0",
+    "type": "awg2",
+    "version": "2.0",
+    "addresses": [
+      "10.8.0.1/24",
+      "fd00:8::1/64"
+    ],
+    "port": 51820,
+    "status": "up",
+    "clients_total": 2,
+    "clients_locked": 1
+  },
+  {
+    "interface": "awg30",
+    "type": "awg3",
+    "version": "3.0",
+    "addresses": [
+      "10.14.0.1/24"
+    ],
+    "port": 51825,
+    "status": "down",
+    "clients_total": 0,
+    "clients_locked": 0
+  },
+  {
+    "interface": "awg9",
+    "type": "awg3",
+    "version": "3.1",
+    "addresses": [
+      "10.13.0.1/24"
+    ],
+    "port": 51824,
+    "status": "up",
+    "clients_total": 0,
+    "clients_locked": 0
+  },
+  {
+    "interface": "compat0",
+    "type": "awg",
+    "version": "compat",
+    "addresses": [
+      "10.12.0.1/24"
+    ],
+    "port": 51823,
+    "status": "down",
+    "clients_total": 0,
+    "clients_locked": 0
+  },
+  {
+    "interface": "legacy10",
+    "type": "awg",
+    "version": "1.0",
+    "addresses": [
+      "10.16.0.1/24"
+    ],
+    "port": 51827,
+    "status": "down",
+    "clients_total": 0,
+    "clients_locked": 0
+  },
+  {
+    "interface": "legacy15",
+    "type": "awg",
+    "version": "1.5",
+    "addresses": [
+      "10.15.0.1/24"
+    ],
+    "port": 51826,
+    "status": "down",
+    "clients_total": 0,
+    "clients_locked": 0
+  },
+  {
+    "interface": "office",
+    "type": "wg",
+    "version": "-",
+    "addresses": [
+      "10.11.0.1/24",
+      "fd00:11::1/64"
+    ],
+    "port": 51822,
+    "status": "up",
+    "clients_total": 2,
+    "clients_locked": 0
+  },
+  {
+    "interface": "wg0",
+    "type": "wg",
+    "version": "-",
+    "addresses": [
+      "10.9.0.1/24"
+    ],
+    "port": 51821,
+    "status": "down",
+    "clients_total": 0,
+    "clients_locked": 0
+  }
+]

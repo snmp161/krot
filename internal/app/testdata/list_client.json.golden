@@ -1,0 +1,29 @@
+[
+  {
+    "id": "phone-sergei",
+    "public_key": "9MzuHlmhRvZCWO2jCp/sKB2SzR32zHPCqqxYSgfOpn4=",
+    "addresses": [
+      "10.8.0.2/32",
+      "fd00:8::2/128"
+    ],
+    "status": "active",
+    "latest_handshake": 1792205925,
+    "rx_bytes": 13002342,
+    "tx_bytes": 1181116006,
+    "endpoint": "203.0.113.50:41000",
+    "created": "2026-10-17T01:30:00Z"
+  },
+  {
+    "id": "laptop-old",
+    "public_key": "FFpUTO6I/92XEvA9YRA5dbgBNY0Q/H68MbA5b+f+hyU=",
+    "addresses": [
+      "10.8.0.3/32"
+    ],
+    "status": "locked",
+    "latest_handshake": null,
+    "rx_bytes": 0,
+    "tx_bytes": 0,
+    "endpoint": null,
+    "created": "2026-10-01T10:00:00Z"
+  }
+]
