@@ -1,0 +1,21 @@
+# krot:type=awg
+# krot:endpoint=vpn.example.com
+[Interface]
+PrivateKey = aOZ4P0+96RtuuItzpI7SR9vliC4leWg0MsG/xSVFSl0=
+Address = 10.8.0.1/24
+ListenPort = 51820
+MTU = 1376
+Jc = 12
+Jmin = 112
+Jmax = 204
+S1 = 125
+S2 = 17
+H1 = 1669797713
+H2 = 993309917
+H3 = 1037582551
+H4 = 790836961
+I1 = <b 0xf6ab3267fa><r 16>
+# PreUp =
+# PostUp =
+# PreDown =
+# PostDown =

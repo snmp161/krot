@@ -1,0 +1,23 @@
+# krot:type=awg2
+# krot:endpoint=vpn.example.com
+# krot:dns=1.1.1.1,9.9.9.9
+[Interface]
+PrivateKey = aOZ4P0+96RtuuItzpI7SR9vliC4leWg0MsG/xSVFSl0=
+Address = 10.8.0.1/24, fd00:8::1/64
+ListenPort = 51820
+MTU = 1376
+Jc = 12
+Jmin = 112
+Jmax = 204
+S1 = 125
+S2 = 17
+S3 = 117
+S4 = 3
+H1 = 194653920-195651074
+H2 = 1216544522-1219480502
+H3 = 254526861-257154152
+H4 = 352648825-353444076
+# PreUp =
+# PostUp =
+# PreDown =
+# PostDown =

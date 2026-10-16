@@ -2,8 +2,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
+
+	"github.com/sovchinnikov/krot/internal/app"
 )
 
 // Заполняются при сборке через -ldflags "-X main.version=... -X main.commit=... -X main.date=...".
@@ -14,6 +15,5 @@ var (
 )
 
 func main() {
-	fmt.Fprintf(os.Stderr, "krot %s (%s, %s): not implemented yet\n", version, commit, date)
-	os.Exit(1)
+	os.Exit(app.New(version, commit, date).Run(os.Args[1:]))
 }
