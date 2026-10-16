@@ -110,6 +110,12 @@ func (a *App) run(args []string) error {
 		return a.upDown(cmd, false)
 	case cli.ActAddClient:
 		return a.addClient(cmd)
+	case cli.ActDeleteClient:
+		return a.deleteClient(cmd)
+	case cli.ActLockClient:
+		return a.lockClient(cmd)
+	case cli.ActUnlockClient:
+		return a.unlockClient(cmd)
 	}
 	return errs.New(errs.Internal, "action --%s is not implemented", cmd.Action)
 }
