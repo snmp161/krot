@@ -100,11 +100,11 @@ func TestFake(t *testing.T) {
 
 func TestFakeHandler(t *testing.T) {
 	boom := errors.New("boom")
-	f := &Fake{Handler: func(c Call) (Result, error, bool) {
+	f := &Fake{Handler: func(c Call) *Response {
 		if c.Name == "awg" {
-			return Result{ExitCode: 2}, boom, true
+			return &Response{Result: Result{ExitCode: 2}, Err: boom}
 		}
-		return Result{}, nil, false
+		return nil
 	}}
 	f.On("wg show", "x")
 	if _, err := f.Run("awg", "set", "awg0"); !errors.Is(err, boom) {
