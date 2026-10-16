@@ -1,0 +1,30 @@
+# krot:type=awg2
+# krot:endpoint=vpn.example.com
+# krot:dns=1.1.1.1,9.9.9.9
+[Interface]
+PrivateKey = SERVERprivateKEYserverPRIVATEkeySERVERpriv=
+Address = 10.8.0.1/24, fd00:8::1/64
+ListenPort = 51820
+MTU = 1376
+Jc = 6
+Jmin = 64
+Jmax = 512
+S1 = 43
+S2 = 117
+S3 = 31
+S4 = 12
+H1 = 194847201-195371488
+H2 = 905128442-905652729
+H3 = 1503002211-1503526498
+H4 = 2001009901-2001534188
+# PreUp =
+# PostUp =
+# PreDown =
+# PostDown =
+
+# krot:id=laptop-old
+# krot:created=2026-10-01T10:00:00Z
+# krot:locked=2026-10-16T12:00:00Z
+#~ [Peer]
+#~ PublicKey = LAPTOPpublicKEYlaptopPUBLICkeyLAPTOPpubl=
+#~ AllowedIPs = 10.8.0.3/32
