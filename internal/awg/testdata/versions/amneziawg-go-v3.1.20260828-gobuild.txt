@@ -1,0 +1,4 @@
+amneziawg-go 0.0.20250522
+
+Userspace AmneziaWG daemon for linux-amd64.
+Information available at https://amnezia.org

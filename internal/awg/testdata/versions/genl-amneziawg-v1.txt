@@ -1,0 +1,12 @@
+
+Name: amneziawg
+	ID: 0x22  Version: 0x1  header size: 0  max attribs: 33 
+	commands supported: 
+		#1:  ID-0x0 
+		Capabilities (0xe):
+ 		  can doit; can dumpit; has policy
+
+		#2:  ID-0x1 
+		Capabilities (0xb):
+ 		  requires admin permission; can doit; has policy
+

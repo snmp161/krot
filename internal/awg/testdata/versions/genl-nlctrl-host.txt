@@ -1,0 +1,16 @@
+
+Name: nlctrl
+	ID: 0x10  Version: 0x2  header size: 0  max attribs: 0 
+	commands supported: 
+		#1:  ID-0x3 
+		Capabilities (0xe):
+ 		  can doit; can dumpit; has policy
+
+		#2:  ID-0xa 
+		Capabilities (0xc):
+ 		  can dumpit; has policy
+
+
+	multicast groups:
+		#1:  ID-0x10  name: notify 
+
