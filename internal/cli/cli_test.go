@@ -369,3 +369,18 @@ func TestUsageBeforeValues(t *testing.T) {
 		t.Errorf("code %d; want 2", got)
 	}
 }
+
+// SPEC 4.4, 7.1 V-05: --i1 проверяется по грамматике CPS → код 3.
+func TestI1Syntax(t *testing.T) {
+	base := []string{"--create", "--type", "awg", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h.example"}
+	for _, v := range []string{"<b 0xf6ab3267fa><r 16>", "<t><rc 10><rd 5>"} {
+		if _, err := Parse(append(base, "--i1", v)); err != nil {
+			t.Errorf("--i1 %q: %v", v, err)
+		}
+	}
+	for _, v := range []string{"<x>", "<b 0xabc>", "<r 1001>", "text", "<b 0x00"} {
+		if got := code(parseErr(append(base, "--i1", v))); got != errs.Invalid {
+			t.Errorf("--i1 %q: code %d; want 3", v, got)
+		}
+	}
+}
