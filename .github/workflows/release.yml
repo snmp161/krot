@@ -1,0 +1,81 @@
+name: release
+
+# SPEC 9.2: на тег v* — всё из ci.yml, статические бинари, пакеты .deb/.rpm,
+# smoke-тесты пакетов в матрице ОС (8.4), GitHub Release с SHA256SUMS.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: ci
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: binaries
+        run: |
+          date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath \
+              -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA::7} -X main.date=${date}" \
+              -o "dist/krot-linux-$arch" ./cmd/krot
+          done
+      - name: packages
+        run: |
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
+          for arch in amd64 arm64; do
+            cp "dist/krot-linux-$arch" dist/krot
+            for format in deb rpm; do
+              GOARCH="$arch" VERSION="${GITHUB_REF_NAME#v}" "$(go env GOPATH)/bin/nfpm" package \
+                -f packaging/nfpm.yaml -p "$format" -t dist/
+            done
+          done
+          rm dist/krot
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  smoke:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+        image: ["ubuntu:22.04", "ubuntu:24.04", "ubuntu:26.04", "debian:12", "debian:13", "almalinux:9", "almalinux:10"]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: smoke test
+        run: scripts/smoke.sh "${{ matrix.image }}" dist "${{ matrix.arch }}"
+
+  release:
+    needs: smoke
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: checksums
+        run: cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
