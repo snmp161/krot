@@ -9,7 +9,7 @@ version: ${VERSION}
 version_schema: semver
 section: net
 priority: optional
-maintainer: Sergey Ovchinnikov <snmp161prt@gmail.com>
+maintainer: Sergey Ovchinnikov <sovchinnikov@gmail.com>
 homepage: https://github.com/sovchinnikov/krot
 description: |
   Manage WireGuard and AmneziaWG tunnels on Linux servers.
