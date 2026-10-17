@@ -61,3 +61,50 @@ jobs:
         with:
           name: krot-linux-${{ matrix.goarch }}
           path: dist/krot-linux-${{ matrix.goarch }}
+
+  # SPEC 8.3, 9.1: интеграционные тесты под sudo в отдельных network namespace.
+  # AmneziaWG работает на userspace amneziawg-go; tools и amneziawg-go собираются
+  # из исходников на закреплённых тегах, результат кэшируется.
+  integration:
+    runs-on: ubuntu-24.04
+    env:
+      AWG_TOOLS_TAG: v3.1.20260812
+      AWG_GO_TAG: v3.1.20260828
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod
+      - name: cache AmneziaWG build
+        id: awg-cache
+        uses: actions/cache@v4
+        with:
+          path: awg-out
+          key: awg-${{ runner.os }}-${{ env.AWG_TOOLS_TAG }}-${{ env.AWG_GO_TAG }}
+      - name: build AmneziaWG from pinned tags
+        if: steps.awg-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone -q --depth 1 --branch "$AWG_TOOLS_TAG" https://github.com/amnezia-vpn/amneziawg-tools awg-tools
+          make -s -C awg-tools/src
+          make -s -C awg-tools/src install DESTDIR="$PWD/awg-out" PREFIX=/usr SYSCONFDIR=/etc \
+            WITH_WGQUICK=yes WITH_SYSTEMDUNITS=yes WITH_BASHCOMPLETION=no
+          git clone -q --depth 1 --branch "$AWG_GO_TAG" https://github.com/amnezia-vpn/amneziawg-go awg-go
+          make -s -C awg-go
+          install -D -m 0755 awg-go/amneziawg-go awg-out/usr/bin/amneziawg-go
+      - name: install AmneziaWG
+        run: |
+          sudo cp -r awg-out/usr/. /usr/
+          sudo install -d -m 0700 /etc/amnezia/amneziawg
+          sudo systemctl daemon-reload
+          awg --version
+          amneziawg-go --version | head -n 1
+      - name: build
+        run: |
+          CGO_ENABLED=0 go build -o krot ./cmd/krot
+          CGO_ENABLED=0 go test -c -tags integration -o integration.test ./test/integration
+      - name: integration tests
+        run: sudo KROT_BIN="$PWD/krot" ./integration.test -test.v -test.count=1 -test.timeout=30m
