@@ -1,0 +1,34 @@
+# Пакеты .deb и .rpm (SPEC 9.2). Переменные окружения:
+#   VERSION — версия без префикса v (1.2.3), GOARCH — amd64 | arm64.
+# Бинарь нужной архитектуры перед запуском nfpm копируется в dist/krot
+# (nfpm не подставляет переменные в contents.src).
+name: krot
+arch: ${GOARCH}
+platform: linux
+version: ${VERSION}
+version_schema: semver
+section: net
+priority: optional
+maintainer: Sergey Ovchinnikov <snmp161prt@gmail.com>
+homepage: https://github.com/sovchinnikov/krot
+description: |
+  Manage WireGuard and AmneziaWG tunnels on Linux servers.
+  krot creates and deletes interfaces, manages clients (peers) without
+  restarting the interface and prints client configs and QR codes.
+
+contents:
+  - src: ./dist/krot
+    dst: /usr/bin/krot
+    file_info:
+      mode: 0755
+
+# krot не устанавливает WireGuard/AmneziaWG (SPEC 2.2, 11) — только рекомендует.
+overrides:
+  deb:
+    recommends:
+      - wireguard-tools
+      - iproute2
+  rpm:
+    recommends:
+      - wireguard-tools
+      - iproute
