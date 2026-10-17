@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sovchinnikov/krot/internal/awg"
-	"github.com/sovchinnikov/krot/internal/errs"
+	"github.com/snmp161/krot/internal/awg"
+	"github.com/snmp161/krot/internal/errs"
 )
 
 // Пакеты, из которых ставятся внешние программы (SPEC 2.2).

@@ -47,11 +47,11 @@ krot сам ничего из этого не устанавливает. Есл
 ## Установка
 
 Устанавливайте из пакетов или бинарей со страницы релизов
-<https://github.com/sovchinnikov/krot/releases>, обязательно проверяя контрольную сумму.
+<https://github.com/snmp161/krot/releases>, обязательно проверяя контрольную сумму.
 
 ```sh
 VERSION=0.1.0
-BASE=https://github.com/sovchinnikov/krot/releases/download/v$VERSION
+BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # скачать пакет и список контрольных сумм
 wget "$BASE/krot_${VERSION}_amd64.deb" "$BASE/SHA256SUMS"

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sovchinnikov/krot/internal/awg"
-	"github.com/sovchinnikov/krot/internal/conf"
-	"github.com/sovchinnikov/krot/internal/errs"
-	"github.com/sovchinnikov/krot/internal/execx"
-	"github.com/sovchinnikov/krot/internal/keys"
+	"github.com/snmp161/krot/internal/awg"
+	"github.com/snmp161/krot/internal/conf"
+	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/execx"
+	"github.com/snmp161/krot/internal/keys"
 )
 
 // assertOnlyPeerOps — SPEC 6.10, 8.2: клиентские операции не вызывают ничего, кроме

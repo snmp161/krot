@@ -1,4 +1,4 @@
-module github.com/sovchinnikov/krot
+module github.com/snmp161/krot
 
 go 1.27.2
 

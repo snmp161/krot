@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sovchinnikov/krot/internal/conf"
-	"github.com/sovchinnikov/krot/internal/errs"
-	"github.com/sovchinnikov/krot/internal/execx"
+	"github.com/snmp161/krot/internal/conf"
+	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/execx"
 )
 
 const lockTime = "2026-10-17T03:00:00Z"

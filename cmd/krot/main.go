@@ -4,7 +4,7 @@ package main
 import (
 	"os"
 
-	"github.com/sovchinnikov/krot/internal/app"
+	"github.com/snmp161/krot/internal/app"
 )
 
 // Заполняются при сборке через -ldflags "-X main.version=... -X main.commit=... -X main.date=...".

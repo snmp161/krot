@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sovchinnikov/krot/internal/errs"
-	"github.com/sovchinnikov/krot/internal/execx"
-	"github.com/sovchinnikov/krot/internal/fsutil"
+	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/execx"
+	"github.com/snmp161/krot/internal/fsutil"
 )
 
 var update = flag.Bool("update", false, "update golden files")

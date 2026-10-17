@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sovchinnikov/krot/internal/awg"
-	"github.com/sovchinnikov/krot/internal/errs"
+	"github.com/snmp161/krot/internal/awg"
+	"github.com/snmp161/krot/internal/errs"
 )
 
 var actions = []Action{

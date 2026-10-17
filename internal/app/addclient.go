@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sovchinnikov/krot/internal/awg"
-	"github.com/sovchinnikov/krot/internal/cli"
-	"github.com/sovchinnikov/krot/internal/conf"
-	"github.com/sovchinnikov/krot/internal/errs"
-	"github.com/sovchinnikov/krot/internal/ipalloc"
-	"github.com/sovchinnikov/krot/internal/keys"
-	"github.com/sovchinnikov/krot/internal/qr"
+	"github.com/snmp161/krot/internal/awg"
+	"github.com/snmp161/krot/internal/cli"
+	"github.com/snmp161/krot/internal/conf"
+	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/ipalloc"
+	"github.com/snmp161/krot/internal/keys"
+	"github.com/snmp161/krot/internal/qr"
 )
 
 // keepalive — PersistentKeepalive клиентского конфига (SPEC 6.5).

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sovchinnikov/krot/internal/errs"
+	"github.com/snmp161/krot/internal/errs"
 )
 
 // SPEC 6.3: удаление туннеля.
