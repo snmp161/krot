@@ -11,6 +11,7 @@ section: net
 priority: optional
 maintainer: Sergey Ovchinnikov <sovchinnikov@gmail.com>
 homepage: https://github.com/snmp161/krot
+license: Apache-2.0
 description: |
   Manage WireGuard and AmneziaWG tunnels on Linux servers.
   krot creates and deletes interfaces, manages clients (peers) without
@@ -21,6 +22,10 @@ contents:
     dst: /usr/bin/krot
     file_info:
       mode: 0755
+  - src: ./LICENSE
+    dst: /usr/share/doc/krot/LICENSE
+    file_info:
+      mode: 0644
 
 # krot не устанавливает WireGuard/AmneziaWG (SPEC 2.2, 11) — только рекомендует.
 overrides:

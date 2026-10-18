@@ -267,3 +267,7 @@ make integration  # интеграционные тесты в privileged docker
   тесты, сборка `amd64`/`arm64`. **Релиз** (`release.yml`, тег `v*`): бинари, пакеты `.deb`/`.rpm`
   (nfpm, `packaging/nfpm.yaml`), smoke-тесты пакетов на всех ОС (`scripts/smoke.sh`), GitHub Release
   с `SHA256SUMS`.
+
+## Лицензия
+
+[Apache License 2.0](LICENSE). Copyright 2026 Sergey Ovchinnikov.
