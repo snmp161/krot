@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/snmp161/krot/internal/amnezia"
 	"github.com/snmp161/krot/internal/awg"
 	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/conf"
@@ -96,8 +97,11 @@ func (a *App) addClient(cmd *cli.Command) error {
 		return err
 	}
 
-	// Конфиг и QR показываются один раз; приватный ключ клиента нигде не хранится (SPEC 5.2).
+	// Конфиг, ключ и QR показываются один раз; приватный ключ клиента нигде не хранится (SPEC 5.2).
 	a.printf("%s", clientText)
+	if cmd.AmneziaKey {
+		a.printf("\n%s\n", amnezia.Key(clientText))
+	}
 	if cmd.QR {
 		code, err := qr.Render(clientText)
 		if err != nil {

@@ -40,6 +40,7 @@ Flags (--flag value or --flag=value):
   --allowed-ips CIDR[,CIDR] AllowedIPs of the client config, e.g. 0.0.0.0/0,::/0
   --psk                     generate a PresharedKey for the client
   --qr                      also print the client config as a QR code
+  --amnezia-key             also print the client config as an AmneziaVPN key (vpn://...)
   --json                    JSON output instead of a table (list, list-client)
   --yes                     do not ask for confirmation (delete)
 
@@ -49,6 +50,7 @@ Flags per action:
   --delete         --interface [--yes]
   --up, --down     --interface
   --add-client     --interface --id --allowed-ips [--ip] [--endpoint] [--psk] [--qr]
+                   [--amnezia-key]
   --delete-client  --interface --id
   --lock-client    --interface --id
   --unlock-client  --interface --id
