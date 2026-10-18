@@ -17,10 +17,10 @@ var actions = []Action{
 
 var params = []string{
 	"type", "interface", "ip", "port", "endpoint", "mtu", "dns", "i1",
-	"id", "allowed-ips", "psk", "qr", "json", "yes",
+	"id", "allowed-ips", "psk", "qr", "amnezia-key", "json", "yes",
 }
 
-var boolParams = map[string]bool{"psk": true, "qr": true, "json": true, "yes": true}
+var boolParams = map[string]bool{"psk": true, "qr": true, "amnezia-key": true, "json": true, "yes": true}
 
 // SPEC 4.3: матрица параметров. О — обязателен, н — необязателен, — — недопустим.
 var specMatrix = map[string]map[Action]string{
@@ -36,6 +36,7 @@ var specMatrix = map[string]map[Action]string{
 	"allowed-ips": {ActAddClient: "О"},
 	"psk":         {ActAddClient: "н"},
 	"qr":          {ActAddClient: "н"},
+	"amnezia-key": {ActAddClient: "н"},
 	"json":        {ActList: "н", ActListClient: "н"},
 	"yes":         {ActDelete: "н"},
 }
@@ -202,11 +203,11 @@ func TestEqualsForm(t *testing.T) {
 
 func TestClientFlags(t *testing.T) {
 	c, err := Parse([]string{"--add-client", "--interface", "wg0", "--id", "phone-sergei",
-		"--allowed-ips", "0.0.0.0/0, ::/0", "--psk", "--qr", "--ip", "10.8.0.9/32,fd00:8::9/128", "--endpoint", "2001:db8::1"})
+		"--allowed-ips", "0.0.0.0/0, ::/0", "--psk", "--qr", "--amnezia-key", "--ip", "10.8.0.9/32,fd00:8::9/128", "--endpoint", "2001:db8::1"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Action != ActAddClient || c.ID != "phone-sergei" || !c.PSK || !c.QR || c.Endpoint != "2001:db8::1" ||
+	if c.Action != ActAddClient || c.ID != "phone-sergei" || !c.PSK || !c.QR || !c.AmneziaKey || c.Endpoint != "2001:db8::1" ||
 		!slices.Equal(c.AllowedIPs, []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")}) ||
 		!slices.Equal(c.IPs, []netip.Prefix{netip.MustParsePrefix("10.8.0.9/32"), netip.MustParsePrefix("fd00:8::9/128")}) {
 		t.Fatalf("got %+v", *c)
@@ -238,6 +239,11 @@ func TestHelpVersion(t *testing.T) {
 	}
 	if !strings.Contains(Usage(), "--add-client") || !strings.Contains(Usage(), "--allowed-ips") {
 		t.Error("usage text is incomplete")
+	}
+	for _, p := range params {
+		if !strings.Contains(Usage(), "  --"+p+" ") {
+			t.Errorf("usage text does not describe --%s", p)
+		}
 	}
 }
 

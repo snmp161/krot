@@ -6,11 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/snmp161/krot/internal/amnezia"
 	"github.com/snmp161/krot/internal/awg"
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/execx"
 	"github.com/snmp161/krot/internal/keys"
+	"github.com/snmp161/krot/internal/qr"
 )
 
 // assertOnlyPeerOps — SPEC 6.10, 8.2: клиентские операции не вызывают ничего, кроме
@@ -315,6 +317,82 @@ func TestAddClientQR(t *testing.T) {
 	e.write(path, big)
 	e.mustRun(errs.Invalid, "--add-client", "--interface", "awg0", "--id", "q2", "--allowed-ips", "0.0.0.0/0", "--qr")
 	if !strings.Contains(e.stdout.String(), "[Peer]") || !strings.Contains(e.stderr.String(), "config too large for QR") {
+		t.Fatalf("stdout %q\nstderr %q", e.stdout, e.stderr)
+	}
+	if _, ok := conf.Parse([]byte(e.read(path))).PeerByID("q2"); !ok {
+		t.Fatal("client must stay added")
+	}
+}
+
+// splitKey отделяет клиентский конфиг от того, что выведено после него, начиная со строки vpn://.
+func splitKey(t *testing.T, out string) (cfg, rest string) {
+	t.Helper()
+	i := strings.Index(out, "\nvpn://")
+	if i < 0 {
+		t.Fatalf("no vpn:// key after the config:\n%s", out)
+	}
+	return out[:i], out[i+1:]
+}
+
+// SPEC 6.5 п.7: --amnezia-key — после конфига пустая строка и ключ AmneziaVPN с этим же конфигом;
+// с --qr — затем пустая строка и QR-код текста конфига (не ключа).
+func TestAddClientAmneziaKey(t *testing.T) {
+	e := newEnv(t)
+	path := setupAWG0(t, e, true)
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "k1", "--allowed-ips", "0.0.0.0/0", "--amnezia-key")
+	cfg, rest := splitKey(t, e.stdout.String())
+	if !strings.HasSuffix(cfg, "PersistentKeepalive = 25\n") {
+		t.Fatalf("config must end before the key:\n%s", cfg)
+	}
+	if want := amnezia.Key(cfg) + "\n"; rest != want {
+		t.Fatalf("after the config:\n%q\nwant:\n%q", rest, want)
+	}
+	checkClient(t, conf.Parse([]byte(e.read(path))), conf.Parse([]byte(cfg)), "k1",
+		[]string{"10.8.0.4/32", "fd00:8::3/128"}, "vpn.example.com:51820", "0.0.0.0/0", false)
+	assertOnlyPeerOps(t, e, "awg", "awg0")
+
+	// --qr: ключ, затем QR-код конфига.
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "k2", "--allowed-ips", "0.0.0.0/0", "--psk", "--amnezia-key", "--qr")
+	cfg, _ = splitKey(t, e.stdout.String())
+	code, err := qr.Render(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := cfg + "\n" + amnezia.Key(cfg) + "\n\n" + code; e.stdout.String() != want {
+		t.Fatalf("output:\n%s\nwant:\n%s", e.stdout, want)
+	}
+	assertOnlyPeerOps(t, e, "awg", "awg0")
+
+	// Без флага ключа нет.
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "k3", "--allowed-ips", "0.0.0.0/0", "--qr")
+	if strings.Contains(e.stdout.String(), "vpn://") {
+		t.Fatalf("vpn:// key without --amnezia-key:\n%s", e.stdout)
+	}
+}
+
+// SPEC 6.5: ключ выдаётся для всех типов, включая wg.
+func TestAddClientAmneziaKeyWG(t *testing.T) {
+	e := newEnv(t)
+	path := e.wgConf("wg0")
+	e.write(path, fixture(t, "create_wg.golden"))
+	e.fake.On("wg show interfaces", "")
+	e.mustRun(0, "--add-client", "--interface", "wg0", "--id", "c1", "--allowed-ips", "0.0.0.0/0", "--amnezia-key")
+	cfg, rest := splitKey(t, e.stdout.String())
+	if rest != amnezia.Key(cfg)+"\n" {
+		t.Fatalf("after the config:\n%q", rest)
+	}
+	assertOnlyPeerOps(t, e, "wg", "wg0")
+}
+
+// SPEC 6.5: конфиг не помещается в QR — конфиг и ключ выведены, затем код 3.
+func TestAddClientAmneziaKeyQRTooLarge(t *testing.T) {
+	e := newEnv(t)
+	path := e.awgConf("awg0")
+	big := strings.Replace(fixture(t, "create_awg_i1.golden"), "<b 0xf6ab3267fa><r 16>", "<b 0x"+strings.Repeat("ab", 1500)+">", 1)
+	e.write(path, big)
+	e.mustRun(errs.Invalid, "--add-client", "--interface", "awg0", "--id", "q2", "--allowed-ips", "0.0.0.0/0", "--amnezia-key", "--qr")
+	cfg, rest := splitKey(t, e.stdout.String())
+	if rest != amnezia.Key(cfg)+"\n" || !strings.Contains(e.stderr.String(), "config too large for QR") {
 		t.Fatalf("stdout %q\nstderr %q", e.stdout, e.stderr)
 	}
 	if _, ok := conf.Parse([]byte(e.read(path))).PeerByID("q2"); !ok {
