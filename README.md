@@ -2,7 +2,7 @@
 
 `krot` — консольная утилита для управления туннелями **WireGuard** и **AmneziaWG**
 (1.x, 2.0, 3.1) на Linux-серверах: создание и удаление интерфейсов, управление клиентами
-(peer'ами), выдача клиентских конфигов и QR-кодов.
+(peer'ами), выдача клиентских конфигов, QR-кодов и ключей AmneziaVPN (`vpn://…`).
 
 - Один статический бинарь без зависимостей (Go, `CGO_ENABLED=0`).
 - Операции с клиентами **не перезапускают и не пересоздают интерфейс**: только точечные
@@ -131,6 +131,9 @@ sudo krot --add-client --interface awg0 --id phone-sergei --allowed-ips 0.0.0.0/
 # с PresharedKey и QR-кодом в терминале
 sudo krot --add-client --interface awg0 --id laptop --allowed-ips 0.0.0.0/0 --psk --qr
 
+# дополнительно ключ для приложения AmneziaVPN: строка vpn://… после конфига
+sudo krot --add-client --interface awg0 --id tablet --allowed-ips 0.0.0.0/0,::/0 --amnezia-key
+
 # конкретный адрес клиента
 sudo krot --add-client --interface awg0 --id router --allowed-ips 10.8.0.0/24 --ip 10.8.0.50/32
 
@@ -147,6 +150,12 @@ sudo krot --delete-client --interface awg0 --id laptop
 `--allowed-ips` — это `AllowedIPs` в конфиге **клиента** (что клиент направляет в туннель).
 Сохраните выданный конфиг сразу: повторно получить его нельзя, только удалить клиента и
 добавить заново. QR выводится полублоками Unicode и рассчитан на тёмный фон терминала.
+
+`--amnezia-key` печатает после конфига ключ AmneziaVPN — одну строку `vpn://…`, которую
+вставляют в приложении AmneziaVPN («Вставить ключ»), например, переслав через мессенджер. Внутри
+тот же клиентский конфиг: `vpn://` + base64url без `=` от `qCompress` из Qt (4 байта длины
+big-endian + zlib). Ключ работает для всех типов, включая `wg`. QR-код при `--qr` содержит текст
+конфига — его понимают и AmneziaVPN, и AmneziaWG, и WireGuard.
 
 Пример `--list-client`:
 
