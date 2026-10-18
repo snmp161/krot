@@ -155,7 +155,7 @@ sudo krot --delete-client --interface awg0 --id laptop
 вставляют в приложении AmneziaVPN («Вставить ключ»), например, переслав через мессенджер. Внутри
 тот же клиентский конфиг: `vpn://` + base64url без `=` от `qCompress` из Qt (4 байта длины
 big-endian + zlib). Ключ работает для всех типов, включая `wg`. QR-код при `--qr` содержит текст
-конфига — его понимают и AmneziaVPN, и AmneziaWG, и WireGuard.
+конфига — его сканируют AmneziaVPN и AmneziaWG, а для типа `wg` — и WireGuard.
 
 Пример `--list-client`:
 
