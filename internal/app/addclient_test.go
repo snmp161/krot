@@ -399,3 +399,58 @@ func TestAddClientAmneziaKeyQRTooLarge(t *testing.T) {
 		t.Fatal("client must stay added")
 	}
 }
+
+// SPEC 6.5: DNS клиентского конфига — --dns, иначе # krot:dns, иначе DNS из [Interface] сервера;
+// если нет ничего — строки DNS нет. --dns в конфиг сервера не пишется.
+func TestAddClientDNS(t *testing.T) {
+	// В чужой конфиг (без # krot:) добавлены две строки DNS.
+	foreignDNS := strings.Replace(fixture(t, "foreign_wg.conf"), "ListenPort = 51821\n",
+		"ListenPort = 51821\nDNS = 10.9.0.1\nDNS = fd00:9::1, 9.9.9.9   # resolvers\n", 1)
+	// В конфиг krot с # krot:dns добавлена строка DNS в [Interface].
+	krotDNS := strings.Replace(fixture(t, "awg0_two_clients.conf"), "[Interface]\n", "[Interface]\nDNS = 10.8.0.1\n", 1)
+	if foreignDNS == fixture(t, "foreign_wg.conf") || krotDNS == fixture(t, "awg0_two_clients.conf") {
+		t.Fatal("fixtures changed: DNS lines were not inserted")
+	}
+
+	cases := []struct {
+		name    string
+		awg     bool
+		server  string
+		args    []string
+		wantDNS string // "" — строки DNS нет
+	}{
+		{"flag overrides krot:dns", true, fixture(t, "awg0_two_clients.conf"),
+			[]string{"--dns", "8.8.8.8,2001:4860:4860::8888"}, "8.8.8.8, 2001:4860:4860::8888"},
+		{"krot:dns", true, fixture(t, "awg0_two_clients.conf"), nil, "1.1.1.1, 9.9.9.9"},
+		{"krot:dns wins over server DNS", true, krotDNS, nil, "1.1.1.1, 9.9.9.9"},
+		{"server DNS", false, foreignDNS, []string{"--endpoint", "198.51.100.7"}, "10.9.0.1, fd00:9::1, 9.9.9.9"},
+		{"flag overrides server DNS", false, foreignDNS, []string{"--endpoint", "198.51.100.7", "--dns", "1.0.0.1"}, "1.0.0.1"},
+		{"no DNS anywhere", false, fixture(t, "foreign_wg.conf"), []string{"--endpoint", "198.51.100.7"}, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			e := newEnv(t)
+			name, path, tool := "office", e.wgConf("office"), "wg"
+			if c.awg {
+				name, path, tool = "awg0", e.awgConf("awg0"), "awg"
+			}
+			e.write(path, c.server)
+			e.fake.On(tool+" show interfaces", name+"\n")
+			args := append([]string{"--add-client", "--interface", name, "--id", "d1", "--allowed-ips", "0.0.0.0/0"}, c.args...)
+			e.mustRun(0, args...)
+			out := e.stdout.String()
+			cifc, _ := clientConfig(t, out).Interface()
+			if got := cifc.Get("DNS"); got != c.wantDNS {
+				t.Fatalf("client DNS = %q; want %q\n%s", got, c.wantDNS, out)
+			}
+			if c.wantDNS == "" && strings.Contains(out, "DNS") {
+				t.Fatalf("client config must have no DNS line:\n%s", out)
+			}
+			// Конфиг сервера: прежние строки байт-в-байт, дописан только peer.
+			if !strings.HasPrefix(e.read(path), c.server) {
+				t.Fatalf("server config changed:\n%s", e.read(path))
+			}
+			assertOnlyPeerOps(t, e, tool, name)
+		})
+	}
+}

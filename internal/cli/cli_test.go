@@ -30,7 +30,7 @@ var specMatrix = map[string]map[Action]string{
 	"port":        {ActList: "н", ActCreate: "О"},
 	"endpoint":    {ActCreate: "О", ActAddClient: "н"},
 	"mtu":         {ActCreate: "н"},
-	"dns":         {ActCreate: "н"},
+	"dns":         {ActCreate: "н", ActAddClient: "н"},
 	"i1":          {ActCreate: "н"},
 	"id":          {ActAddClient: "О", ActDeleteClient: "О", ActLockClient: "О", ActUnlockClient: "О", ActListClient: "н"},
 	"allowed-ips": {ActAddClient: "О"},
@@ -203,11 +203,13 @@ func TestEqualsForm(t *testing.T) {
 
 func TestClientFlags(t *testing.T) {
 	c, err := Parse([]string{"--add-client", "--interface", "wg0", "--id", "phone-sergei",
-		"--allowed-ips", "0.0.0.0/0, ::/0", "--psk", "--qr", "--amnezia-key", "--ip", "10.8.0.9/32,fd00:8::9/128", "--endpoint", "2001:db8::1"})
+		"--allowed-ips", "0.0.0.0/0, ::/0", "--psk", "--qr", "--amnezia-key", "--ip", "10.8.0.9/32,fd00:8::9/128", "--endpoint", "2001:db8::1",
+		"--dns", "8.8.8.8,2001:4860:4860::8888"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if c.Action != ActAddClient || c.ID != "phone-sergei" || !c.PSK || !c.QR || !c.AmneziaKey || c.Endpoint != "2001:db8::1" ||
+		!slices.Equal(c.DNS, []netip.Addr{netip.MustParseAddr("8.8.8.8"), netip.MustParseAddr("2001:4860:4860::8888")}) ||
 		!slices.Equal(c.AllowedIPs, []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")}) ||
 		!slices.Equal(c.IPs, []netip.Prefix{netip.MustParsePrefix("10.8.0.9/32"), netip.MustParsePrefix("fd00:8::9/128")}) {
 		t.Fatalf("got %+v", *c)
@@ -268,7 +270,7 @@ func TestValues(t *testing.T) {
 			m[kv[i]] = kv[i+1]
 		}
 		args := []string{"--add-client"}
-		for _, k := range []string{"interface", "id", "allowed-ips", "ip", "endpoint"} {
+		for _, k := range []string{"interface", "id", "allowed-ips", "ip", "endpoint", "dns"} {
 			if v, ok := m[k]; ok {
 				args = append(args, "--"+k, v)
 			}
@@ -352,6 +354,10 @@ func TestValues(t *testing.T) {
 		{add("allowed-ips", "0.0.0.0"), 3},
 		{add("allowed-ips", ""), 3},
 		{add("endpoint", "bad_host"), 3},
+		{add("dns", "8.8.8.8, 2001:4860:4860::8888"), 0},
+		{add("dns", "8.8.8"), 3},
+		{add("dns", ""), 3},
+		{add("dns", "8.8.8.8/32"), 3},
 		{[]string{"--list", "--ip", "10.8.0.0/24"}, 0},
 		{[]string{"--list", "--ip", "10.8.0.5"}, 0},
 		{[]string{"--list", "--ip", "fd00::5,10.8.0.5"}, 0},
