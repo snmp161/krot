@@ -140,6 +140,9 @@ sudo krot --add-client --interface awg0 --id router --allowed-ips 10.8.0.0/24 --
 # чужой конфиг без метаданных krot: endpoint передаётся явно (в конфиг сервера не пишется)
 sudo krot --add-client --interface office --id guest --allowed-ips 0.0.0.0/0 --endpoint 203.0.113.10
 
+# свой DNS для одного клиента (в конфиг сервера не пишется)
+sudo krot --add-client --interface awg0 --id kid-phone --allowed-ips 0.0.0.0/0 --dns 94.140.14.15
+
 sudo krot --list-client --interface awg0
 sudo krot --list-client --interface awg0 --id phone-sergei --json
 sudo krot --lock-client   --interface awg0 --id laptop    # повторно — «already locked», код 0
@@ -148,6 +151,8 @@ sudo krot --delete-client --interface awg0 --id laptop
 ```
 
 `--allowed-ips` — это `AllowedIPs` в конфиге **клиента** (что клиент направляет в туннель).
+DNS клиента: `--dns`, если задан; иначе `# krot:dns` интерфейса (`--dns` при `--create`); иначе
+строки `DNS` из `[Interface]` конфига сервера; если DNS нет нигде — строки `DNS` в конфиге клиента нет.
 Сохраните выданный конфиг сразу: повторно получить его нельзя, только удалить клиента и
 добавить заново. QR выводится полублоками Unicode и рассчитан на тёмный фон терминала.
 
