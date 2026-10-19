@@ -64,7 +64,7 @@ var paramTable = []param{
 	{"port", false, map[Action]need{ActList: opt, ActCreate: req}},
 	{"endpoint", false, map[Action]need{ActCreate: req, ActAddClient: opt}},
 	{"mtu", false, map[Action]need{ActCreate: opt}},
-	{"dns", false, map[Action]need{ActCreate: opt}},
+	{"dns", false, map[Action]need{ActCreate: opt, ActAddClient: opt}},
 	{"i1", false, map[Action]need{ActCreate: opt}},
 	{"id", false, map[Action]need{ActAddClient: req, ActDeleteClient: req, ActLockClient: req, ActUnlockClient: req, ActListClient: opt}},
 	{"allowed-ips", false, map[Action]need{ActAddClient: req}},

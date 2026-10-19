@@ -90,7 +90,7 @@ func (a *App) addClient(cmd *cli.Command) error {
 			return a.rollback(t, orig, err)
 		}
 
-		clientText = renderClient(ifc, priv.String(), addrStrs, serverPub.String(), psk, endpoint, cmd.AllowedIPs)
+		clientText = renderClient(ifc, priv.String(), addrStrs, clientDNS(ifc, cmd.DNS), serverPub.String(), psk, endpoint, cmd.AllowedIPs)
 		return nil
 	})
 	if err != nil {
@@ -167,6 +167,24 @@ func clientEndpoint(t *tunnel, ifc conf.Interface, override string) (string, err
 	return host + ":" + port, nil
 }
 
+// clientDNS — DNS клиентского конфига: --dns, иначе # krot:dns, иначе все строки DNS из [Interface]
+// сервера; "" — DNS нет (SPEC 6.5).
+func clientDNS(ifc conf.Interface, override []netip.Addr) string {
+	if len(override) > 0 {
+		return joinAddrs(override, ", ")
+	}
+	if dns := ifc.Meta["dns"]; dns != "" {
+		var out []string
+		for _, s := range strings.Split(dns, ",") {
+			if s = strings.TrimSpace(s); s != "" {
+				out = append(out, s)
+			}
+		}
+		return strings.Join(out, ", ")
+	}
+	return strings.Join(ifc.List("DNS"), ", ")
+}
+
 // serverPrefixes — адреса интерфейса (Address).
 func serverPrefixes(ifc conf.Interface) []netip.Prefix {
 	var out []netip.Prefix
@@ -232,13 +250,13 @@ func clientAddresses(t *tunnel, ifc conf.Interface, manual []netip.Prefix) ([]ne
 }
 
 // renderClient формирует клиентский конфиг (SPEC 6.5, 7.5).
-func renderClient(ifc conf.Interface, priv string, addrs []string, serverPub, psk, endpoint string, allowed []netip.Prefix) string {
+func renderClient(ifc conf.Interface, priv string, addrs []string, dns, serverPub, psk, endpoint string, allowed []netip.Prefix) string {
 	var b strings.Builder
 	b.WriteString("[Interface]\n")
 	b.WriteString("PrivateKey = " + priv + "\n")
 	b.WriteString("Address = " + strings.Join(addrs, ", ") + "\n")
-	if dns := ifc.Meta["dns"]; dns != "" {
-		b.WriteString("DNS = " + strings.Join(strings.Split(dns, ","), ", ") + "\n")
+	if dns != "" {
+		b.WriteString("DNS = " + dns + "\n")
 	}
 	if mtu := ifc.Get("MTU"); mtu != "" {
 		b.WriteString("MTU = " + mtu + "\n")
