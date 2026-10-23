@@ -454,3 +454,32 @@ func TestAddClientDNS(t *testing.T) {
 		})
 	}
 }
+
+// SPEC 6.5: в /31 и /127 клиент получает второй адрес подсети; второго клиента добавить некуда (5).
+func TestAddClientPointToPoint(t *testing.T) {
+	p2p := strings.Replace(fixture(t, "wg0_empty.conf"), "Address = 10.9.0.1/24\n", "Address = 10.9.0.0/31, fd00:9::1/127\n", 1)
+	if p2p == fixture(t, "wg0_empty.conf") {
+		t.Fatal("fixture changed: Address was not replaced")
+	}
+
+	e := newEnv(t)
+	path := e.wgConf("wg0")
+	e.write(path, p2p)
+	e.fake.On("wg show interfaces", "wg0\n")
+	e.mustRun(0, "--add-client", "--interface", "wg0", "--id", "a", "--allowed-ips", "0.0.0.0/0,::/0")
+	checkClient(t, conf.Parse([]byte(e.read(path))), clientConfig(t, e.stdout.String()), "a",
+		[]string{"10.9.0.1/32", "fd00:9::/128"}, "203.0.113.1:51821", "0.0.0.0/0,::/0", false)
+	assertOnlyPeerOps(t, e, "wg", "wg0")
+	e.mustRun(errs.Conflict, "--add-client", "--interface", "wg0", "--id", "b", "--allowed-ips", "0.0.0.0/0")
+
+	// Вручную: второй адрес подсети допустим, адрес сервера — нет.
+	e = newEnv(t)
+	path = e.wgConf("wg0")
+	e.write(path, p2p)
+	e.fake.On("wg show interfaces", "")
+	e.mustRun(errs.Conflict, "--add-client", "--interface", "wg0", "--id", "m", "--allowed-ips", "0.0.0.0/0", "--ip", "10.9.0.0/32")
+	e.mustRun(0, "--add-client", "--interface", "wg0", "--id", "m", "--allowed-ips", "0.0.0.0/0", "--ip", "10.9.0.1/32,fd00:9::/128")
+	if p, ok := conf.Parse([]byte(e.read(path))).PeerByID("m"); !ok || !slices.Equal(p.AllowedIPs(), []string{"10.9.0.1/32", "fd00:9::/128"}) {
+		t.Fatalf("peer m: %v %v", p, ok)
+	}
+}

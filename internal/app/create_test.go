@@ -2,6 +2,7 @@ package app
 
 import (
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -289,5 +290,15 @@ func TestCreateRollback(t *testing.T) {
 	}
 	if !strings.Contains(e.stderr.String(), "Job for wg-quick@wg0.service failed.") {
 		t.Fatalf("stderr = %q", e.stderr)
+	}
+}
+
+// SPEC 6.2, 6.5: /31 и /127 — допустимые адреса сервера.
+func TestCreatePointToPoint(t *testing.T) {
+	e := newEnv(t)
+	e.mustRun(0, "--create", "--type", "wg", "--ip", "10.9.0.0/31,fd00:9::/127", "--port", "51820", "--endpoint", "vpn.example.com")
+	ifc, _ := conf.Parse([]byte(e.read(e.wgConf("wg0")))).Interface()
+	if got := ifc.List("Address"); !slices.Equal(got, []string{"10.9.0.0/31", "fd00:9::/127"}) {
+		t.Fatalf("Address = %q", got)
 	}
 }

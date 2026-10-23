@@ -37,12 +37,19 @@ func TestAllocate(t *testing.T) {
 			"10.8.0.224/28", "10.8.0.240/29", "10.8.0.248/30", "10.8.0.252/31", "10.8.0.254/32"), ""},
 		{"v4 /30", "10.8.0.1/30", nil, "10.8.0.2"},
 		{"v4 /30 exhausted", "10.8.0.1/30", pfx("10.8.0.2/32"), ""},
-		{"v4 /31 has no addresses", "10.8.0.1/31", nil, ""},
+		// SPEC 6.5: в /31 (RFC 3021) и /127 (RFC 6164) оба адреса допустимы.
+		{"v4 /31 server high", "10.8.0.1/31", nil, "10.8.0.0"},
+		{"v4 /31 server low", "10.8.0.0/31", nil, "10.8.0.1"},
+		{"v4 /31 exhausted", "10.8.0.0/31", pfx("10.8.0.1/32"), ""},
+		{"v4 /32 has no addresses", "10.8.0.1/32", nil, ""},
 		{"v6 empty", "fd00:8::1/64", nil, "fd00:8::2"},
 		{"v6 skip used", "fd00:8::1/64", pfx("fd00:8::2/128"), "fd00:8::3"},
 		{"v6 /126", "fd00:8::1/126", pfx("fd00:8::2/128"), "fd00:8::3"},
 		{"v6 /126 exhausted", "fd00:8::1/126", pfx("fd00:8::2/128", "fd00:8::3/128"), ""},
 		{"v6 jump over huge prefix", "fd00:8::1/64", pfx("fd00:8::/65"), "fd00:8:0:0:8000::"},
+		{"v6 /127 server high", "fd00:8::1/127", nil, "fd00:8::"},
+		{"v6 /127 server low", "fd00:8::/127", nil, "fd00:8::1"},
+		{"v6 /127 exhausted", "fd00:8::1/127", pfx("fd00:8::/128"), ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -123,7 +130,13 @@ func TestIsNetworkOrBroadcast(t *testing.T) {
 		"10.8.0.255/24":                true,
 		"10.8.0.1/24":                  false,
 		"10.8.0.1/32":                  true,
-		"10.8.0.1/31":                  true,
+		"10.8.0.0/30":                  true,
+		"10.8.0.3/30":                  true,
+		"10.8.0.1/31":                  false, // RFC 3021
+		"10.8.0.0/31":                  false,
+		"fd00::/127":                   false, // RFC 6164
+		"fd00::1/127":                  false,
+		"fd00::1/128":                  true,
 		"fd00::/64":                    true,
 		"fd00::1/64":                   false,
 		"fd00::ffff:ffff:ffff:ffff/64": false,
@@ -131,6 +144,31 @@ func TestIsNetworkOrBroadcast(t *testing.T) {
 	for s, want := range cases {
 		if got := IsNetworkOrBroadcast(netip.MustParsePrefix(s)); got != want {
 			t.Errorf("IsNetworkOrBroadcast(%s) = %v; want %v", s, got, want)
+		}
+	}
+}
+
+// SPEC 6.5: в /31 и /127 второй адрес подсети — адрес клиента, а не адрес сети или broadcast.
+func TestCheckPointToPoint(t *testing.T) {
+	servers := pfx("10.8.0.0/31", "fd00:8::1/127")
+	cases := []struct {
+		addr string
+		used []netip.Prefix
+		want error
+	}{
+		{"10.8.0.1", nil, nil},
+		{"fd00:8::", nil, nil},
+		{"10.8.0.0", nil, ErrReserved},
+		{"fd00:8::1", nil, ErrReserved},
+		{"10.8.0.1", pfx("10.8.0.1/32"), ErrInUse},
+		{"fd00:8::", pfx("fd00:8::/128"), ErrInUse},
+		{"10.8.0.2", nil, ErrOutsideSubnet},
+		{"fd00:8::2", nil, ErrOutsideSubnet},
+	}
+	for _, c := range cases {
+		err := Check(netip.MustParseAddr(c.addr), servers, c.used)
+		if !errors.Is(err, c.want) || (c.want == nil && err != nil) {
+			t.Errorf("Check(%s, used %v) = %v; want %v", c.addr, c.used, err, c.want)
 		}
 	}
 }
