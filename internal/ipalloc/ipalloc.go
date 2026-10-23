@@ -24,9 +24,18 @@ func Last(p netip.Prefix) netip.Addr {
 	return a
 }
 
+// pointToPoint — подсети /31 (RFC 3021) и /127 (RFC 6164): адресов сети и broadcast нет,
+// оба адреса допустимы (SPEC 6.5).
+func pointToPoint(p netip.Prefix) bool {
+	return p.IsValid() && p.Bits() == p.Addr().BitLen()-1
+}
+
 // IsNetworkOrBroadcast сообщает, является ли адрес префикса адресом сети (IPv4 и IPv6)
-// или broadcast (IPv4).
+// или broadcast (IPv4). У /31 и /127 таких адресов нет.
 func IsNetworkOrBroadcast(p netip.Prefix) bool {
+	if pointToPoint(p) {
+		return false
+	}
 	a := p.Addr()
 	return a == p.Masked().Addr() || (a.Is4() && a == Last(p))
 }
@@ -34,7 +43,11 @@ func IsNetworkOrBroadcast(p netip.Prefix) bool {
 func single(a netip.Addr) netip.Prefix { return netip.PrefixFrom(a, a.BitLen()) }
 
 // reserved — адреса, которые не выдаются никогда: сеть, broadcast (IPv4), адрес сервера.
+// У /31 и /127 — только адрес сервера.
 func reserved(server netip.Prefix) []netip.Prefix {
+	if pointToPoint(server) {
+		return []netip.Prefix{single(server.Addr())}
+	}
 	r := []netip.Prefix{single(server.Masked().Addr()), single(server.Addr())}
 	if server.Addr().Is4() {
 		r = append(r, single(Last(server)))
