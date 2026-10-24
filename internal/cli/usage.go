@@ -36,7 +36,7 @@ Flags (--flag value or --flag=value):
   --mtu N                   MTU 576..9000 (default: wg 1420, awg/awg2 1376, awg3 1280)
   --dns IP[,IP]             DNS servers for client configs
                             (create: for all clients; add-client: this client only)
-  --i1 CPS                  AmneziaWG I1 signature packet (awg* only)
+  --i1 CPS                  AmneziaWG I1 signature packet (awg* only, at most 2048 chars)
   --id ID                   client id [a-zA-Z0-9_.-]{1,64}, unique within an interface
   --allowed-ips CIDR[,CIDR] AllowedIPs of the client config, e.g. 0.0.0.0/0,::/0
   --psk                     generate a PresharedKey for the client

@@ -308,6 +308,9 @@ func validateI1(s string) error {
 	if err := awg.ValidateCPS(s); err != nil {
 		return errs.Invalidf("invalid --i1: %v", err)
 	}
+	if len(s) > awg.MaxITotal {
+		return errs.Invalidf("invalid --i1: %d characters, at most %d (longer values break awg, amneziawg-tools#69)", len(s), awg.MaxITotal)
+	}
 	return nil
 }
 

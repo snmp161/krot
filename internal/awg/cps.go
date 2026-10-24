@@ -10,6 +10,10 @@ import (
 // maxCPSLen — максимальное N в тегах <r N>, <rc N>, <rd N> (SPEC 7.1 V-05).
 const maxCPSLen = 1000
 
+// MaxITotal — предел суммарной длины значений I1–I5 в символах (SPEC 7.1 V-06): amneziawg-tools
+// пишет их в netlink-сообщение 4 КБ без проверки границ (amneziawg-tools#69).
+const MaxITotal = 2048
+
 // ValidateCPS проверяет синтаксис CPS-строки I1–I5 (SPEC 7.1 V-05): последовательность тегов
 // <b 0xHEX>, <t>, <r N>, <rc N>, <rd N>; N ≤ 1000; hex чётной длины. Между тегами допустимы
 // только пробелы, внутри тега аргумент отделяется пробелами (как в amneziawg-go).

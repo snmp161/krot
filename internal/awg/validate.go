@@ -92,7 +92,7 @@ func Validate(t Type, p Params, mtu int) error {
 	return fmt.Errorf("unknown type %q", t)
 }
 
-// SPEC 7.1: V-01…V-05.
+// SPEC 7.1: V-01…V-06.
 func validateCommon(p Params, mtu int) error {
 	for _, k := range []string{"Jc", "Jmin", "Jmax", "S1", "S2", "S3", "S4"} {
 		if v, ok := p.Get(k); ok {
@@ -129,12 +129,17 @@ func validateCommon(p Params, mtu int) error {
 	if s2, ok := num(p, "S2"); ok && 92+s2 > mtu+wgOverhead {
 		return rule("V-04", "92 + S2 (%d) must not exceed MTU + 80 (%d)", 92+s2, mtu+wgOverhead)
 	}
+	total := 0
 	for _, k := range keysI {
 		if v, ok := p.Get(k); ok {
 			if err := ValidateCPS(v); err != nil {
 				return rule("V-05", "%s: %v", k, err)
 			}
+			total += len(v)
 		}
+	}
+	if total > MaxITotal {
+		return rule("V-06", "I1-I5 total %d characters, at most %d (amneziawg-tools#69)", total, MaxITotal)
 	}
 	return nil
 }
