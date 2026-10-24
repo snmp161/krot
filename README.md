@@ -94,7 +94,7 @@ sudo krot --create --type awg2 --ip 10.8.0.1/24,fd00:8::1/64 --port 51820 \
 sudo krot --create --type wg --interface wg0 --ip 10.9.0.1/24 --port 51821 \
           --endpoint 203.0.113.10 --mtu 1420
 
-# AmneziaWG 1.5 с пакетом-сигнатурой I1 (krot проверяет только синтаксис CPS)
+# AmneziaWG 1.5 с пакетом-сигнатурой I1 (krot проверяет синтаксис CPS и длину — до 2048 символов)
 sudo krot --create --type awg --ip 10.10.0.1/24 --port 51822 --endpoint vpn.example.com \
           --i1 '<b 0xf6ab3267fa><r 16>'
 
@@ -251,6 +251,9 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 - NAT, forwarding, firewall, sysctl — вне рамок krot (используйте хуки `PostUp`/`PostDown`).
 - Установка WireGuard/AmneziaWG, миграция туннеля между типами, генерация сигнатур `I1`–`I5`
   (только приём готовой строки через `--i1`) не поддерживаются.
+- `--i1` — не длиннее 2048 символов: из-за бага
+  [amneziawg-tools#69](https://github.com/amnezia-vpn/amneziawg-tools/issues/69) при длинных
+  `I1`–`I5` (примерно от 3600 символов) `awg show` зависает, а `awg set`/`setconf` падает.
 - Приватные ключи клиентов не хранятся, повторная выдача клиентского конфига невозможна.
 
 ## Разработка
