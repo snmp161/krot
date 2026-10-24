@@ -28,6 +28,14 @@ var baseParams = map[Type]Params{
 	},
 }
 
+// cpsOfLen — корректная CPS-строка ровно из n символов (n ≥ 9).
+func cpsOfLen(n int) string {
+	if n%2 == 0 {
+		return "<b 0x" + strings.Repeat("ab", (n-6)/2) + ">"
+	}
+	return "<b 0x" + strings.Repeat("ab", (n-9)/2) + "><t>"
+}
+
 // with копирует базовый набор и применяет изменения: пустое значение — удалить ключ.
 func with(t Type, kv ...string) Params {
 	p := append(Params(nil), baseParams[t]...)
@@ -97,6 +105,12 @@ func TestValidate(t *testing.T) {
 		{"V-05 unknown tag", TypeAWG, 1376, with(TypeAWG, "I1", "<x>"), "V-05"},
 		{"V-05 N too big", TypeAWG2, 1376, with(TypeAWG2, "I3", "<r 1001>"), "V-05"},
 		{"V-05 odd hex", TypeAWG3, 1280, with(TypeAWG3, "I2", "<b 0xabc>"), "V-05"},
+
+		// V-06: суммарная длина I1–I5 ≤ 2048 символов (amneziawg-tools#69).
+		{"V-06 I1 at limit", TypeAWG, 1376, with(TypeAWG, "I1", cpsOfLen(2048)), ""},
+		{"V-06 I1 over", TypeAWG2, 1376, with(TypeAWG2, "I1", cpsOfLen(2049)), "V-06"},
+		{"V-06 sum at limit", TypeAWG3, 1280, with(TypeAWG3, "I1", cpsOfLen(1024), "I5", cpsOfLen(1024)), ""},
+		{"V-06 sum over", TypeAWG, 1376, with(TypeAWG, "I1", cpsOfLen(1024), "I3", cpsOfLen(1025)), "V-06"},
 
 		// SPEC 7.2 V-10: H одиночные, 5..2147483647, попарно различны.
 		{"V-10 min", TypeAWG, 1376, with(TypeAWG, "H1", "5"), ""},

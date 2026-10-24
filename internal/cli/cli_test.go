@@ -390,6 +390,30 @@ func TestUsageBeforeValues(t *testing.T) {
 	}
 }
 
+// SPEC 4.4, 7.1 V-06: --i1 не длиннее 2048 символов (amneziawg-tools#69), иначе код 3.
+func TestI1Length(t *testing.T) {
+	base := []string{"--create", "--type", "awg2", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h.example"}
+	at := "<b 0x" + strings.Repeat("ab", 1021) + ">" // 2048 символов
+	if len(at) != 2048 {
+		t.Fatalf("test string has %d characters", len(at))
+	}
+	c, err := Parse(append(base, "--i1", at))
+	if err != nil {
+		t.Fatalf("--i1 of 2048 characters: %v", err)
+	}
+	if c.I1 != at {
+		t.Fatal("--i1 value changed")
+	}
+	over := "<b 0x" + strings.Repeat("ab", 1020) + "><t>" // 2049 символов
+	err = parseErr(append(base, "--i1", over))
+	if got := code(err); got != errs.Invalid {
+		t.Fatalf("--i1 of 2049 characters: code %d; want 3", got)
+	}
+	if !strings.Contains(err.Error(), "2048") {
+		t.Errorf("error %q does not mention the limit", err)
+	}
+}
+
 // SPEC 4.4, 7.1 V-05: --i1 проверяется по грамматике CPS → код 3.
 func TestI1Syntax(t *testing.T) {
 	base := []string{"--create", "--type", "awg", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h.example"}
