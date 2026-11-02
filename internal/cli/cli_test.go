@@ -13,6 +13,7 @@ import (
 var actions = []Action{
 	ActList, ActCreate, ActDelete, ActUp, ActDown,
 	ActAddClient, ActDeleteClient, ActLockClient, ActUnlockClient, ActListClient,
+	ActDoctor,
 }
 
 var params = []string{
