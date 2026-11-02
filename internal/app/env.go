@@ -39,6 +39,9 @@ func (a *App) checkWGModule() error {
 	if exists(filepath.Join(a.Paths.SysModule, "wireguard")) {
 		return nil
 	}
+	if _, err := a.Exec.LookPath("modinfo"); err != nil {
+		return errs.Envf("modinfo not found in PATH: install package kmod to check the WireGuard kernel module")
+	}
 	if _, err := a.Exec.Run("modinfo", "-F", "version", "wireguard"); err == nil {
 		return nil
 	}
