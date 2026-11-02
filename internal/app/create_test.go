@@ -293,6 +293,23 @@ func TestCreateRollback(t *testing.T) {
 	}
 }
 
+// SPEC 6.2: ошибки отката не глотаются — неудачный откат попадает в сообщение об ошибке.
+func TestCreateRollbackErrorsReported(t *testing.T) {
+	e := newEnv(t)
+	e.fake.Fail("systemctl enable --now wg-quick@wg0", 1, "Job for wg-quick@wg0.service failed.")
+	e.fake.Fail("systemctl disable --now wg-quick@wg0", 1, "Unit wg-quick@wg0.service not loaded.")
+	e.mustRun(errs.Internal, createArgs("wg")...)
+	if e.exists(e.wgConf("wg0")) {
+		t.Fatal("config not removed on rollback")
+	}
+	for _, s := range []string{"Job for wg-quick@wg0.service failed",
+		"rollback incomplete", "Unit wg-quick@wg0.service not loaded"} {
+		if !strings.Contains(e.stderr.String(), s) {
+			t.Fatalf("stderr misses %q:\n%s", s, e.stderr)
+		}
+	}
+}
+
 // SPEC 6.2, 6.5: /31 и /127 — допустимые адреса сервера.
 func TestCreatePointToPoint(t *testing.T) {
 	e := newEnv(t)
