@@ -68,6 +68,7 @@ var paramTable = []param{
 	{"mtu", false, map[Action]need{ActCreate: opt}},
 	{"dns", false, map[Action]need{ActCreate: opt, ActAddClient: opt}},
 	{"i1", false, map[Action]need{ActCreate: opt}},
+	{"mimic", false, map[Action]need{ActCreate: opt, ActAddClient: opt}},
 	{"id", false, map[Action]need{ActAddClient: req, ActDeleteClient: req, ActLockClient: req, ActUnlockClient: req, ActListClient: opt}},
 	{"allowed-ips", false, map[Action]need{ActAddClient: req}},
 	{"psk", true, map[Action]need{ActAddClient: opt}},
@@ -91,6 +92,7 @@ type Command struct {
 	MTU        int // 0 — по умолчанию для типа
 	DNS        []netip.Addr
 	I1         string
+	Mimic      string
 	ID         string
 	AllowedIPs []netip.Prefix
 	PSK        bool
@@ -194,6 +196,16 @@ func Parse(args []string) (*Command, error) {
 			return nil, errs.Usagef("flag --i1 is only applicable to --type awg, awg2 or awg3")
 		}
 	}
+	// SPEC 6.12: --mimic допустим только для awg* и несовместим с --i1
+	// (--mimic сам генерирует цепочку I1–I5).
+	if set["mimic"] {
+		if t, ok := awg.ParseType(values["type"]); ok && !t.IsAmnezia() {
+			return nil, errs.Usagef("flag --mimic is only applicable to --type awg, awg2 or awg3")
+		}
+		if set["i1"] {
+			return nil, errs.Usagef("flags --mimic and --i1 cannot be combined: --mimic generates the I1-I5 chain")
+		}
+	}
 
 	c := &Command{Action: act, set: set}
 	if err := c.fill(values); err != nil {
@@ -286,6 +298,12 @@ func (c *Command) fill(v map[string]string) error {
 			return err
 		}
 		c.I1 = v["i1"]
+	}
+	if c.Has("mimic") {
+		if !slices.Contains(awg.MimicProfiles(), v["mimic"]) {
+			return errs.Invalidf("invalid --mimic %q: must be one of %s", v["mimic"], strings.Join(awg.MimicProfiles(), ", "))
+		}
+		c.Mimic = v["mimic"]
 	}
 	if c.Has("id") {
 		if !ValidID(v["id"]) {

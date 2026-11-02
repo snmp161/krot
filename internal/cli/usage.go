@@ -38,6 +38,8 @@ Flags (--flag value or --flag=value):
   --dns IP[,IP]             DNS servers for client configs
                             (create: for all clients; add-client: this client only)
   --i1 CPS                  AmneziaWG I1 signature packet (awg* only, at most 2048 chars)
+  --mimic PROFILE           generate an I1-I5 mimicry chain for client configs:
+                            dns|stun|ntp|ssdp|dtls (awg* only; not with --i1)
   --id ID                   client id [a-zA-Z0-9_.-]{1,64}, unique within an interface
   --allowed-ips CIDR[,CIDR] AllowedIPs of the client config, e.g. 0.0.0.0/0,::/0
   --psk                     generate a PresharedKey for the client
@@ -48,11 +50,11 @@ Flags (--flag value or --flag=value):
 
 Flags per action:
   --list           [--type] [--interface] [--ip] [--port] [--json]
-  --create         --type --ip --port --endpoint [--interface] [--mtu] [--dns] [--i1]
+  --create         --type --ip --port --endpoint [--interface] [--mtu] [--dns] [--i1] [--mimic]
   --delete         --interface [--yes]
   --up, --down     --interface
   --add-client     --interface --id --allowed-ips [--ip] [--endpoint] [--psk] [--qr]
-                   [--dns] [--amnezia-key]
+                   [--dns] [--amnezia-key] [--mimic]
   --delete-client  --interface --id
   --lock-client    --interface --id
   --unlock-client  --interface --id
