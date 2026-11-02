@@ -158,7 +158,7 @@ func clientEndpoint(t *tunnel, ifc conf.Interface, override string) (string, err
 		return "", errs.Invalidf("interface %s has no endpoint: pass --endpoint or add the line '# krot:endpoint=<host>' before [Interface] in %s", t.name, t.path)
 	}
 	port := ifc.Get("ListenPort")
-	if _, err := strconv.Atoi(port); err != nil {
+	if p, err := strconv.Atoi(port); err != nil || p < 1 || p > 65535 {
 		return "", errs.Invalidf("interface %s has no valid ListenPort in %s", t.name, t.path)
 	}
 	if a, err := netip.ParseAddr(host); err == nil && a.Is6() {
