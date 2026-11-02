@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/netip"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -20,6 +21,10 @@ import (
 
 // keepalive — PersistentKeepalive клиентского конфига (SPEC 6.5).
 const keepalive = 25
+
+// iKeys — I-параметры AmneziaWG: при сгенерированной цепочке мимикрии копирование
+// значений сервера не нужно (SPEC 6.12).
+var iKeys = []string{"I1", "I2", "I3", "I4", "I5"}
 
 // SPEC 6.5: --add-client.
 func (a *App) addClient(cmd *cli.Command) error {
@@ -72,6 +77,32 @@ func (a *App) addClient(cmd *cli.Command) error {
 			psk = k.String()
 		}
 
+		// Цепочка мимикрии I1–Ik: --mimic, иначе профиль интерфейса (SPEC 6.12).
+		// Генерируется до изменений: серверу I-параметры не нужны, цепочка уходит
+		// только в клиентский конфиг.
+		profile := cmd.Mimic
+		if profile == "" {
+			profile = ifc.Meta["mimic"]
+		}
+		var chain []string
+		if profile != "" {
+			chain, err = awg.GenerateMimicChain(profile, a.Rand, a.Now())
+			if err != nil {
+				return errs.Invalidf("interface %s: %v", t.name, err)
+			}
+			// Сгенерированное обязано проходить валидацию (SPEC 7.6).
+			total := 0
+			for _, cps := range chain {
+				if err := awg.ValidateCPS(cps); err != nil {
+					return errs.Wrap(errs.Invalid, err)
+				}
+				total += len(cps)
+			}
+			if total > awg.MaxITotal {
+				return errs.Invalidf("mimic chain is %d characters, at most %d (SPEC 7.1 V-06)", total, awg.MaxITotal)
+			}
+		}
+
 		// Запись peer'а в конфиг.
 		orig := t.conf.Bytes()
 		addrStrs := prefixStrings(addrs)
@@ -90,7 +121,7 @@ func (a *App) addClient(cmd *cli.Command) error {
 			return a.rollback(t, orig, err)
 		}
 
-		clientText = renderClient(ifc, priv.String(), addrStrs, clientDNS(ifc, cmd.DNS), serverPub.String(), psk, endpoint, cmd.AllowedIPs)
+		clientText = renderClient(ifc, priv.String(), addrStrs, clientDNS(ifc, cmd.DNS), serverPub.String(), psk, endpoint, cmd.AllowedIPs, chain)
 		return nil
 	})
 	if err != nil {
@@ -250,7 +281,9 @@ func clientAddresses(t *tunnel, ifc conf.Interface, manual []netip.Prefix) ([]ne
 }
 
 // renderClient формирует клиентский конфиг (SPEC 6.5, 7.5).
-func renderClient(ifc conf.Interface, priv string, addrs []string, dns, serverPub, psk, endpoint string, allowed []netip.Prefix) string {
+// mimic — сгенерированная цепочка I1–Ik (SPEC 6.12): не nil — заменяет
+// I-параметры, скопированные с сервера; nil — копирование по 7.5.
+func renderClient(ifc conf.Interface, priv string, addrs []string, dns, serverPub, psk, endpoint string, allowed []netip.Prefix, mimic []string) string {
 	var b strings.Builder
 	b.WriteString("[Interface]\n")
 	b.WriteString("PrivateKey = " + priv + "\n")
@@ -261,14 +294,21 @@ func renderClient(ifc conf.Interface, priv string, addrs []string, dns, serverPu
 	if mtu := ifc.Get("MTU"); mtu != "" {
 		b.WriteString("MTU = " + mtu + "\n")
 	}
-	// Все AWG-параметры сервера — без изменений, в каноническом порядке.
+	// Все AWG-параметры сервера — без изменений, в каноническом порядке;
+	// I-параметры пропускаются, если есть сгенерированная цепочка.
 	for _, k := range awg.Keys {
+		if mimic != nil && slices.Contains(iKeys, k) {
+			continue
+		}
 		for _, kv := range ifc.Keys {
 			if strings.EqualFold(kv.Key, k) {
 				b.WriteString(k + " = " + kv.Value + "\n")
 				break
 			}
 		}
+	}
+	for i, cps := range mimic {
+		b.WriteString(fmt.Sprintf("I%d = %s\n", i+1, cps))
 	}
 	b.WriteString("\n[Peer]\n")
 	b.WriteString("PublicKey = " + serverPub + "\n")

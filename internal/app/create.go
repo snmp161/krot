@@ -67,6 +67,9 @@ func (a *App) create(cmd *cli.Command) error {
 			return errs.Wrap(errs.Invalid, err)
 		}
 		meta := []conf.KV{{Key: "type", Value: string(typ)}, {Key: "endpoint", Value: cmd.Endpoint}}
+		if cmd.Mimic != "" {
+			meta = append(meta, conf.KV{Key: "mimic", Value: cmd.Mimic})
+		}
 		if len(cmd.DNS) > 0 {
 			meta = append(meta, conf.KV{Key: "dns", Value: joinAddrs(cmd.DNS, ",")})
 		}
