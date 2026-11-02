@@ -252,6 +252,17 @@ func TestCreateEnvironment(t *testing.T) {
 	}
 }
 
+// SPEC 2.2: без modinfo модуль не проверить — понятная ошибка с названием пакета kmod.
+func TestCreateNoModinfo(t *testing.T) {
+	e := newEnv(t)
+	os.RemoveAll(e.app.Paths.SysModule + "/wireguard")
+	e.fake.Missing = map[string]bool{"modinfo": true}
+	e.mustRun(errs.Env, createArgs("wg")...)
+	if !strings.Contains(e.stderr.String(), "kmod") {
+		t.Fatalf("stderr = %q; want a hint about the kmod package", e.stderr)
+	}
+}
+
 // SPEC 3.1: модуль ядра проверяется через genl и строку версии; заглушки — предупреждение.
 func TestCreateModuleChecks(t *testing.T) {
 	e := newEnv(t)
