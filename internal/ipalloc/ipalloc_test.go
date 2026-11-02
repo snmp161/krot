@@ -28,13 +28,15 @@ func TestAllocate(t *testing.T) {
 		{"v4 skip used", "10.8.0.1/24", pfx("10.8.0.2/32", "10.8.0.3/32"), "10.8.0.4"},
 		{"v4 hole", "10.8.0.1/24", pfx("10.8.0.2/32", "10.8.0.4/32"), "10.8.0.3"},
 		{"v4 locked clients count", "10.8.0.1/24", pfx("10.8.0.3/32", "10.8.0.2/32"), "10.8.0.4"},
-		{"v4 foreign wide AllowedIPs", "10.8.0.1/24", pfx("10.8.0.0/28"), "10.8.0.16"},
+		// Широкие AllowedIPs чужого peer'а — маршрут, а не адрес: адреса внутри него выдаются.
+		{"v4 foreign wide AllowedIPs", "10.8.0.1/24", pfx("10.8.0.0/28"), "10.8.0.2"},
 		{"v4 server in the middle", "10.8.0.10/24", nil, "10.8.0.1"},
 		{"v4 skip server", "10.8.0.10/24", pfx("10.8.0.1/32", "10.8.0.2/32", "10.8.0.3/32", "10.8.0.4/32",
 			"10.8.0.5/32", "10.8.0.6/32", "10.8.0.7/32", "10.8.0.8/32", "10.8.0.9/32"), "10.8.0.11"},
-		{"v4 covered by a default route peer", "10.8.0.1/24", pfx("0.0.0.0/0"), ""},
-		{"v4 full except broadcast", "10.8.0.1/24", pfx("10.8.0.0/25", "10.8.0.128/26", "10.8.0.192/27",
-			"10.8.0.224/28", "10.8.0.240/29", "10.8.0.248/30", "10.8.0.252/31", "10.8.0.254/32"), ""},
+		{"v4 covered by a default route peer", "10.8.0.1/24", pfx("0.0.0.0/0"), "10.8.0.2"},
+		// Подсеть заполнена одиночными адресами клиентов (широкие префиксы — не адреса).
+		{"v4 /29 exhausted", "10.8.0.1/29", pfx("10.8.0.2/32", "10.8.0.3/32", "10.8.0.4/32",
+			"10.8.0.5/32", "10.8.0.6/32"), ""},
 		{"v4 /30", "10.8.0.1/30", nil, "10.8.0.2"},
 		{"v4 /30 exhausted", "10.8.0.1/30", pfx("10.8.0.2/32"), ""},
 		// SPEC 6.5: в /31 (RFC 3021) и /127 (RFC 6164) оба адреса допустимы.
@@ -46,7 +48,8 @@ func TestAllocate(t *testing.T) {
 		{"v6 skip used", "fd00:8::1/64", pfx("fd00:8::2/128"), "fd00:8::3"},
 		{"v6 /126", "fd00:8::1/126", pfx("fd00:8::2/128"), "fd00:8::3"},
 		{"v6 /126 exhausted", "fd00:8::1/126", pfx("fd00:8::2/128", "fd00:8::3/128"), ""},
-		{"v6 jump over huge prefix", "fd00:8::1/64", pfx("fd00:8::/65"), "fd00:8:0:0:8000::"},
+		// Широкий маршрут (fd00:8::/65) не занимает адреса: выдаётся первый свободный.
+		{"v6 jump over huge prefix", "fd00:8::1/64", pfx("fd00:8::/65"), "fd00:8::2"},
 		{"v6 /127 server high", "fd00:8::1/127", nil, "fd00:8::"},
 		{"v6 /127 server low", "fd00:8::/127", nil, "fd00:8::1"},
 		{"v6 /127 exhausted", "fd00:8::1/127", pfx("fd00:8::/128"), ""},
@@ -93,9 +96,11 @@ func TestAllocateManyClients(t *testing.T) {
 }
 
 // SPEC 6.5 п.2: адрес, заданный вручную, должен быть в подсети интерфейса и свободен.
+// Занятыми считаются только одиночные адреса клиентов (/32, /128); широкие AllowedIPs
+// (подсети, маршруты по умолчанию) — это маршруты, а не занятые адреса.
 func TestCheck(t *testing.T) {
 	servers := pfx("10.8.0.1/24", "fd00:8::1/64")
-	used := pfx("10.8.0.2/32", "fd00:8::2/128", "10.8.0.64/26")
+	used := pfx("10.8.0.2/32", "fd00:8::2/128", "10.8.0.64/26", "10.8.0.80/32")
 	cases := []struct {
 		addr string
 		want error
@@ -110,8 +115,11 @@ func TestCheck(t *testing.T) {
 		{"fd00:8::", ErrReserved},
 		{"fd00:8::1", ErrReserved},
 		{"10.8.0.2", ErrInUse},
-		{"10.8.0.70", ErrInUse},
+		{"10.8.0.80", ErrInUse},
 		{"fd00:8::2", ErrInUse},
+		// Адреса внутри широкого маршрута 10.8.0.64/26 доступны.
+		{"10.8.0.70", nil},
+		{"10.8.0.64", nil},
 	}
 	for _, c := range cases {
 		err := Check(netip.MustParseAddr(c.addr), servers, used)
@@ -145,6 +153,29 @@ func TestIsNetworkOrBroadcast(t *testing.T) {
 		if got := IsNetworkOrBroadcast(netip.MustParsePrefix(s)); got != want {
 			t.Errorf("IsNetworkOrBroadcast(%s) = %v; want %v", s, got, want)
 		}
+	}
+}
+
+// SPEC 6.5: широкие AllowedIPs peer'а (подсети, маршруты по умолчанию) — это маршруты,
+// а не адреса клиентов. Занятыми считаются только одиночные адреса (/32, /128):
+// адреса внутри широкого маршрута остаются доступны для выдачи (longest-prefix match
+// в WireGuard отдаст трафик клиенту с более специфичным /32).
+func TestWideRoutesDoNotReserveAddresses(t *testing.T) {
+	server := netip.MustParsePrefix("10.8.0.1/24")
+	routes := pfx("10.8.0.0/16", "0.0.0.0/0", "10.8.0.128/25", "fd00:8::/64")
+	got, err := Allocate(server, routes)
+	if err != nil || got != netip.MustParseAddr("10.8.0.2") {
+		t.Fatalf("Allocate with wide routes: got %v, %v", got, err)
+	}
+	for _, a := range []string{"10.8.0.2", "10.8.0.200", "fd00:8::5"} {
+		if err := Check(netip.MustParseAddr(a), pfx("10.8.0.1/24", "fd00:8::1/64"), routes); err != nil {
+			t.Errorf("Check(%s) = %v; want nil", a, err)
+		}
+	}
+	// Одиночный адрес внутри бывшего широкого маршрута занят.
+	used := append(routes, netip.MustParsePrefix("10.8.0.200/32"))
+	if err := Check(netip.MustParseAddr("10.8.0.200"), pfx("10.8.0.1/24"), used); !errors.Is(err, ErrInUse) {
+		t.Errorf("Check(10.8.0.200) with host prefix = %v; want ErrInUse", err)
 	}
 }
 

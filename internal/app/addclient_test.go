@@ -478,8 +478,43 @@ func TestAddClientPointToPoint(t *testing.T) {
 	e.write(path, p2p)
 	e.fake.On("wg show interfaces", "")
 	e.mustRun(errs.Conflict, "--add-client", "--interface", "wg0", "--id", "m", "--allowed-ips", "0.0.0.0/0", "--ip", "10.9.0.0/32")
-	e.mustRun(0, "--add-client", "--interface", "wg0", "--id", "m", "--allowed-ips", "0.0.0.0/0", "--ip", "10.9.0.1/32,fd00:9::/128")
+	e.mustRun(0, "--add-client", "--interface", "wg0", "--id", "m", "--allowed-ips", "10.9.0.0/24", "--ip", "10.9.0.1/32,fd00:9::/128")
 	if p, ok := conf.Parse([]byte(e.read(path))).PeerByID("m"); !ok || !slices.Equal(p.AllowedIPs(), []string{"10.9.0.1/32", "fd00:9::/128"}) {
 		t.Fatalf("peer m: %v %v", p, ok)
 	}
+}
+
+// SPEC 6.5: peer со широкими AllowedIPs (site-to-site, чужой конфиг) не блокирует выдачу
+// адресов клиентам: широкие префиксы — маршруты, а не занятые адреса. Адрес внутри такого
+// маршрута доступен и при автоматической, и при ручной выдаче.
+func TestAddClientWidePeerRoutes(t *testing.T) {
+	server := `# krot:type=awg2
+# krot:endpoint=vpn.example.com
+[Interface]
+PrivateKey = 8PmO8wRo4aJLy+bo7GiQC3n1mSPkbnDAH/sWWs85NW8=
+Address = 10.8.0.1/24, fd00:8::1/64
+ListenPort = 51820
+
+[Peer]
+PublicKey = 9MzuHlmhRvZCWO2jCp/sKB2SzR32zHPCqqxYSgfOpn4=
+AllowedIPs = 10.8.0.0/16, fd00:8::/64, 0.0.0.0/0
+`
+	e := newEnv(t)
+	path := e.awgConf("awg0")
+	e.write(path, server)
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "road", "--allowed-ips", "0.0.0.0/0")
+	cifc, _ := clientConfig(t, e.stdout.String()).Interface()
+	if got := cifc.List("Address"); !slices.Equal(got, []string{"10.8.0.2/32", "fd00:8::2/128"}) {
+		t.Fatalf("client Address = %q; want [10.8.0.2/32 fd00:8::2/128]", got)
+	}
+
+	// Ручной адрес внутри широких маршрутов — тоже доступен.
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "road2", "--allowed-ips", "0.0.0.0/0", "--ip", "10.8.0.70/32")
+	cifc, _ = clientConfig(t, e.stdout.String()).Interface()
+	if got := cifc.List("Address"); !slices.Equal(got, []string{"10.8.0.70/32"}) {
+		t.Fatalf("client Address = %q; want [10.8.0.70/32]", got)
+	}
+	// Одиночный адрес другого клиента занят, несмотря на широкие маршруты.
+	e.mustRun(errs.Conflict, "--add-client", "--interface", "awg0", "--id", "road3", "--allowed-ips", "0.0.0.0/0", "--ip", "10.8.0.70/32")
+	assertOnlyPeerOps(t, e, "awg", "awg0")
 }
