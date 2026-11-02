@@ -1,0 +1,12 @@
+# Dependabot: обновления Go-модулей и GitHub Actions (AGENTS.md: новые зависимости
+# согласовываются с владельцем — PR dependabot это и делает).
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
