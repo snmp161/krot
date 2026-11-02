@@ -17,7 +17,7 @@ var actions = []Action{
 }
 
 var params = []string{
-	"type", "interface", "ip", "port", "endpoint", "mtu", "dns", "i1",
+	"type", "interface", "ip", "port", "endpoint", "mtu", "dns", "i1", "mimic",
 	"id", "allowed-ips", "psk", "qr", "amnezia-key", "json", "yes",
 }
 
@@ -33,6 +33,7 @@ var specMatrix = map[string]map[Action]string{
 	"mtu":         {ActCreate: "н"},
 	"dns":         {ActCreate: "н", ActAddClient: "н"},
 	"i1":          {ActCreate: "н"},
+	"mimic":       {ActCreate: "н", ActAddClient: "н"},
 	"id":          {ActAddClient: "О", ActDeleteClient: "О", ActLockClient: "О", ActUnlockClient: "О", ActListClient: "н"},
 	"allowed-ips": {ActAddClient: "О"},
 	"psk":         {ActAddClient: "н"},
@@ -67,6 +68,8 @@ func validValue(p string, a Action) string {
 		return "1.1.1.1"
 	case "i1":
 		return "<b 0xf6ab3267fa><r 16>"
+	case "mimic":
+		return "stun"
 	case "id":
 		return "phone"
 	case "allowed-ips":
@@ -426,6 +429,40 @@ func TestI1Syntax(t *testing.T) {
 	for _, v := range []string{"<x>", "<b 0xabc>", "<r 1001>", "text", "<b 0x00"} {
 		if got := code(parseErr(append(base, "--i1", v))); got != errs.Invalid {
 			t.Errorf("--i1 %q: code %d; want 3", v, got)
+		}
+	}
+}
+
+// SPEC 4.3, 4.4, 6.12: --mimic — профили мимикрии для create/add-client.
+func TestMimicFlag(t *testing.T) {
+	create := []string{"--create", "--type", "awg", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h.example"}
+
+	// Разбор: create и add-client, значение сохраняется.
+	c, err := Parse(append(create, "--mimic", "dns"))
+	if err != nil || c.Mimic != "dns" || !c.Has("mimic") {
+		t.Fatalf("create --mimic dns: c=%+v err=%v", c, err)
+	}
+	c, err = Parse([]string{"--add-client", "--interface", "awg0", "--id", "phone", "--allowed-ips", "0.0.0.0/0", "--mimic=stun"})
+	if err != nil || c.Mimic != "stun" {
+		t.Fatalf("add-client --mimic=stun: c=%+v err=%v", c, err)
+	}
+
+	// Только awg* → код 2.
+	if got := code(parseErr(append([]string{"--create", "--type", "wg", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h"}, "--mimic", "dns"))); got != errs.Usage {
+		t.Fatalf("--type wg --mimic: code %d; want 2", got)
+	}
+	// Несовместим с --i1 (SPEC 6.12) → код 2.
+	if got := code(parseErr(append(create, "--mimic", "dns", "--i1", "<r 4>"))); got != errs.Usage {
+		t.Fatalf("--mimic + --i1: code %d; want 2", got)
+	}
+	// Недопустим для прочих действий → код 2.
+	if got := code(parseErr([]string{"--list", "--mimic", "dns"})); got != errs.Usage {
+		t.Fatalf("--list --mimic: code %d; want 2", got)
+	}
+	// Неизвестный профиль → код 3.
+	for _, p := range []string{"quic", "bogus", ""} {
+		if got := code(parseErr(append(create, "--mimic", p))); got != errs.Invalid {
+			t.Fatalf("--mimic %q: code %d; want 3", p, got)
 		}
 	}
 }
