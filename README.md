@@ -109,6 +109,15 @@ sudo krot --delete --interface awg0      # спросит подтвержден
 sudo krot --delete --interface awg0 --yes
 ```
 
+### Диагностика
+
+```sh
+krot --doctor   # работает и без root: утилиты, модули ядра, версии AmneziaWG, каталоги
+```
+
+Вывод — таблица `CHECK/STATUS/DETAIL` со статусами `ok` / `warn` / `fail`. Код выхода
+`0`, если нет ни одного `fail`, иначе `6`. Ничего не меняет, блокировку не берёт.
+
 Пример `--list`:
 
 ```
