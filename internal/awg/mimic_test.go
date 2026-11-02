@@ -119,7 +119,9 @@ func instantiate(t *testing.T, cps string, seed uint64) []byte {
 		case "r":
 			n := atoiOrDie(t, parts[1])
 			buf := make([]byte, n)
-			rng.Read(buf)
+			for i := range buf {
+				buf[i] = byte(rng.Uint64())
+			}
 			out = append(out, buf...)
 		case "rc":
 			const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -287,8 +289,9 @@ func TestMimicSTUN(t *testing.T) {
 	if cookie := binary.BigEndian.Uint32(pkt[4:8]); cookie != 0x2112A442 {
 		t.Fatalf("magic cookie = %#x; want 0x2112A442", cookie)
 	}
-	var seen map[uint16]bool = map[uint16]bool{}
-	for off := 20; off+4 <= len(pkt); {
+	seen := map[uint16]bool{}
+	off := 20
+	for off+4 <= len(pkt) {
 		at := binary.BigEndian.Uint16(pkt[off : off+2])
 		al := int(binary.BigEndian.Uint16(pkt[off+2 : off+4]))
 		seen[at] = true
@@ -411,8 +414,8 @@ func TestMimicDTLS(t *testing.T) {
 		t.Fatalf("handshake type = %#x; want 1 (ClientHello)", hs[0])
 	}
 	bodyLen := int(hs[1])<<16 | int(hs[2])<<8 | int(hs[3])
-	if bodyLen+25 != len(hs) {
-		t.Fatalf("handshake length = %d; want %d", bodyLen, len(hs)-25)
+	if bodyLen+12 != len(hs) {
+		t.Fatalf("handshake length = %d; want %d", bodyLen, len(hs)-12)
 	}
 	if binary.BigEndian.Uint16(hs[4:6]) != 0 || hs[6] != 0 || hs[7] != 0 || hs[8] != 0 {
 		t.Fatalf("message_seq/frag_offset must be 0: % x", hs[4:9])
