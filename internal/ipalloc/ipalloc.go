@@ -56,11 +56,16 @@ func reserved(server netip.Prefix) []netip.Prefix {
 }
 
 // Allocate возвращает первый свободный адрес подсети сервера server (например, 10.8.0.1/24).
-// used — занятые префиксы: адреса сервера и AllowedIPs всех peer'ов (включая заблокированных и чужих).
+// used — занятые адреса: host-префиксы (/32, /128) адреса сервера и AllowedIPs всех peer'ов
+// (включая заблокированных и чужих). Широкие префиксы (подсети, 0.0.0.0/0) — маршруты,
+// а не адреса клиентов: они не занимают адреса (SPEC 6.5).
 func Allocate(server netip.Prefix, used []netip.Prefix) (netip.Addr, error) {
 	network := server.Masked()
 	var busy []netip.Prefix
 	for _, p := range append(reserved(server), used...) {
+		if !p.IsSingleIP() { // маршрут, а не адрес
+			continue
+		}
 		if p.Addr().Is4() == network.Addr().Is4() && p.Overlaps(network) {
 			busy = append(busy, p.Masked())
 		}
@@ -89,7 +94,8 @@ func Allocate(server netip.Prefix, used []netip.Prefix) (netip.Addr, error) {
 }
 
 // Check проверяет адрес клиента, заданный вручную: он должен лежать в подсети одного из адресов
-// сервера своего семейства, не быть зарезервированным и не пересекаться с занятыми.
+// сервера своего семейства, не быть зарезервированным и не совпадать с занятым адресом
+// (host-префиксом /32, /128; широкие маршруты игнорируются — см. Allocate).
 func Check(addr netip.Addr, servers []netip.Prefix, used []netip.Prefix) error {
 	for _, s := range servers {
 		if s.Addr().Is4() != addr.Is4() || !s.Masked().Contains(addr) {
@@ -101,7 +107,7 @@ func Check(addr netip.Addr, servers []netip.Prefix, used []netip.Prefix) error {
 			}
 		}
 		for _, u := range used {
-			if u.Contains(addr) {
+			if u.IsSingleIP() && u.Contains(addr) {
 				return ErrInUse
 			}
 		}
