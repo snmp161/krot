@@ -455,6 +455,22 @@ func TestAddClientDNS(t *testing.T) {
 	}
 }
 
+// SPEC 6.5: ListenPort чужого конфига должен быть целым 1..65535, иначе код 3 до изменений.
+func TestAddClientInvalidListenPort(t *testing.T) {
+	for _, port := range []string{"-1", "0", "70000", "abc"} {
+		e := newEnv(t)
+		cfg := strings.Replace(fixture(t, "foreign_wg.conf"), "ListenPort = 51821", "ListenPort = "+port, 1)
+		e.write(e.wgConf("office"), cfg)
+		e.mustRun(errs.Invalid, "--add-client", "--interface", "office", "--id", "x", "--allowed-ips", "0.0.0.0/0", "--endpoint", "198.51.100.7")
+		if !strings.Contains(e.stderr.String(), "ListenPort") {
+			t.Fatalf("port %q: stderr = %q", port, e.stderr)
+		}
+		if len(conf.Parse([]byte(e.read(e.wgConf("office")))).Peers()) != 2 {
+			t.Fatalf("port %q: config changed", port)
+		}
+	}
+}
+
 // SPEC 6.5: в /31 и /127 клиент получает второй адрес подсети; второго клиента добавить некуда (5).
 func TestAddClientPointToPoint(t *testing.T) {
 	p2p := strings.Replace(fixture(t, "wg0_empty.conf"), "Address = 10.9.0.1/24\n", "Address = 10.9.0.0/31, fd00:9::1/127\n", 1)
