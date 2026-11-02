@@ -107,8 +107,19 @@ func (a *App) addClient(cmd *cli.Command) error {
 
 		// Блок команд CLI Keenetic: всё проверяется до изменений (SPEC 6.13).
 		if cmd.Keenetic {
+			var asc *keenetic.ASC
 			if t.amnezia {
-				return errs.Invalidf("--keenetic is only available for WireGuard (wg) tunnels: %s is AmneziaWG", t.name)
+				// KeeneticOS поддерживает ASC AmneziaWG 1.0/1.5/2.0 (4.2+/5.1+),
+				// но не защиту заголовка 3.1 (SPEC 6.13).
+				if ifc.Get("HeaderProtectionKey") != "" || ifc.Get("RandomTrailers") != "" || ifc.Get("DisableCookies") != "" {
+					return errs.Invalidf("--keenetic: KeeneticOS does not support AmneziaWG 3.1 (header protection) of interface %s", t.name)
+				}
+				asc = &keenetic.ASC{
+					Jc: ifc.Get("Jc"), Jmin: ifc.Get("Jmin"), Jmax: ifc.Get("Jmax"),
+					S1: ifc.Get("S1"), S2: ifc.Get("S2"), S3: ifc.Get("S3"), S4: ifc.Get("S4"),
+					H1: ifc.Get("H1"), H2: ifc.Get("H2"), H3: ifc.Get("H3"), H4: ifc.Get("H4"),
+					I1: ifc.Get("I1"), I2: ifc.Get("I2"), I3: ifc.Get("I3"), I4: ifc.Get("I4"), I5: ifc.Get("I5"),
+				}
 			}
 			var v4 netip.Addr
 			for _, p := range addrs {
@@ -130,6 +141,12 @@ func (a *App) addClient(cmd *cli.Command) error {
 			if strings.HasPrefix(endpoint, "[") {
 				return errs.Invalidf("--keenetic supports IPv4 endpoints only: %s is IPv6", endpoint)
 			}
+			note := ""
+			if chain != nil {
+				// Цепочка мимикрии (6.12) живёт только в клиентском конфиге —
+				// в asc блоке I1–I5 будут 0.
+				note = "mimicry chain I1-I5 is only in the client config above; import it via the Keenetic web UI or set the I-values manually"
+			}
 			mtu, _ := strconv.Atoi(ifc.Get("MTU"))
 			block, kerr := keenetic.Commands(keenetic.Params{
 				Name:       "krot " + t.name + ": " + cmd.ID,
@@ -143,6 +160,8 @@ func (a *App) addClient(cmd *cli.Command) error {
 				PSK:        psk,
 				AllowedIPs: allowed4,
 				Keepalive:  keepalive,
+				ASC:        asc,
+				Note:       note,
 			})
 			if kerr != nil {
 				return errs.Invalidf("invalid --keenetic: %v", kerr)
