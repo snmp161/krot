@@ -259,3 +259,65 @@ func TestParallelAddClient(t *testing.T) {
 		t.Fatalf("live peers = %d; want 10", len(peers))
 	}
 }
+
+// SPEC 6.12, 7.6, 8.3: туннель awg с профилем мимикрии. Серверный конфиг хранит
+// только метаданные krot:mimic, клиентские конфиги получают сгенерированную
+// цепочку I1–Ik, трафик через туннель ходит — awg 1.5+ принимает сигнатуры.
+func TestMimicry(t *testing.T) {
+	tu := newTunnel(t, "awg", 4)
+	tu.create(t, tu.serverIP()+"/24", "--mimic", "dns")
+
+	server, err := os.ReadFile(tu.conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(server), "\nI1 ") {
+		t.Fatal("server config must not contain I1 (SPEC 6.12)")
+	}
+	if !strings.Contains(string(server), "krot:mimic=dns") {
+		t.Fatalf("server config lacks krot:mimic=dns:\n%s", server)
+	}
+
+	// Профиль по умолчанию: dns — цепочка из трёх пакетов.
+	cfgA := tu.addClient(t, "a")
+	for _, k := range []string{"I1", "I2", "I3"} {
+		if !strings.Contains(cfgA, "\n"+k+" = ") {
+			t.Fatalf("client config lacks %s (dns chain, SPEC 7.6):\n%s", k, cfgA)
+		}
+	}
+	if strings.Contains(cfgA, "\nI4 = ") {
+		t.Fatalf("dns chain is 3 packets; I4 must be absent:\n%s", cfgA)
+	}
+
+	// Переопределение: stun — один пакет, отличный от профиля по умолчанию.
+	cfgB := tu.addClient(t, "b", "--mimic", "stun")
+	if !strings.Contains(cfgB, "\nI1 = ") || strings.Contains(cfgB, "\nI2 = ") {
+		t.Fatalf("stun chain is 1 packet:\n%s", cfgB)
+	}
+	i1a := between(cfgA, "\nI1 = ", "\n")
+	i1b := between(cfgB, "\nI1 = ", "\n")
+	if i1a == "" || i1a == i1b {
+		t.Fatal("clients must get different chains (SPEC 6.12)")
+	}
+
+	tu.clientUp(t, cfgA)
+	waitPing(t, tu.serverIP(), 20*time.Second)
+
+	mustKrot(t, "--delete-client", "--interface", tu.name, "--id", "b")
+	mustKrot(t, "--delete-client", "--interface", tu.name, "--id", "a")
+	mustKrot(t, "--delete", "--interface", tu.name, "--yes")
+}
+
+// between возвращает подстроку между первым вхождением a (после него) и b.
+func between(s, a, b string) string {
+	i := strings.Index(s, a)
+	if i < 0 {
+		return ""
+	}
+	s = s[i+len(a):]
+	j := strings.Index(s, b)
+	if j < 0 {
+		return ""
+	}
+	return s[:j]
+}
