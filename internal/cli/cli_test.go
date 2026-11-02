@@ -18,10 +18,10 @@ var actions = []Action{
 
 var params = []string{
 	"type", "interface", "ip", "port", "endpoint", "mtu", "dns", "i1", "mimic",
-	"id", "allowed-ips", "psk", "qr", "amnezia-key", "json", "yes",
+	"id", "allowed-ips", "psk", "qr", "amnezia-key", "keenetic", "json", "yes",
 }
 
-var boolParams = map[string]bool{"psk": true, "qr": true, "amnezia-key": true, "json": true, "yes": true}
+var boolParams = map[string]bool{"psk": true, "qr": true, "amnezia-key": true, "keenetic": true, "json": true, "yes": true}
 
 // SPEC 4.3: матрица параметров. О — обязателен, н — необязателен, — — недопустим.
 var specMatrix = map[string]map[Action]string{
@@ -39,6 +39,7 @@ var specMatrix = map[string]map[Action]string{
 	"psk":         {ActAddClient: "н"},
 	"qr":          {ActAddClient: "н"},
 	"amnezia-key": {ActAddClient: "н"},
+	"keenetic":    {ActAddClient: "н"},
 	"json":        {ActList: "н", ActListClient: "н"},
 	"yes":         {ActDelete: "н"},
 }
@@ -464,5 +465,20 @@ func TestMimicFlag(t *testing.T) {
 		if got := code(parseErr(append(create, "--mimic", p))); got != errs.Invalid {
 			t.Fatalf("--mimic %q: code %d; want 3", p, got)
 		}
+	}
+}
+
+// SPEC 4.3: --keenetic — флаг дополнительного вывода для --add-client.
+func TestKeeneticFlag(t *testing.T) {
+	c, err := Parse([]string{"--add-client", "--interface", "wg0", "--id", "phone", "--allowed-ips", "0.0.0.0/0", "--keenetic"})
+	if err != nil || !c.Keenetic {
+		t.Fatalf("add-client --keenetic: c=%+v err=%v", c, err)
+	}
+	c, err = Parse([]string{"--add-client", "--interface", "wg0", "--id", "phone", "--allowed-ips", "0.0.0.0/0"})
+	if err != nil || c.Keenetic {
+		t.Fatalf("without --keenetic: c=%+v err=%v", c, err)
+	}
+	if got := code(parseErr([]string{"--create", "--type", "wg", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h", "--keenetic"})); got != errs.Usage {
+		t.Fatalf("create --keenetic: code %d; want 2", got)
 	}
 }
