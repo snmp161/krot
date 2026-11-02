@@ -143,6 +143,9 @@ sudo krot --add-client --interface awg0 --id laptop --allowed-ips 0.0.0.0/0 --ps
 # дополнительно ключ для приложения AmneziaVPN: строка vpn://… после конфига
 sudo krot --add-client --interface awg0 --id tablet --allowed-ips 0.0.0.0/0,::/0 --amnezia-key
 
+# команды CLI KeeneticOS: подключить роутер Keenetic клиентом (только wg, только IPv4)
+sudo krot --add-client --interface wg0 --id keenetic --allowed-ips 0.0.0.0/0 --keenetic
+
 # конкретный адрес клиента
 sudo krot --add-client --interface awg0 --id router --allowed-ips 10.8.0.0/24 --ip 10.8.0.50/32
 
@@ -173,6 +176,12 @@ DNS клиента: `--dns`, если задан; иначе `# krot:dns` инт
 тот же клиентский конфиг: `vpn://` + base64url без `=` от `qCompress` из Qt (4 байта длины
 big-endian + zlib). Ключ работает для всех типов, включая `wg`. QR-код при `--qr` содержит текст
 конфига — его сканируют AmneziaVPN и AmneziaWG, а для типа `wg` — и WireGuard.
+
+`--keenetic` печатает после конфига блок команд CLI KeeneticOS — подключение роутера Keenetic
+клиентом туннеля `wg`. Блок повторяет синтаксис running-config KeeneticOS 4.x и вставляется
+в CLI роутера (SSH/telnet или «Интерфейс командной строки» в веб-интерфейсе) как есть. Только
+`wg` (KeeneticOS не поддерживает AmneziaWG) и только IPv4; при несовпадении MTU туннеля с
+дефолтом 1420 выводится примечание. Формат — в разделе 6.13 ТЗ.
 
 Пример `--list-client`:
 
