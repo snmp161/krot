@@ -15,6 +15,7 @@ import (
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/ipalloc"
+	"github.com/snmp161/krot/internal/keenetic"
 	"github.com/snmp161/krot/internal/keys"
 	"github.com/snmp161/krot/internal/qr"
 )
@@ -29,6 +30,7 @@ var iKeys = []string{"I1", "I2", "I3", "I4", "I5"}
 // SPEC 6.5: --add-client.
 func (a *App) addClient(cmd *cli.Command) error {
 	var clientText string
+	var kgBlock string
 	err := a.withLock(func() error {
 		t, err := a.findTunnel(cmd.Interface)
 		if err != nil {
@@ -103,6 +105,51 @@ func (a *App) addClient(cmd *cli.Command) error {
 			}
 		}
 
+		// Блок команд CLI Keenetic: всё проверяется до изменений (SPEC 6.13).
+		if cmd.Keenetic {
+			if t.amnezia {
+				return errs.Invalidf("--keenetic is only available for WireGuard (wg) tunnels: %s is AmneziaWG", t.name)
+			}
+			var v4 netip.Addr
+			for _, p := range addrs {
+				if p.Addr().Is4() {
+					v4 = p.Addr()
+					break
+				}
+			}
+			if !v4.IsValid() {
+				return errs.Invalidf("--keenetic requires an IPv4 client address: %s has none", t.name)
+			}
+			var allowed4 []netip.Prefix
+			for _, p := range cmd.AllowedIPs {
+				if !p.Addr().Is4() {
+					return errs.Invalidf("--keenetic supports IPv4 only: %s is IPv6", p)
+				}
+				allowed4 = append(allowed4, p)
+			}
+			if strings.HasPrefix(endpoint, "[") {
+				return errs.Invalidf("--keenetic supports IPv4 endpoints only: %s is IPv6", endpoint)
+			}
+			mtu, _ := strconv.Atoi(ifc.Get("MTU"))
+			block, kerr := keenetic.Commands(keenetic.Params{
+				Name:       "krot " + t.name + ": " + cmd.ID,
+				IfName:     "Wireguard0",
+				Iface:      t.name,
+				PrivateKey: priv.String(),
+				Address:    v4,
+				MTU:        mtu,
+				PublicKey:  serverPub.String(),
+				Endpoint:   endpoint,
+				PSK:        psk,
+				AllowedIPs: allowed4,
+				Keepalive:  keepalive,
+			})
+			if kerr != nil {
+				return errs.Invalidf("invalid --keenetic: %v", kerr)
+			}
+			kgBlock = block
+		}
+
 		// Запись peer'а в конфиг.
 		orig := t.conf.Bytes()
 		addrStrs := prefixStrings(addrs)
@@ -139,6 +186,9 @@ func (a *App) addClient(cmd *cli.Command) error {
 			return errs.Invalidf("config too large for QR (client %s was added, use the text config above)", cmd.ID)
 		}
 		a.printf("\n%s", code)
+	}
+	if kgBlock != "" {
+		a.printf("\n%s\n", kgBlock)
 	}
 	return nil
 }

@@ -23,7 +23,7 @@ func TestAddClientKeenetic(t *testing.T) {
 		"preshared-key ",
 		"keepalive-interval 25",
 		"allow-ips 0.0.0.0 0.0.0.0",
-		"\nup",
+		"\n up",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("keenetic output lacks %q:\n%s", want, out)
