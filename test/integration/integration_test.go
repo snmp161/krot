@@ -321,3 +321,34 @@ func between(s, a, b string) string {
 	}
 	return s[:j]
 }
+
+// SPEC 6.13, 8.3: --keenetic на wg-туннеле выводит блок команд CLI KeeneticOS;
+// для AmneziaWG-клиентов не применим (код 3) — KeeneticOS не знает обфускацию.
+func TestKeenetic(t *testing.T) {
+	tu := newTunnel(t, "wg", 5)
+	tu.create(t, tu.serverIP()+"/24")
+	out := tu.addClient(t, "a", "--keenetic", "--psk")
+	for _, want := range []string{
+		"interface Wireguard0",
+		"description \"krot " + tu.name + ": a\"",
+		"wireguard private-key ",
+		"wireguard peer ",
+		"endpoint " + srvAddr + ":" + strconv.Itoa(tu.port),
+		"preshared-key ",
+		"keepalive-interval 25",
+		"allow-ips " + tu.subnet + ".0 255.255.255.0",
+		"\n up",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("keenetic output lacks %q:\n%s", want, out)
+		}
+	}
+
+	awg := newTunnel(t, "awg", 6)
+	awg.create(t, awg.serverIP()+"/24")
+	if _, _, code := krot("--add-client", "--interface", awg.name, "--id", "k", "--allowed-ips", "0.0.0.0/0", "--keenetic"); code != 3 {
+		t.Fatalf("awg --keenetic: exit %d; want 3", code)
+	}
+	mustKrot(t, "--delete", "--interface", awg.name, "--yes")
+	mustKrot(t, "--delete", "--interface", tu.name, "--yes")
+}
