@@ -45,6 +45,8 @@ Flags (--flag value or --flag=value):
   --psk                     generate a PresharedKey for the client
   --qr                      also print the client config as a QR code
   --amnezia-key             also print the client config as an AmneziaVPN key (vpn://...)
+  --keenetic                also print KeeneticOS CLI commands for a Keenetic router
+                            (wg tunnels, IPv4 only)
   --json                    JSON output instead of a table (list, list-client)
   --yes                     do not ask for confirmation (delete)
 
@@ -54,7 +56,7 @@ Flags per action:
   --delete         --interface [--yes]
   --up, --down     --interface
   --add-client     --interface --id --allowed-ips [--ip] [--endpoint] [--psk] [--qr]
-                   [--dns] [--amnezia-key] [--mimic]
+                   [--dns] [--amnezia-key] [--mimic] [--keenetic]
   --delete-client  --interface --id
   --lock-client    --interface --id
   --unlock-client  --interface --id

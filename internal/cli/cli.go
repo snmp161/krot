@@ -74,6 +74,7 @@ var paramTable = []param{
 	{"psk", true, map[Action]need{ActAddClient: opt}},
 	{"qr", true, map[Action]need{ActAddClient: opt}},
 	{"amnezia-key", true, map[Action]need{ActAddClient: opt}},
+	{"keenetic", true, map[Action]need{ActAddClient: opt}},
 	{"json", true, map[Action]need{ActList: opt, ActListClient: opt}},
 	{"yes", true, map[Action]need{ActDelete: opt}},
 }
@@ -98,6 +99,7 @@ type Command struct {
 	PSK        bool
 	QR         bool
 	AmneziaKey bool
+	Keenetic   bool
 	JSON       bool
 	Yes        bool
 
@@ -320,7 +322,7 @@ func (c *Command) fill(v map[string]string) error {
 			c.AllowedIPs = append(c.AllowedIPs, p)
 		}
 	}
-	c.PSK, c.QR, c.AmneziaKey, c.JSON, c.Yes = c.Has("psk"), c.Has("qr"), c.Has("amnezia-key"), c.Has("json"), c.Has("yes")
+	c.PSK, c.QR, c.AmneziaKey, c.Keenetic, c.JSON, c.Yes = c.Has("psk"), c.Has("qr"), c.Has("amnezia-key"), c.Has("keenetic"), c.Has("json"), c.Has("yes")
 	return nil
 }
 
