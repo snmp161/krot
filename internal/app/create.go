@@ -100,9 +100,18 @@ func (a *App) create(cmd *cli.Command) error {
 		// 6. Запуск; при ошибке — возврат системы в исходное состояние.
 		unit := unitName(amnezia, name)
 		if _, err := a.Exec.Run("systemctl", "enable", "--now", unit); err != nil {
-			a.Exec.Run("systemctl", "disable", "--now", unit)
-			os.Remove(path)
-			return fmt.Errorf("failed to start %s, changes rolled back: %w", unit, err)
+			var rb []string
+			if _, derr := a.Exec.Run("systemctl", "disable", "--now", unit); derr != nil {
+				rb = append(rb, fmt.Sprintf("failed to disable %s: %v", unit, derr))
+			}
+			if rerr := os.Remove(path); rerr != nil {
+				rb = append(rb, fmt.Sprintf("failed to remove %s: %v", path, rerr))
+			}
+			suffix := ""
+			if len(rb) > 0 {
+				suffix = "; rollback incomplete: " + strings.Join(rb, "; ")
+			}
+			return fmt.Errorf("failed to start %s, changes rolled back: %w%s", unit, err, suffix)
 		}
 
 		// 7. Сводка.
