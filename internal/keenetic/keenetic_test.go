@@ -80,7 +80,7 @@ func TestCommandsAllowIPs(t *testing.T) {
 	}
 	at := 0
 	for _, line := range strings.Split(got, "\n") {
-		if line == lines[at] {
+		if strings.TrimSpace(line) == lines[at] {
 			at++
 			if at == len(lines) {
 				break
