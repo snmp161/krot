@@ -100,7 +100,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod
       - name: cache AmneziaWG build
         id: awg-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: awg-out
           key: awg-${{ runner.os }}-${{ env.AWG_TOOLS_TAG }}-${{ env.AWG_GO_TAG }}
