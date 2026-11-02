@@ -46,7 +46,7 @@ Flags (--flag value or --flag=value):
   --qr                      also print the client config as a QR code
   --amnezia-key             also print the client config as an AmneziaVPN key (vpn://...)
   --keenetic                also print KeeneticOS CLI commands for a Keenetic router
-                            (wg tunnels, IPv4 only)
+                            (wg and awg 1.0/1.5/2.0 tunnels, IPv4 only)
   --json                    JSON output instead of a table (list, list-client)
   --yes                     do not ask for confirmation (delete)
 
