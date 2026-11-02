@@ -148,3 +148,72 @@ func TestCommandsNames(t *testing.T) {
 		}
 	}
 }
+
+// asc10 — параметры AWG 1.0 (девять чисел).
+func asc10() *ASC {
+	return &ASC{Jc: "4", Jmin: "64", Jmax: "128", S1: "15", S2: "30", H1: "111", H2: "222", H3: "333", H4: "444"}
+}
+
+// SPEC 6.13: AWG 1.0 — wireguard asc с девятью параметрами, без требования 5.1.
+func TestCommandsASC10(t *testing.T) {
+	p := testParams()
+	p.ASC = asc10()
+	got, err := Commands(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "wireguard asc 4 64 128 15 30 111 222 333 444") {
+		t.Fatalf("9-param asc missing:\n%s", got)
+	}
+	if strings.Contains(got, "5.1") {
+		t.Fatalf("AWG 1.0 must not require KeeneticOS 5.1:\n%s", got)
+	}
+}
+
+// SPEC 6.13: AWG 2.0 — расширенная форма (7 позиционных, пропуски — 0),
+// требование KeeneticOS 5.1+, CPS-строки в кавычках.
+func TestCommandsASC20(t *testing.T) {
+	p := testParams()
+	p.ASC = asc10()
+	p.ASC.S3, p.ASC.S4 = "7", "8"
+	p.ASC.I1 = "<b 0xdead><r 4>"
+	got, err := Commands(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `wireguard asc 4 64 128 15 30 111 222 333 444 7 8 "<b 0xdead><r 4>" 0 0 0 0`
+	if !strings.Contains(got, want) {
+		t.Fatalf("extended asc missing:\nwant %s\ngot:\n%s", want, got)
+	}
+	if !strings.Contains(got, "KeeneticOS 5.1+") {
+		t.Fatalf("5.1 requirement note missing:\n%s", got)
+	}
+}
+
+// SPEC 6.13: H-диапазоны AWG 2.0 передаются как есть.
+func TestCommandsASCRanges(t *testing.T) {
+	p := testParams()
+	p.ASC = asc10()
+	p.ASC.H1 = "1638400-1687551"
+	p.ASC.S3 = "42"
+	got, err := Commands(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "wireguard asc 4 64 128 15 30 1638400-1687551 222 333 444 42 0 0 0 0 0 0") {
+		t.Fatalf("ranges not passed as-is:\n%s", got)
+	}
+}
+
+// SPEC 6.13: заметка вызывающего кода попадает в блок комментарием.
+func TestCommandsNote(t *testing.T) {
+	p := testParams()
+	p.Note = "mimicry chain is only in the client config"
+	got, err := Commands(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "! NB: mimicry chain is only in the client config") {
+		t.Fatalf("note missing:\n%s", got)
+	}
+}

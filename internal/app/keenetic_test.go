@@ -3,6 +3,8 @@ package app
 import (
 	"strings"
 	"testing"
+
+	"github.com/snmp161/krot/internal/conf"
 )
 
 // SPEC 6.13: --add-client --keenetic печатает блок команд CLI KeeneticOS после конфига.
@@ -63,12 +65,53 @@ func betweenStr(s, a, b string) string {
 	return s[:j]
 }
 
-// SPEC 6.13: --keenetic доступен только для wg — для awg ошибка 3 до изменений.
+// SPEC 6.13: awg (1.0) — блок с девятипараметровым wireguard asc.
 func TestAddClientKeeneticAWG(t *testing.T) {
 	e := newEnv(t)
 	e.mustRun(0, createArgs("awg")...)
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "a", "--allowed-ips", "0.0.0.0/0", "--keenetic")
+	out := e.stdout.String()
+	if !strings.Contains(out, "wireguard asc ") {
+		t.Fatalf("asc line missing:\n%s", out)
+	}
+	asc := betweenStr(out, "wireguard asc ", "\n")
+	if n := len(strings.Fields(asc)); n != 9 {
+		t.Fatalf("AWG 1.0 asc: %d params; want 9 (%q)", n, asc)
+	}
+	if strings.Contains(out, "KeeneticOS 5.1") {
+		t.Fatalf("AWG 1.0 must not require KeeneticOS 5.1:\n%s", out)
+	}
+	// Значения совпадают с параметрами интерфейса.
+	c := conf.Parse([]byte(e.read(e.awgConf("awg0"))))
+	ifc, _ := c.Interface()
+	for _, k := range []string{"Jc", "Jmin", "Jmax", "S1", "S2", "H1", "H2", "H3", "H4"} {
+		if !strings.Contains(asc, ifc.Get(k)) {
+			t.Fatalf("asc lacks %s=%q:\n%s", k, ifc.Get(k), asc)
+		}
+	}
+}
+
+// SPEC 6.13: awg2 — расширенная форма asc (S3/S4, 16 значений) и требование 5.1+.
+func TestAddClientKeeneticAWG2(t *testing.T) {
+	e := newEnv(t)
+	e.mustRun(0, createArgs("awg2")...)
+	e.mustRun(0, "--add-client", "--interface", "awg0", "--id", "a", "--allowed-ips", "0.0.0.0/0", "--keenetic")
+	out := e.stdout.String()
+	asc := betweenStr(out, "wireguard asc ", "\n")
+	if n := len(strings.Fields(asc)); n != 16 {
+		t.Fatalf("AWG 2.0 asc: %d params; want 16 (%q)", n, asc)
+	}
+	if !strings.Contains(out, "KeeneticOS 5.1+") {
+		t.Fatalf("AWG 2.0 must note KeeneticOS 5.1+:\n%s", out)
+	}
+}
+
+// SPEC 6.13: awg3 (3.1) — KeeneticOS защиту заголовка не поддерживает: код 3.
+func TestAddClientKeeneticAWG3(t *testing.T) {
+	e := newEnv(t)
+	e.mustRun(0, createArgs("awg3")...)
 	if got := e.run("--add-client", "--interface", "awg0", "--id", "a", "--allowed-ips", "0.0.0.0/0", "--keenetic"); got != 3 {
-		t.Fatalf("awg --keenetic: exit %d; want 3", got)
+		t.Fatalf("awg3 --keenetic: exit %d; want 3", got)
 	}
 	if strings.Contains(e.read(e.awgConf("awg0")), "[Peer]") {
 		t.Fatal("failed --keenetic must not change the config")

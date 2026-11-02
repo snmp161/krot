@@ -346,9 +346,22 @@ func TestKeenetic(t *testing.T) {
 
 	awg := newTunnel(t, "awg", 6)
 	awg.create(t, awg.serverIP()+"/24")
-	if _, _, code := krot("--add-client", "--interface", awg.name, "--id", "k", "--allowed-ips", "0.0.0.0/0", "--keenetic"); code != 3 {
-		t.Fatalf("awg --keenetic: exit %d; want 3", code)
+	out = awg.addClient(t, "k", "--keenetic")
+	for _, want := range []string{"wireguard asc ", "interface Wireguard0"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("awg keenetic output lacks %q:\n%s", want, out)
+		}
 	}
+	if strings.Contains(out, "KeeneticOS 5.1") {
+		t.Fatalf("AWG 1.0 must not require KeeneticOS 5.1:\n%s", out)
+	}
+
+	awg3 := newTunnel(t, "awg3", 7)
+	awg3.create(t, awg3.serverIP()+"/24")
+	if _, _, code := krot("--add-client", "--interface", awg3.name, "--id", "k", "--allowed-ips", "0.0.0.0/0", "--keenetic"); code != 3 {
+		t.Fatalf("awg3 --keenetic: exit %d; want 3", code)
+	}
+	mustKrot(t, "--delete", "--interface", awg3.name, "--yes")
 	mustKrot(t, "--delete", "--interface", awg.name, "--yes")
 	mustKrot(t, "--delete", "--interface", tu.name, "--yes")
 }
