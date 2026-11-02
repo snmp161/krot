@@ -12,7 +12,8 @@ import (
 func TestDoctorOK(t *testing.T) {
 	e := newEnv(t)
 	e.mustRun(0, "--doctor")
-	golden(t, "doctor_ok.txt", e.stdout.String())
+	// Абсолютные пути временного каталога заменены на /ROOT — golden стабилен.
+	golden(t, "doctor_ok.txt", strings.ReplaceAll(e.stdout.String(), e.root, "/ROOT"))
 	if e.stderr.String() != "" {
 		t.Fatalf("stderr: %q", e.stderr)
 	}

@@ -50,6 +50,20 @@ func (a *App) checkWGModule() error {
 
 // checkAmnezia проверяет, что установленная AmneziaWG поддерживает тип (SPEC 3.1).
 func (a *App) checkAmnezia(t awg.Type, i1 bool) error {
+	in := a.amneziaInstalled()
+	warnings, err := awg.CheckInstalled(awg.RequirementFor(t, i1), in)
+	for _, w := range warnings {
+		a.warnf("%s", w)
+	}
+	if err != nil {
+		return errs.Wrap(errs.Env, err)
+	}
+	return nil
+}
+
+// amneziaInstalled собирает сведения об установленной AmneziaWG (SPEC 3.1): версии
+// инструментов, модуля ядра (genl и строка версии) или amneziawg-go.
+func (a *App) amneziaInstalled() awg.Installed {
 	var in awg.Installed
 	if r, err := a.Exec.Run("awg", "--version"); err == nil {
 		in.Tools = string(r.Stdout)
@@ -76,12 +90,5 @@ func (a *App) checkAmnezia(t awg.Type, i1 bool) error {
 			}
 		}
 	}
-	warnings, err := awg.CheckInstalled(awg.RequirementFor(t, i1), in)
-	for _, w := range warnings {
-		a.warnf("%s", w)
-	}
-	if err != nil {
-		return errs.Wrap(errs.Env, err)
-	}
-	return nil
+	return in
 }

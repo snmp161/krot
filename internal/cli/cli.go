@@ -27,11 +27,13 @@ const (
 	ActLockClient   Action = "lock-client"
 	ActUnlockClient Action = "unlock-client"
 	ActListClient   Action = "list-client"
+	ActDoctor       Action = "doctor"
 )
 
 var allActions = []Action{
 	ActList, ActCreate, ActDelete, ActUp, ActDown,
 	ActAddClient, ActDeleteClient, ActLockClient, ActUnlockClient, ActListClient,
+	ActDoctor,
 }
 
 type need int

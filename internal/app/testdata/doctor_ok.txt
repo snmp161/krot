@@ -1,0 +1,16 @@
+CHECK                          STATUS  DETAIL
+root                           ok      running as root
+ip                             ok      /usr/bin/ip
+systemctl                      ok      /usr/bin/systemctl
+wg                             ok      /usr/bin/wg
+wg-quick                       ok      /usr/bin/wg-quick
+awg                            ok      /usr/bin/awg (amneziawg-tools 3.1.20260812)
+awg-quick                      ok      /usr/bin/awg-quick
+wireguard kernel module        ok      loaded
+amneziawg 1.0 (awg)            ok      amneziawg-go 3.1.20260828
+amneziawg 1.5 (awg with --i1)  ok      amneziawg-go 3.1.20260828
+amneziawg 2.0 (awg2)           ok      amneziawg-go 3.1.20260828
+amneziawg 3.1 (awg3)           ok      amneziawg-go 3.1.20260828
+config dir (wg)                ok      /ROOT/etc/wireguard
+config dir (awg)               ok      will be created: /ROOT/etc/amnezia/amneziawg
+lock file dir                  ok      will be created: /ROOT/run/lock

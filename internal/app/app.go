@@ -96,6 +96,10 @@ func (a *App) run(args []string) error {
 		fmt.Fprintf(a.Stdout, "krot %s (commit %s, built %s)\n", a.Version, a.Commit, a.Date)
 		return nil
 	}
+	// SPEC 6.11: --doctor работает без root — диагноз окружения и есть его задача.
+	if cmd.Action == cli.ActDoctor {
+		return a.doctor()
+	}
 	if a.Euid() != 0 {
 		return errs.Envf("root privileges are required: run krot as root")
 	}

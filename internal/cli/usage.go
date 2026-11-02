@@ -21,6 +21,7 @@ Actions (exactly one):
   --lock-client     lock a client
   --unlock-client   unlock a client
   --list-client     list clients
+  --doctor          check the environment (tools, kernel modules, AmneziaWG versions)
   --help            show this help
   --version         show version, commit and build date
 
@@ -56,6 +57,7 @@ Flags per action:
   --lock-client    --interface --id
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
+  --doctor         (no flags; works without root)
 
 Exit codes:
   0 success                 5 conflict (already exists, address or port in use)
