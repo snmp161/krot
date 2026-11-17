@@ -23,7 +23,7 @@
 | Для `--type wg` | `wireguard-tools` (`wg`, `wg-quick`), модуль ядра WireGuard |
 | Для `--type awg*` | `amneziawg-tools` (`awg`, `awg-quick`) и модуль ядра AmneziaWG **или** `amneziawg-go` |
 | Всегда | `iproute2` (`ip`), `systemd` |
-| Права | root (кроме `--help` и `--version`) |
+| Права | root (кроме `--help`, `--version`, `--doctor`, `--udp-checker`; `--udp-listener` — root только для портов `<1024` или при недоступном `/proc/net/udp{,6}`) |
 
 krot сам ничего из этого не устанавливает. Если программы нет — ошибка с кодом `6` и
 названием пакета.
@@ -117,6 +117,61 @@ krot --doctor   # работает и без root: утилиты, модули 
 
 Вывод — таблица `CHECK/STATUS/DETAIL` со статусами `ok` / `warn` / `fail`. Код выхода
 `0`, если нет ни одного `fail`, иначе `6`. Ничего не меняет, блокировку не берёт.
+
+#### Диагностика UDP-портов
+
+`krot` умеет проверять, какие UDP-порты реально проходят между двумя хостами. Это полезно,
+когда хостинг или его uplink фильтрует часть портов (например, из-за DDoS-правил).
+
+На сервере запускается listener:
+
+```sh
+# один порт
+sudo krot --udp-listener --port 51820
+
+# диапазон портов (до 1024 штук, по сокету на порт)
+sudo krot --udp-listener --port 51820:51830
+```
+
+Listener отвечает на три типа датаграмм:
+- `ping SEQ:N` → `pong SEQ:N`;
+- `ECHO <text>` → `<text>`;
+- `TIME` → текущее unix-время в миллисекундах.
+
+На клиенте запускается checker:
+
+```sh
+# проверить один порт
+krot --udp-checker --address 203.0.113.1 --port 51820
+
+# проверить диапазон
+krot --udp-checker --address 203.0.113.1 --port 51820:51830
+
+# увеличить размер echo-payload (1–1400 байт, по умолчанию 64) — можно подобрать MTU
+krot --udp-checker --address 203.0.113.1 --port 51820 --echo-size 1400
+```
+
+Checker по умолчанию шлёт по 3 пакета каждого типа на порт (`--count`, 1–100) и ждёт
+ответа `--timeout` (по умолчанию 2s). Вывод — таблица:
+
+```
+PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
+51820    ok       3/3     3/3     12/24/45 ms          -
+51821    filtered 0/3     0/3     -                    timeout
+```
+
+Статусы:
+- `ok` — все ping и echo получили корректные ответы;
+- `filtered` — хотя бы один пакет не получил ответа (порт, скорее всего, фильтруется);
+- `error` — получен некорректный ответ.
+
+При `--json` выводится массив объектов с полями `port`, `status`, `ping_sent`, `ping_ok`,
+`echo_sent`, `echo_ok`, `time_sent`, `time_ok`, `rtt_min_ms`, `rtt_avg_ms`, `rtt_max_ms`,
+`detail`.
+
+`--udp-checker` работает без root. `--udp-listener` требует root только если в диапазоне
+есть порты `<1024` или `/proc/net/udp` и `/proc/net/udp6` недоступны текущему пользователю.
+Listener работает до `Ctrl+C`/`SIGTERM`.
 
 Пример `--list`:
 
@@ -340,7 +395,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 Нужен Go из `go.mod` (сейчас 1.27.2) и docker для интеграционных тестов.
 
 ```sh
-make check        # gofmt, go vet (с тегом integration тоже), go test -race ./...
+make check        # gofmt, go vet (с тегом integration тоже), go test -race ./..., gosec
 make build        # статический bin/krot (CGO_ENABLED=0), версия из git describe
 make build-arm64
 make integration  # интеграционные тесты в privileged docker-контейнере с systemd
@@ -362,10 +417,10 @@ make integration  # интеграционные тесты в privileged docker
   клиентских операций (непрерывный ping без потерь, неизменный ifindex и handshake), IPv6,
   чужие конфиги и параллельные запуски. Локально — `scripts/integration-docker.sh`, в CI — под `sudo`.
 - `scripts/collect-versions.sh` пересобирает реальные выводы версий AmneziaWG для golden-тестов.
-- **CI** (`.github/workflows/ci.yml`): gofmt, vet, unit-тесты с `-race` и покрытием, интеграционные
-  тесты, сборка `amd64`/`arm64`. **Релиз** (`release.yml`, тег `v*`): бинари, пакеты `.deb`/`.rpm`
-  (nfpm, `packaging/nfpm.yaml`), smoke-тесты пакетов на всех ОС (`scripts/smoke.sh`), GitHub Release
-  с `SHA256SUMS`.
+- **CI** (`.github/workflows/ci.yml`): gofmt, vet, unit-тесты с `-race` и покрытием, аудит
+  безопасности `govulncheck` + `gosec`, интеграционные тесты, сборка `amd64`/`arm64`.
+  **Релиз** (`release.yml`, тег `v*`): бинари, пакеты `.deb`/`.rpm` (nfpm, `packaging/nfpm.yaml`),
+  smoke-тесты пакетов на всех ОС (`scripts/smoke.sh`), GitHub Release с `SHA256SUMS`.
 
 ## Лицензия
 
