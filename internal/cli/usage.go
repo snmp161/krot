@@ -79,5 +79,9 @@ Exit codes:
   3 invalid value           10 cancelled by user
   4 not found
 
-All actions except --help and --version require root.
+Root privileges:
+  Not required for --help, --version, --doctor, or --udp-checker.
+  --udp-listener requires root only for ports below 1024 or when
+  /proc/net/udp and /proc/net/udp6 are not readable.
+  All other actions require root.
 `

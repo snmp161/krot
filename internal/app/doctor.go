@@ -28,7 +28,7 @@ func (a *App) doctor() error {
 	if a.Euid() == 0 {
 		add("root", "ok", "running as root")
 	} else {
-		add("root", "warn", "not root: all actions except --help/--version/--doctor require root (code 6)")
+		add("root", "warn", "not root: tunnel/client actions require root (code 6); --udp-checker does not, and --udp-listener needs it only for privileged ports or unreadable /proc/net/udp{,6}")
 	}
 
 	for _, p := range []string{"ip", "systemctl", "wg", "wg-quick", "awg", "awg-quick"} {
