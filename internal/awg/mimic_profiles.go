@@ -52,7 +52,7 @@ func genDNSChain(g *gen, _ time.Time) ([]packet, error) {
 		u16(&p, 0)         // NSCOUNT
 		u16(&p, 1)         // ARCOUNT
 		for _, label := range labels {
-			p.buf = append(p.buf, byte(len(label)))
+			p.buf = append(p.buf, byte(len(label))) // #nosec G115 -- DNS label length <= 63
 			p.buf = append(p.buf, label...)
 		}
 		p.buf = append(p.buf, 0) // корень
@@ -107,7 +107,7 @@ func genSTUNChain(g *gen, _ time.Time) ([]packet, error) {
 		g.bytes(v, 8)
 		v.mark(tagRand, 8)
 	})
-	setU16(p.buf[lenOff:], uint16(len(p.buf)-20))
+	setU16(p.buf[lenOff:], uint16(len(p.buf)-20)) // #nosec G115 -- STUN message length fits uint16
 	return []packet{p}, nil
 }
 
@@ -116,7 +116,7 @@ func stunAttr(p *packet, typ uint16, build func(v *packet)) {
 	var v packet
 	build(&v)
 	u16(p, typ)
-	u16(p, uint16(len(v.buf)))
+	u16(p, uint16(len(v.buf))) // #nosec G115 -- STUN attribute length fits uint16
 	valOff := len(p.buf)
 	p.buf = append(p.buf, v.buf...)
 	for _, d := range v.dyn {
@@ -127,7 +127,7 @@ func stunAttr(p *packet, typ uint16, build func(v *packet)) {
 	}
 }
 
-func setU16(b []byte, v uint16) { b[0], b[1] = byte(v>>8), byte(v) }
+func setU16(b []byte, v uint16) { b[0], b[1] = byte(v>>8), byte(v) } // #nosec G115 -- intentional truncation for big-endian
 
 // ntpEpoch — сдвиг Unix → NTP (эра 1900).
 const ntpEpoch = 2208988800
@@ -143,13 +143,13 @@ func genNTPChain(g *gen, now time.Time) ([]packet, error) {
 	u32(&p, 0x00000100)                           // root dispersion
 	p.buf = append(p.buf, "INIT"...)
 	sec := now.Unix()
-	u32(&p, uint32(sec-int64(g.int(30, 900)))+ntpEpoch) // Reference Timestamp
+	u32(&p, uint32(sec-int64(g.int(30, 900)))+ntpEpoch) // #nosec G115 -- NTP era 1900 seconds fit uint32
 	g.bytes(&p, 4)
 	p.mark(tagRand, 4) // дробная часть Reference
 	for range 16 {     // Origin + Receive = 0
 		p.buf = append(p.buf, 0)
 	}
-	u32(&p, uint32(sec)+ntpEpoch) // Transmit Timestamp
+	u32(&p, uint32(sec)+ntpEpoch) // #nosec G115 -- NTP era 1900 seconds fit uint32
 	g.bytes(&p, 4)
 	p.mark(tagRand, 4) // дробная часть Transmit
 	return []packet{p}, nil
@@ -198,7 +198,7 @@ func genDTLSChain(g *gen, _ time.Time) ([]packet, error) {
 	body.mark(tagRand, 32)         // session_id
 	body.buf = append(body.buf, 0) // cookie: пустой (нет HelloVerifyRequest)
 	suites := []uint16{0xC02B, 0xC02F, 0xCCA9, 0xC02C, 0x009C, 0x009D}
-	u16(&body, uint16(2*len(suites)))
+	u16(&body, uint16(2*len(suites))) // #nosec G115 -- cipher suite count fits uint16
 	for _, s := range suites {
 		u16(&body, s)
 	}
@@ -208,9 +208,9 @@ func genDTLSChain(g *gen, _ time.Time) ([]packet, error) {
 	extU16(&ext, 0x0000, func(v *packet) { // server_name
 		var list packet
 		list.buf = append(list.buf, 0) // тип: hostname
-		u16(&list, uint16(len(host)))
+		u16(&list, uint16(len(host)))  // #nosec G115 -- hostname length fits uint16
 		list.buf = append(list.buf, host...)
-		u16(v, uint16(len(list.buf)))
+		u16(v, uint16(len(list.buf))) // #nosec G115 -- server_name list length fits uint16
 		v.buf = append(v.buf, list.buf...)
 	})
 	extU16(&ext, 0x000A, func(v *packet) { // supported_groups
@@ -221,7 +221,7 @@ func genDTLSChain(g *gen, _ time.Time) ([]packet, error) {
 	})
 	extU16(&ext, 0x000D, func(v *packet) { // signature_algorithms
 		algs := []uint16{0x0403, 0x0503, 0x0804, 0x0401, 0x0501, 0x0201}
-		u16(v, uint16(2*len(algs)))
+		u16(v, uint16(2*len(algs))) // #nosec G115 -- signature algorithm count fits uint16
 		for _, a := range algs {
 			u16(v, a)
 		}
@@ -232,7 +232,7 @@ func genDTLSChain(g *gen, _ time.Time) ([]packet, error) {
 		v.buf = append(v.buf, 0) // MKI length
 	})
 	extU16(&ext, 0x0017, func(v *packet) {}) // extended_master_secret
-	u16(&body, uint16(len(ext.buf)))
+	u16(&body, uint16(len(ext.buf)))         // #nosec G115 -- DTLS extensions length fits uint16
 	body.buf = append(body.buf, ext.buf...)
 
 	// Record layer + handshake header; поля body сдвигаются на их длину.
@@ -240,12 +240,12 @@ func genDTLSChain(g *gen, _ time.Time) ([]packet, error) {
 	p.buf = append(p.buf, 0x16, 0xFE, 0xFD) // handshake, DTLS 1.2
 	u16(&p, 0)                              // epoch
 	p.buf = append(p.buf, 0, 0, 0, 0, 0, 0) // sequence_number первого полёта
-	u16(&p, uint16(12+len(body.buf)))       // длина handshake-сообщения
+	u16(&p, uint16(12+len(body.buf)))       // #nosec G115 -- handshake length fits uint16
 	p.buf = append(p.buf, 0x01)             // ClientHello
-	u24(&p, uint32(len(body.buf)))
-	u16(&p, 0) // message_seq
-	u24(&p, 0) // fragment_offset
-	u24(&p, uint32(len(body.buf)))
+	u24(&p, uint32(len(body.buf)))          // #nosec G115 -- handshake body length fits uint32
+	u16(&p, 0)                              // message_seq
+	u24(&p, 0)                              // fragment_offset
+	u24(&p, uint32(len(body.buf)))          // #nosec G115 -- handshake body length fits uint32
 	p.buf = append(p.buf, body.buf...)
 	const shift = 13 + 12 // record header + handshake header
 	for _, d := range body.dyn {
@@ -259,6 +259,6 @@ func extU16(p *packet, typ uint16, build func(v *packet)) {
 	var v packet
 	build(&v)
 	u16(p, typ)
-	u16(p, uint16(len(v.buf)))
+	u16(p, uint16(len(v.buf))) // #nosec G115 -- DTLS extension length fits uint16
 	p.buf = append(p.buf, v.buf...)
 }

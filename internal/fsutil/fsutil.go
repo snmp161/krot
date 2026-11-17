@@ -39,9 +39,9 @@ func WriteFileAtomic(path string, data []byte) (err error) {
 	defer func() {
 		if err != nil {
 			if !closed {
-				f.Close()
+				_ = f.Close() // #nosec G104 -- cleanup on error path, error is already being returned
 			}
-			os.Remove(tmp)
+			_ = os.Remove(tmp) // #nosec G104 -- best-effort cleanup of temp file
 		}
 	}()
 
@@ -92,7 +92,7 @@ func syncDir(dir string) error {
 	if err := step("syncdir"); err != nil {
 		return err
 	}
-	d, err := os.Open(dir)
+	d, err := os.Open(dir) // #nosec G304 -- dir comes from programmatically constructed config path
 	if err != nil {
 		return err
 	}
@@ -110,10 +110,10 @@ type Lock struct {
 
 // AcquireLock берёт эксклюзивный flock на файл, ожидая до timeout.
 func AcquireLock(path string, timeout time.Duration) (*Lock, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil { // #nosec G301 -- lock dir is typically /run/lock with standard permissions
 		return nil, err
 	}
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600) // #nosec G304 -- lock path is fixed by the application
 	if err != nil {
 		return nil, err
 	}
@@ -126,11 +126,11 @@ func AcquireLock(path string, timeout time.Duration) (*Lock, error) {
 		case errors.Is(err, syscall.EINTR):
 			continue
 		case !errors.Is(err, syscall.EWOULDBLOCK):
-			f.Close()
+			_ = f.Close() // #nosec G104 -- error from Flock is returned instead
 			return nil, err
 		}
 		if !time.Now().Before(deadline) {
-			f.Close()
+			_ = f.Close() // #nosec G104 -- timeout error is returned instead
 			return nil, ErrLockTimeout
 		}
 		time.Sleep(50 * time.Millisecond)

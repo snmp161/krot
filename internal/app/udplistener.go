@@ -60,11 +60,11 @@ func (a *App) checkUDPListenerRoot(ports []int) error {
 	}
 	for _, f := range []string{"udp", "udp6"} {
 		path := filepath.Join(a.Paths.ProcNet, f)
-		file, err := os.Open(path)
+		file, err := os.Open(path) // #nosec G304 -- path is /proc/net/udp{,6} from fixed Paths.ProcNet
 		if err != nil {
 			return errs.Envf("root privileges are required: cannot read %s", path)
 		}
-		file.Close()
+		_ = file.Close() // #nosec G104 -- readability check only, close error is not relevant
 	}
 	return nil
 }

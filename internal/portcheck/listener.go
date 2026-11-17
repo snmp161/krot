@@ -29,7 +29,7 @@ func (l *Listener) Listen(ctx context.Context) error {
 		addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: port}
 		conn, err := net.ListenUDP("udp", addr)
 		if err != nil {
-			l.Close()
+			_ = l.Close() // #nosec G104 -- listen error is returned instead
 			return fmt.Errorf("listen udp :%d: %w", port, err)
 		}
 		l.conns = append(l.conns, conn)
@@ -39,7 +39,7 @@ func (l *Listener) Listen(ctx context.Context) error {
 		go l.serve(ctx, conn)
 	}
 	<-ctx.Done()
-	l.Close()
+	_ = l.Close() // #nosec G104 -- listener is shutting down, ctx.Err() is returned
 	l.wg.Wait()
 	return ctx.Err()
 }

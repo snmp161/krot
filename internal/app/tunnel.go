@@ -53,7 +53,7 @@ func (a *App) confDirs() []confDir {
 }
 
 func readTunnel(path, name string, amnezia bool) (*tunnel, error) {
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) // #nosec G304 -- path is built from validated interface name and fixed config dirs
 	if err != nil {
 		return nil, err
 	}

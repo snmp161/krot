@@ -51,7 +51,7 @@ func (g *gen) intn(lo, hi uint64) uint64 {
 	}
 }
 
-func (g *gen) int(lo, hi int) int { return int(g.intn(uint64(lo), uint64(hi))) }
+func (g *gen) int(lo, hi int) int { return int(g.intn(uint64(lo), uint64(hi))) } // #nosec G115 -- lo, hi checked, result fits int
 
 func itoa(n int) string { return strconv.Itoa(n) }
 

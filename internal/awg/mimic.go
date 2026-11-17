@@ -176,15 +176,15 @@ func isDigits(b []byte) bool {
 
 // u16/u32 — сериализация полей пакетов (big-endian).
 func u16(b *packet, v uint16) {
-	b.buf = append(b.buf, byte(v>>8), byte(v))
+	b.buf = append(b.buf, byte(v>>8), byte(v)) // #nosec G115 -- intentional truncation for big-endian
 }
 
 func u24(b *packet, v uint32) {
-	b.buf = append(b.buf, byte(v>>16), byte(v>>8), byte(v))
+	b.buf = append(b.buf, byte(v>>16), byte(v>>8), byte(v)) // #nosec G115 -- intentional truncation for big-endian
 }
 
 func u32(b *packet, v uint32) {
-	b.buf = append(b.buf, byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
+	b.buf = append(b.buf, byte(v>>24), byte(v>>16), byte(v>>8), byte(v)) // #nosec G115 -- intentional truncation for big-endian
 }
 
 // bytes appendит n случайных байт и возвращает их срез в buf.

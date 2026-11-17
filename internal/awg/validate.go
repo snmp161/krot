@@ -281,7 +281,7 @@ func validateAWG3(p Params, mtu int) error {
 	}
 	if v, ok := p.Get("ContentPaddingAddition"); ok {
 		r, _, valid, _ := parseRange(v, maxU16)
-		if !valid || r.Lo > r.Hi || r.Hi > uint64(mtu-wgOverhead) {
+		if !valid || r.Lo > r.Hi || r.Hi > uint64(mtu-wgOverhead) { // #nosec G115 -- mtu validated to 576..9000, so mtu-wgOverhead >= 496
 			return rule("V-35", "ContentPaddingAddition = %q must be a range a-b with a <= b <= MTU - 80 (%d)", v, mtu-wgOverhead)
 		}
 	}

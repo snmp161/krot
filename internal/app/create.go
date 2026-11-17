@@ -178,7 +178,7 @@ func (a *App) checkPort(port int) error {
 
 // listened разбирает /proc/net/udp{,6}: local_address вида ADDR:PORT (hex).
 func listened(path string, port int) bool {
-	f, err := os.Open(path)
+	f, err := os.Open(path) // #nosec G304 -- path is /proc/net/udp{,6} from fixed Paths.ProcNet
 	if err != nil {
 		return false
 	}

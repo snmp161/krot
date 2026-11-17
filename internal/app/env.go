@@ -72,7 +72,7 @@ func (a *App) amneziaInstalled() awg.Installed {
 	switch {
 	case exists(modDir):
 		in.ModuleLoaded, in.ModulePresent = true, true
-		if b, err := os.ReadFile(filepath.Join(modDir, "version")); err == nil {
+		if b, err := os.ReadFile(filepath.Join(modDir, "version")); err == nil { // #nosec G304 -- path is fixed system module directory
 			in.Module = string(b)
 		}
 		if _, err := a.Exec.LookPath("genl"); err == nil {

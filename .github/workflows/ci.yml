@@ -60,6 +60,20 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
           "$(go env GOPATH)/bin/govulncheck" ./...
 
+  # Статический аудит безопасности кода. gosec падает при любых findings;
+  # известные false positives размечены в коде // #nosec с обоснованием.
+  gosec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
+          "$(go env GOPATH)/bin/gosec" ./...
+
   build:
     runs-on: ubuntu-latest
     strategy:
