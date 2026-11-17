@@ -89,9 +89,10 @@ var paramTable = []param{
 
 // Command — результат разбора.
 type Command struct {
-	Action  Action
-	Help    bool
-	Version bool
+	Action     Action
+	Help       bool
+	Version    bool
+	Completion string
 
 	Type       awg.Type
 	Interface  string
@@ -174,6 +175,17 @@ func Parse(args []string) (*Command, error) {
 		values[name] = value
 	}
 
+	if set["completion"] {
+		if len(set) > 1 {
+			return nil, errs.Usagef("--completion cannot be combined with other flags")
+		}
+		shell := values["completion"]
+		if shell != "bash" && shell != "zsh" {
+			return nil, errs.Invalidf("invalid --completion %q: must be bash or zsh", shell)
+		}
+		return &Command{Completion: shell}, nil
+	}
+
 	if set["version"] {
 		if len(set) > 1 {
 			return nil, errs.Usagef("--version cannot be combined with other flags")
@@ -234,6 +246,8 @@ func lookupFlag(name string) (isBool, ok bool) {
 	switch name {
 	case "help", "version":
 		return true, true
+	case "completion":
+		return false, true
 	}
 	for _, a := range allActions {
 		if string(a) == name {

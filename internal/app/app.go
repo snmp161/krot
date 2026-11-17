@@ -98,6 +98,13 @@ func (a *App) run(args []string) error {
 	case cmd.Version:
 		fmt.Fprintf(a.Stdout, "krot %s (commit %s, built %s)\n", a.Version, a.Commit, a.Date)
 		return nil
+	case cmd.Completion != "":
+		script, err := cli.CompletionScript(cmd.Completion)
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(a.Stdout, script)
+		return nil
 	}
 	// SPEC 6.11, 6.15: --doctor и --udp-checker работают без root.
 	if cmd.Action == cli.ActDoctor {

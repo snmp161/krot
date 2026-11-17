@@ -22,6 +22,14 @@ contents:
     dst: /usr/bin/krot
     file_info:
       mode: 0755
+  - src: ./dist/krot.bash
+    dst: /usr/share/bash-completion/completions/krot
+    file_info:
+      mode: 0644
+  - src: ./dist/_krot
+    dst: /usr/share/zsh/site-functions/_krot
+    file_info:
+      mode: 0644
   - src: ./LICENSE
     dst: /usr/share/doc/krot/LICENSE
     file_info:

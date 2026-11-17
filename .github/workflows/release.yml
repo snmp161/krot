@@ -29,6 +29,11 @@ jobs:
               -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA::7} -X main.date=${date}" \
               -o "dist/krot-linux-$arch" ./cmd/krot
           done
+      - name: shell completion
+        run: |
+          go run ./cmd/krot --completion bash > dist/krot.bash
+          go run ./cmd/krot --completion zsh > dist/_krot
+          bash -n dist/krot.bash
       - name: packages
         run: |
           go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
@@ -39,7 +44,7 @@ jobs:
                 -f packaging/nfpm.yaml -p "$format" -t dist/
             done
           done
-          rm dist/krot
+          rm dist/krot dist/krot.bash dist/_krot
           ls -l dist
       - uses: actions/upload-artifact@v7
         with:
