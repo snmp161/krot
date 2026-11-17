@@ -2,10 +2,10 @@ package portcheck
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"math"
-	"math/rand/v2"
 	"net"
 	"slices"
 	"time"
@@ -43,7 +43,10 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 	if c.EchoSize <= 0 {
 		c.EchoSize = 64
 	}
-	rng := c.rand()
+	rng := c.Rand
+	if rng == nil {
+		rng = rand.Reader
+	}
 
 	results := make([]Result, len(c.Ports))
 	for i, port := range c.Ports {
@@ -57,21 +60,7 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 	return results, nil
 }
 
-func (c *Checker) rand() *rand.Rand {
-	if c.Rand != nil {
-		var seed [16]byte
-		_, _ = io.ReadFull(c.Rand, seed[:])
-		return rand.New(rand.NewPCG(binaryLittleEndianUint64(seed[0:8]), binaryLittleEndianUint64(seed[8:16])))
-	}
-	return rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), 0))
-}
-
-func binaryLittleEndianUint64(b []byte) uint64 {
-	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
-		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
-}
-
-func (c *Checker) checkPort(ctx context.Context, rng *rand.Rand, port int) Result {
+func (c *Checker) checkPort(ctx context.Context, rng io.Reader, port int) Result {
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", c.Address, port))
 	if err != nil {
 		return Result{Port: port, Status: "error", Detail: err.Error()}
@@ -155,11 +144,15 @@ func (c *Checker) exchangeRTT(ctx context.Context, conn *net.UDPConn, req []byte
 	return rtt, true
 }
 
-func randomText(rng *rand.Rand, size int) string {
+func randomText(rng io.Reader, size int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, size)
+	buf := make([]byte, size)
+	if _, err := io.ReadFull(rng, buf); err != nil {
+		return string(b)
+	}
 	for i := range b {
-		b[i] = chars[rng.IntN(len(chars))]
+		b[i] = chars[int(buf[i])%len(chars)]
 	}
 	return string(b)
 }
