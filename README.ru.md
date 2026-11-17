@@ -1,6 +1,6 @@
 # krot
 
-[English](README.md) | **Русский**
+[English](README.md) | **Русский** | [中文](README.zh.md) | [Español](README.es.md) | [Português](README.pt.md)
 
 `krot` — консольная утилита для управления туннелями **WireGuard** и **AmneziaWG**
 (1.x, 2.0, 3.1) на Linux-серверах: создание и удаление интерфейсов, управление клиентами

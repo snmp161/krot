@@ -1,6 +1,6 @@
 # krot
 
-**English** | [Русский](README.ru.md)
+**English** | [Русский](README.ru.md) | [中文](README.zh.md) | [Español](README.es.md) | [Português](README.pt.md)
 
 `krot` is a command-line utility for managing **WireGuard** and **AmneziaWG**
 (1.x, 2.0, 3.1) tunnels on Linux servers: creating and deleting interfaces,
