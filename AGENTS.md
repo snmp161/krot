@@ -1,50 +1,50 @@
-# AGENTS.md — правила работы для LLM-агентов в репозитории krot
+# AGENTS.md — Rules for LLM Agents Working in the krot Repository
 
-## Главное
+## Core Rules
 
-1. **`SPEC.md` — первичен.** Тесты вторичны, код третичен.
-   Если тест или код расходятся с `SPEC.md` — исправляй тест или код, не ТЗ.
-2. **`SPEC.md` не меняется без явного решения человека.** Нашёл неясность или противоречие — остановись, опиши проблему и предложи варианты. Не додумывай.
-3. **Сначала тесты, потом код.** Для каждой задачи:
-   1. прочитать нужные разделы `SPEC.md`;
-   2. написать тесты по ТЗ, со ссылкой на пункт (`// SPEC 7.3 V-21`);
-   3. запустить и убедиться, что новые тесты **падают**;
-   4. закоммитить тесты: `test(<область>): <что проверяем>`;
-   5. написать код;
-   6. добиться зелёных тестов: `gofmt -l .` пусто, `go vet ./...` чисто, `go test -race ./...` зелёный;
-   7. закоммитить код: `feat|fix|refactor(<область>): <что сделано>`.
-4. **После каждой задачи — коммит в git.** Задача без коммита не считается выполненной. Не копить изменения нескольких задач в одном коммите.
-5. Задачи берутся по порядку из `SPEC.md`, раздел 10 (T0, T1, …).
+1. **`SPEC.md` is authoritative.** Tests come second, and code comes third.
+   If a test or the code conflicts with `SPEC.md`, fix the test or the code, not the specification.
+2. **Do not modify `SPEC.md` without an explicit decision from a human.** If you find an ambiguity or contradiction, stop, describe the problem, and propose options. Do not resolve it by making assumptions.
+3. **Write tests before code.** For each task:
+   1. Read the relevant sections of `SPEC.md`;
+   2. Write tests based on the specification, with a reference to the applicable section (`// SPEC 7.3 V-21`);
+   3. Run the tests and confirm that the new tests **fail**;
+   4. Commit the tests: `test(<scope>): <what is being tested>`;
+   5. Implement the code;
+   6. Make all checks pass: `gofmt -l .` produces no output, `go vet ./...` is clean, and `go test -race ./...` passes;
+   7. Commit the code: `feat|fix|refactor(<scope>): <summary of changes>`.
+4. **Create a git commit after every task.** A task is not complete until it has been committed. Do not combine changes from multiple tasks in a single commit.
+5. Take tasks in order from `SPEC.md`, section 10 (T0, T1, …).
 
-## Коммиты
+## Commits
 
-- Формат Conventional Commits: `type(scope): описание`.
-- Типы: `test`, `feat`, `fix`, `refactor`, `docs`, `ci`, `build`, `chore`.
-- В теле коммита — номер задачи и пункты ТЗ: `Task: T5`, `Spec: 7.3`.
-- Не коммитить с красными тестами (кроме коммита `test:` на шаге 3.4, где падение ожидается — пометить в теле `Expected: failing`).
-- Никогда не делать `git push --force` и не переписывать историю.
+- Use the Conventional Commits format: `type(scope): description`.
+- Allowed types: `test`, `feat`, `fix`, `refactor`, `docs`, `ci`, `build`, `chore`.
+- Include the task number and relevant specification sections in the commit body: `Task: T5`, `Spec: 7.3`.
+- Do not commit with failing tests, except for a `test:` commit in step 3.4, where failures are expected. In that case, add `Expected: failing` to the commit body.
+- Never run `git push --force` or rewrite history.
 
-## Код
+## Code
 
-- Go — последняя стабильная версия, фиксируется в `go.mod`.
-- Только стандартная библиотека + `golang.org/x/crypto` + одна библиотека для QR. Новая зависимость — только с одобрения человека.
+- Use the latest stable version of Go, pinned in `go.mod`.
+- Use only the standard library, `golang.org/x/crypto`, and one QR code library. Adding a new dependency requires human approval.
 - `CGO_ENABLED=0`.
-- Простота важнее красоты: без лишних абстракций, фреймворков, DI-контейнеров, генераторов кода.
-- Внешние команды — только через интерфейс-исполнитель (SPEC 8.2), чтобы их можно было подменить в тестах.
-- Случайность — только `crypto/rand` в рабочем коде; в тестах — детерминированный источник с seed.
-- Ошибки — с понятным текстом для оператора и правильным кодом выхода (SPEC 4.5).
+- Favor simplicity over elegance: avoid unnecessary abstractions, frameworks, DI containers, and code generators.
+- Run external commands only through the executor interface (SPEC 8.2), so they can be replaced with fakes in tests.
+- Use only `crypto/rand` for randomness in production code; in tests, use a deterministic source with a seed.
+- Provide operators with clear error messages and return the correct exit codes (SPEC 4.5).
 
-## Тесты
+## Tests
 
-- Unit-тесты не требуют root и не трогают систему.
-- Интеграционные — только с build tag `integration` и только внутри отдельных network namespace. Сеть хоста не трогать никогда.
-- Golden-файлы — в `testdata/`. Обновлять их только осознанно, с объяснением в коммите.
-- Требование «незаметности для клиентов» (SPEC 6.10) проверяется и в unit-тестах (через фейк исполнителя), и в интеграционном тесте. Эти тесты нельзя отключать, пропускать или ослаблять.
+- Unit tests must not require root privileges or modify the system.
+- Integration tests must use the `integration` build tag and run only inside separate network namespaces. Never modify the host network.
+- Store golden files in `testdata/`. Update them only deliberately, with an explanation in the commit message.
+- The requirement that operations remain invisible to clients (SPEC 6.10) must be covered by both unit tests (using a fake executor) and an integration test. These tests must not be disabled, skipped, or weakened.
 
-## Запрещено
+## Prohibited Actions
 
-- Изменять `SPEC.md` по своей инициативе.
-- Удалять, отключать (`t.Skip`) или ослаблять тесты, чтобы код «прошёл».
-- Использовать `wg-quick down/up`, `systemctl restart` или пересоздание интерфейса в клиентских операциях.
-- Хранить приватные ключи клиентов где-либо.
-- Писать в документации и скриптах установку вида `curl … | bash`.
+- Modifying `SPEC.md` on your own initiative.
+- Deleting, disabling (`t.Skip`), or weakening tests to make the code pass.
+- Using `wg-quick down/up`, `systemctl restart`, or recreating an interface in client operations.
+- Storing clients' private keys anywhere.
+- Writing installation instructions or scripts that use `curl … | bash`.
