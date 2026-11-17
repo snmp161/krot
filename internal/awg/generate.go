@@ -30,6 +30,10 @@ func (g *gen) intn(lo, hi uint64) uint64 {
 	if g.err != nil {
 		return lo
 	}
+	if lo > hi {
+		g.err = fmt.Errorf("invalid random range %d > %d", lo, hi)
+		return lo
+	}
 	span := hi - lo + 1
 	var buf [8]byte
 	for {
@@ -155,7 +159,7 @@ const (
 // genHRanges — четыре непересекающихся диапазона в [5, 2^31-1] шириной [2^16, 2^22]
 // с зазором не меньше 2^16 (SPEC 7.3). Порядок H1..H4 случайный.
 func genHRanges(g *gen) []Range {
-	for g.err == nil {
+	for attempt := 0; attempt < 1000 && g.err == nil; attempt++ {
 		rs := make([]Range, 0, 4)
 		for len(rs) < 4 {
 			w := g.intn(hMinWidth, hMaxWidth)
@@ -165,6 +169,9 @@ func genHRanges(g *gen) []Range {
 		if separated(rs) {
 			return rs
 		}
+	}
+	if g.err == nil {
+		g.err = fmt.Errorf("could not generate non-overlapping H ranges after 1000 attempts")
 	}
 	return make([]Range, 4)
 }

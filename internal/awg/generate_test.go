@@ -238,3 +238,25 @@ func TestGenerateRandError(t *testing.T) {
 		}
 	}
 }
+
+// Защита от будущих ошибок: intn с lo > hi должен завершаться с ошибкой,
+// а не уходить в underflow uint64.
+func TestGenIntnInvalidRange(t *testing.T) {
+	g := &gen{r: seeded(1)}
+	if got := g.intn(10, 5); got != 10 || g.err == nil {
+		t.Fatalf("intn(10,5) = %d, err = %v; want 10 and error", got, g.err)
+	}
+}
+
+// genHRanges не должен зацикливаться бесконечно при неблагоприятном источнике.
+func TestGenHRangesTerminates(t *testing.T) {
+	// failReader гарантирует g.err на первой же попытке, цикл должен прерваться.
+	g := &gen{r: failReader{}}
+	rs := genHRanges(g)
+	if len(rs) != 4 {
+		t.Fatalf("genHRanges returned %d ranges; want 4", len(rs))
+	}
+	if g.err == nil {
+		t.Fatal("genHRanges should record the read error")
+	}
+}
