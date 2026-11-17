@@ -804,7 +804,7 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 ### 8.4. Smoke-тесты пакетов
 
 В контейнерах всех ОС из 2.1: установка `.deb`/`.rpm` → `krot --version` → `krot --help` →
-удаление пакета.
+проверка Bash/Zsh completion (4.6) → удаление пакета.
 
 ## 9. CI/CD (GitHub Actions)
 
