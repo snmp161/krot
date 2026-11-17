@@ -98,10 +98,11 @@ func TestKeyRoundTrip(t *testing.T) {
 
 // Ключ детерминирован: один и тот же конфиг — одна и та же строка.
 func TestKeyDeterministic(t *testing.T) {
-	if Key(awgConf) != Key(awgConf) {
+	a, b := Key(awgConf), Key(awgConf)
+	if a != b {
 		t.Fatal("Key is not deterministic")
 	}
-	if Key(awgConf) == Key(wgConf) {
+	if a == Key(wgConf) {
 		t.Fatal("different configs give the same key")
 	}
 }

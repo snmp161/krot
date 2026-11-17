@@ -395,7 +395,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 Нужен Go из `go.mod` (сейчас 1.27.2) и docker для интеграционных тестов.
 
 ```sh
-make check        # gofmt, go vet (с тегом integration тоже), go test -race ./..., gosec
+make check        # gofmt, go vet (с тегом integration тоже), go test -race ./..., gosec, staticcheck
 make build        # статический bin/krot (CGO_ENABLED=0), версия из git describe
 make build-arm64
 make integration  # интеграционные тесты в privileged docker-контейнере с systemd

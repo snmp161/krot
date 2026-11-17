@@ -3,7 +3,7 @@ COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 DATE    ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)
 
-.PHONY: all build build-arm64 fmt-check vet test gosec check integration
+.PHONY: all build build-arm64 fmt-check vet test gosec staticcheck check integration
 
 all: check build
 
@@ -28,7 +28,11 @@ gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
 	"$$(go env GOPATH)/bin/gosec" ./...
 
-check: fmt-check vet test gosec
+staticcheck:
+	GOTOOLCHAIN=local go install honnef.co/go/tools/cmd/staticcheck@latest
+	"$$(go env GOPATH)/bin/staticcheck" ./...
+
+check: fmt-check vet test gosec staticcheck
 
 integration:
 	./scripts/integration-docker.sh
