@@ -13,12 +13,13 @@ import (
 var actions = []Action{
 	ActList, ActCreate, ActDelete, ActUp, ActDown,
 	ActAddClient, ActDeleteClient, ActLockClient, ActUnlockClient, ActListClient,
-	ActDoctor,
+	ActDoctor, ActUDPListener, ActUDPChecker,
 }
 
 var params = []string{
 	"type", "interface", "ip", "port", "endpoint", "mtu", "dns", "i1", "mimic",
 	"id", "allowed-ips", "psk", "qr", "amnezia-key", "keenetic", "json", "yes",
+	"address", "timeout", "count", "echo-size",
 }
 
 var boolParams = map[string]bool{"psk": true, "qr": true, "amnezia-key": true, "keenetic": true, "json": true, "yes": true}
@@ -28,7 +29,7 @@ var specMatrix = map[string]map[Action]string{
 	"type":        {ActList: "н", ActCreate: "О"},
 	"interface":   {ActList: "н", ActCreate: "н", ActDelete: "О", ActUp: "О", ActDown: "О", ActAddClient: "О", ActDeleteClient: "О", ActLockClient: "О", ActUnlockClient: "О", ActListClient: "О"},
 	"ip":          {ActList: "н", ActCreate: "О", ActAddClient: "н"},
-	"port":        {ActList: "н", ActCreate: "О"},
+	"port":        {ActList: "н", ActCreate: "О", ActUDPListener: "О", ActUDPChecker: "О"},
 	"endpoint":    {ActCreate: "О", ActAddClient: "н"},
 	"mtu":         {ActCreate: "н"},
 	"dns":         {ActCreate: "н", ActAddClient: "н"},
@@ -40,8 +41,12 @@ var specMatrix = map[string]map[Action]string{
 	"qr":          {ActAddClient: "н"},
 	"amnezia-key": {ActAddClient: "н"},
 	"keenetic":    {ActAddClient: "н"},
-	"json":        {ActList: "н", ActListClient: "н"},
+	"json":        {ActList: "н", ActListClient: "н", ActUDPListener: "н", ActUDPChecker: "н"},
 	"yes":         {ActDelete: "н"},
+	"address":     {ActUDPChecker: "О"},
+	"timeout":     {ActUDPListener: "н", ActUDPChecker: "н"},
+	"count":       {ActUDPListener: "н", ActUDPChecker: "н"},
+	"echo-size":   {ActUDPChecker: "н"},
 }
 
 // Валидное значение параметра для действия.
@@ -75,6 +80,14 @@ func validValue(p string, a Action) string {
 		return "phone"
 	case "allowed-ips":
 		return "0.0.0.0/0,::/0"
+	case "address":
+		return "203.0.113.1"
+	case "timeout":
+		return "2s"
+	case "count":
+		return "3"
+	case "echo-size":
+		return "64"
 	}
 	panic(p)
 }
@@ -379,6 +392,75 @@ func TestValues(t *testing.T) {
 		{[]string{"--list", "--type", "x"}, 3},
 		{[]string{"--list", "--interface", "bad/name"}, 3},
 		{[]string{"--list-client", "--interface", "wg0", "--id", "bad id"}, 3},
+	}
+	for _, c := range cases {
+		if got := code(parseErr(c.args)); got != c.want {
+			t.Errorf("%q: code %d; want %d (%v)", c.args, got, c.want, parseErr(c.args))
+		}
+	}
+}
+
+// SPEC 4.4: значения флагов для --udp-listener и --udp-checker.
+func TestUDPValues(t *testing.T) {
+	listener := func(kv ...string) []string {
+		m := map[string]string{"port": "51820"}
+		for i := 0; i < len(kv); i += 2 {
+			m[kv[i]] = kv[i+1]
+		}
+		args := []string{"--udp-listener"}
+		for _, k := range []string{"port", "timeout", "count"} {
+			if v, ok := m[k]; ok {
+				args = append(args, "--"+k, v)
+			}
+		}
+		return args
+	}
+	checker := func(kv ...string) []string {
+		m := map[string]string{"address": "203.0.113.1", "port": "51820"}
+		for i := 0; i < len(kv); i += 2 {
+			m[kv[i]] = kv[i+1]
+		}
+		args := []string{"--udp-checker"}
+		for _, k := range []string{"address", "port", "timeout", "count", "echo-size"} {
+			if v, ok := m[k]; ok {
+				args = append(args, "--"+k, v)
+			}
+		}
+		return args
+	}
+	cases := []struct {
+		args []string
+		want int
+	}{
+		{listener(), 0},
+		{listener("port", "51820:51822"), 0},
+		{listener("port", "1:1024"), 0},
+		{listener("port", "0"), 3},
+		{listener("port", "65536"), 3},
+		{listener("port", "51822:51820"), 3},
+		{listener("port", "1:1025"), 3},
+		{listener("port", "abc"), 3},
+		{listener("timeout", "2s"), 0},
+		{listener("timeout", "500ms"), 0},
+		{listener("timeout", "0"), 3},
+		{listener("timeout", "abc"), 3},
+		{listener("count", "1"), 0},
+		{listener("count", "100"), 0},
+		{listener("count", "0"), 3},
+		{listener("count", "101"), 3},
+		{checker(), 0},
+		{checker("port", "51820:51822"), 0},
+		{checker("address", "2001:db8::1"), 0},
+		{checker("address", "vpn.example.com"), 0},
+		{checker("address", ""), 3},
+		{checker("echo-size", "1"), 0},
+		{checker("echo-size", "1400"), 0},
+		{checker("echo-size", "0"), 3},
+		{checker("echo-size", "1401"), 3},
+		{checker("echo-size", ""), 3},
+		// Недопустимые комбинации флагов.
+		{append(listener(), "--address", "203.0.113.1"), 2},
+		{append(checker(), "--json"), 0},
 	}
 	for _, c := range cases {
 		if got := code(parseErr(c.args)); got != c.want {
