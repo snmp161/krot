@@ -79,6 +79,9 @@ func (a *App) Run(args []string) int {
 	err := a.run(args)
 	if err != nil {
 		fmt.Fprintf(a.Stderr, "krot: %v\n", err)
+		if errs.Code(err) == errs.Usage {
+			fmt.Fprintln(a.Stderr, "Try 'krot --help' for more information.")
+		}
 	}
 	return errs.Code(err)
 }

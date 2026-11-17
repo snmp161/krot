@@ -189,7 +189,7 @@ func Parse(args []string) (*Command, error) {
 	}
 	switch len(given) {
 	case 0:
-		return nil, errs.Usagef("no action given; use one of %s (see --help)", actionList())
+		return nil, errs.Usagef("no action given; use one of %s", actionList())
 	case 1:
 	default:
 		return nil, errs.Usagef("only one action per run is allowed, got --%s and --%s", given[0], given[1])
