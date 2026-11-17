@@ -23,18 +23,67 @@ func freeUDPPort(t *testing.T) int {
 	return conn.LocalAddr().(*net.UDPAddr).Port
 }
 
-// SPEC 2.4: --udp-listener и --udp-checker требуют root.
-func TestUDPRequiresRoot(t *testing.T) {
+// SPEC 2.4: --udp-checker работает без root.
+func TestUDPCheckerWithoutRoot(t *testing.T) {
+	port := freeUDPPort(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	l := portcheck.NewListener([]int{port})
+	go l.Listen(ctx)
+	time.Sleep(50 * time.Millisecond)
+
 	e := newEnv(t)
 	e.app.Euid = func() int { return 1000 }
-	e.mustRun(errs.Env, "--udp-listener", "--port", "51820")
-	if !strings.Contains(e.stderr.String(), "root") {
-		t.Errorf("udp-listener stderr = %q", e.stderr)
+	e.mustRun(0, "--udp-checker", "--address", "127.0.0.1", "--port", itoa(port), "--timeout", "500ms")
+	if !strings.Contains(e.stdout.String(), "ok") {
+		t.Fatalf("stdout:\n%s", e.stdout)
 	}
-	e.stderr.Reset()
-	e.mustRun(errs.Env, "--udp-checker", "--address", "203.0.113.1", "--port", "51820")
+}
+
+// SPEC 2.4, 6.14: --udp-listener без root разрешён для непривилегированных портов
+// при доступных /proc/net/udp{,6}.
+func TestUDPListenerWithoutRoot(t *testing.T) {
+	port := freeUDPPort(t)
+	e := newEnv(t)
+	e.app.Euid = func() int { return 1000 }
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		e.run("--udp-listener", "--port", itoa(port))
+	}()
+	select {
+	case <-done:
+		// listener не должен был завершиться сам; если завершился — проверим код.
+		if code := e.run("--udp-listener", "--port", itoa(port)); code != 0 {
+			t.Fatalf("listener exited with code %d; stdout:\n%s\nstderr:\n%s", code, e.stdout, e.stderr)
+		}
+	case <-time.After(200 * time.Millisecond):
+		// listener запустился и работает — это ожидаемо.
+	}
+}
+
+// SPEC 2.4, 6.14: --udp-listener требует root для привилегированного порта.
+func TestUDPListenerPrivilegedPortRequiresRoot(t *testing.T) {
+	e := newEnv(t)
+	e.app.Euid = func() int { return 1000 }
+	e.mustRun(errs.Env, "--udp-listener", "--port", "1023")
 	if !strings.Contains(e.stderr.String(), "root") {
-		t.Errorf("udp-checker stderr = %q", e.stderr)
+		t.Errorf("stderr = %q", e.stderr)
+	}
+}
+
+// SPEC 2.4, 6.14: --udp-listener требует root, если /proc/net/udp недоступен.
+func TestUDPListenerProcNetRequiresRoot(t *testing.T) {
+	port := freeUDPPort(t)
+	e := newEnv(t)
+	e.app.Euid = func() int { return 1000 }
+	// Удаляем фейковые файлы, чтобы имитировать недоступность /proc/net/udp{,6}.
+	e.app.Paths.ProcNet = t.TempDir() + "/nonexistent"
+
+	e.mustRun(errs.Env, "--udp-listener", "--port", itoa(port))
+	if !strings.Contains(e.stderr.String(), "root") {
+		t.Errorf("stderr = %q", e.stderr)
 	}
 }
 

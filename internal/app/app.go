@@ -96,9 +96,16 @@ func (a *App) run(args []string) error {
 		fmt.Fprintf(a.Stdout, "krot %s (commit %s, built %s)\n", a.Version, a.Commit, a.Date)
 		return nil
 	}
-	// SPEC 6.11: --doctor работает без root — диагноз окружения и есть его задача.
+	// SPEC 6.11, 6.15: --doctor и --udp-checker работают без root.
 	if cmd.Action == cli.ActDoctor {
 		return a.doctor()
+	}
+	if cmd.Action == cli.ActUDPChecker {
+		return a.udpChecker(cmd)
+	}
+	// SPEC 6.14: --udp-listener проверяет необходимость root сам.
+	if cmd.Action == cli.ActUDPListener {
+		return a.udpListener(cmd)
 	}
 	if a.Euid() != 0 {
 		return errs.Envf("root privileges are required: run krot as root")
@@ -124,10 +131,6 @@ func (a *App) run(args []string) error {
 		return a.list(cmd)
 	case cli.ActListClient:
 		return a.listClient(cmd)
-	case cli.ActUDPListener:
-		return a.udpListener(cmd)
-	case cli.ActUDPChecker:
-		return a.udpChecker(cmd)
 	}
 	return errs.New(errs.Internal, "action --%s is not implemented", cmd.Action)
 }

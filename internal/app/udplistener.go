@@ -16,6 +16,9 @@ import (
 // SPEC 6.14: --udp-listener.
 func (a *App) udpListener(cmd *cli.Command) error {
 	ports := cmd.PortRange.Ports()
+	if err := a.checkUDPListenerRoot(ports); err != nil {
+		return err
+	}
 	if err := a.checkUDPPortsFree(ports); err != nil {
 		return err
 	}
@@ -39,6 +42,29 @@ func (a *App) udpListener(cmd *cli.Command) error {
 
 	if err := listener.Listen(ctx); err != nil && err != context.Canceled {
 		return errs.Wrap(errs.Internal, err)
+	}
+	return nil
+}
+
+// checkUDPListenerRoot проверяет, нужен ли root для listener (SPEC 2.4, 6.14):
+// root требуется для привилегированных портов (<1024) или если /proc/net/udp{,6}
+// недоступны текущему пользователю для чтения.
+func (a *App) checkUDPListenerRoot(ports []int) error {
+	if a.Euid() == 0 {
+		return nil
+	}
+	for _, p := range ports {
+		if p < 1024 {
+			return errs.Envf("root privileges are required: UDP port %d is privileged (<1024)", p)
+		}
+	}
+	for _, f := range []string{"udp", "udp6"} {
+		path := filepath.Join(a.Paths.ProcNet, f)
+		file, err := os.Open(path)
+		if err != nil {
+			return errs.Envf("root privileges are required: cannot read %s", path)
+		}
+		file.Close()
 	}
 	return nil
 }
