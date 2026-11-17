@@ -22,6 +22,8 @@ Actions (exactly one):
   --unlock-client   unlock a client
   --list-client     list clients
   --doctor          check the environment (tools, kernel modules, AmneziaWG versions)
+  --udp-listener    UDP listener for port diagnostics
+  --udp-checker     UDP checker for port diagnostics
   --help            show this help
   --version         show version, commit and build date
 
@@ -31,9 +33,11 @@ Flags (--flag value or --flag=value):
   --ip CIDR[,CIDR]          create: server addresses (10.8.0.1/24,fd00:8::1/64);
                             add-client: client addresses (/32, /128);
                             list: filter by address
-  --port N                  UDP port 1..65535 (create: required; list: filter)
+  --port N|N:M              UDP port or range 1..65535, at most 1024 ports
+                            (create, udp-listener, udp-checker: required; list: filter)
   --endpoint HOST           public server address for client configs
                             (create: required; add-client: per-client override)
+  --address HOST            remote listener address for --udp-checker (without port)
   --mtu N                   MTU 576..9000 (default: wg 1420, awg/awg2 1376, awg3 1280)
   --dns IP[,IP]             DNS servers for client configs
                             (create: for all clients; add-client: this client only)
@@ -47,8 +51,11 @@ Flags (--flag value or --flag=value):
   --amnezia-key             also print the client config as an AmneziaVPN key (vpn://...)
   --keenetic                also print KeeneticOS CLI commands for a Keenetic router
                             (wg and awg 1.0/1.5/2.0 tunnels, IPv4 only)
-  --json                    JSON output instead of a table (list, list-client)
+  --json                    JSON output instead of a table (list, list-client, udp-listener, udp-checker)
   --yes                     do not ask for confirmation (delete)
+  --timeout DURATION        packet timeout, e.g. 2s or 500ms (default 2s)
+  --count N                 packets of each type per port, 1..100 (default 3)
+  --echo-size N             echo payload size, 1..1400 (default 64, udp-checker only)
 
 Flags per action:
   --list           [--type] [--interface] [--ip] [--port] [--json]
@@ -62,6 +69,8 @@ Flags per action:
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         (no flags; works without root)
+  --udp-listener   --port [--timeout] [--count] [--json]
+  --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--json]
 
 Exit codes:
   0 success                 5 conflict (already exists, address or port in use)

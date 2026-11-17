@@ -7,10 +7,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/snmp161/krot/internal/awg"
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/ipalloc"
+	"github.com/snmp161/krot/internal/portcheck"
 )
 
 // Action — действие (SPEC 4.2).
@@ -28,12 +30,14 @@ const (
 	ActUnlockClient Action = "unlock-client"
 	ActListClient   Action = "list-client"
 	ActDoctor       Action = "doctor"
+	ActUDPListener  Action = "udp-listener"
+	ActUDPChecker   Action = "udp-checker"
 )
 
 var allActions = []Action{
 	ActList, ActCreate, ActDelete, ActUp, ActDown,
 	ActAddClient, ActDeleteClient, ActLockClient, ActUnlockClient, ActListClient,
-	ActDoctor,
+	ActDoctor, ActUDPListener, ActUDPChecker,
 }
 
 type need int
@@ -63,7 +67,7 @@ var paramTable = []param{
 	{"interface", false, map[Action]need{ActList: opt, ActCreate: opt, ActDelete: req, ActUp: req, ActDown: req,
 		ActAddClient: req, ActDeleteClient: req, ActLockClient: req, ActUnlockClient: req, ActListClient: req}},
 	{"ip", false, map[Action]need{ActList: opt, ActCreate: req, ActAddClient: opt}},
-	{"port", false, map[Action]need{ActList: opt, ActCreate: req}},
+	{"port", false, map[Action]need{ActList: opt, ActCreate: req, ActUDPListener: req, ActUDPChecker: req}},
 	{"endpoint", false, map[Action]need{ActCreate: req, ActAddClient: opt}},
 	{"mtu", false, map[Action]need{ActCreate: opt}},
 	{"dns", false, map[Action]need{ActCreate: opt, ActAddClient: opt}},
@@ -75,8 +79,12 @@ var paramTable = []param{
 	{"qr", true, map[Action]need{ActAddClient: opt}},
 	{"amnezia-key", true, map[Action]need{ActAddClient: opt}},
 	{"keenetic", true, map[Action]need{ActAddClient: opt}},
-	{"json", true, map[Action]need{ActList: opt, ActListClient: opt}},
+	{"json", true, map[Action]need{ActList: opt, ActListClient: opt, ActUDPListener: opt, ActUDPChecker: opt}},
 	{"yes", true, map[Action]need{ActDelete: opt}},
+	{"address", false, map[Action]need{ActUDPChecker: req}},
+	{"timeout", false, map[Action]need{ActUDPListener: opt, ActUDPChecker: opt}},
+	{"count", false, map[Action]need{ActUDPListener: opt, ActUDPChecker: opt}},
+	{"echo-size", false, map[Action]need{ActUDPChecker: opt}},
 }
 
 // Command — результат разбора.
@@ -102,6 +110,12 @@ type Command struct {
 	Keenetic   bool
 	JSON       bool
 	Yes        bool
+
+	Address   string
+	Timeout   time.Duration
+	Count     int
+	EchoSize  int
+	PortRange portcheck.PortRange
 
 	set map[string]bool
 }
@@ -271,8 +285,16 @@ func (c *Command) fill(v map[string]string) error {
 		}
 	}
 	if c.Has("port") {
-		if c.Port, err = parseInt(v["port"], 1, 65535); err != nil {
-			return errs.Invalidf("invalid --port %q: must be an integer 1..65535", v["port"])
+		switch c.Action {
+		case ActUDPListener, ActUDPChecker:
+			c.PortRange, err = portcheck.ParsePortRange(v["port"])
+			if err != nil {
+				return errs.Invalidf("invalid --port %q: %v", v["port"], err)
+			}
+		default:
+			if c.Port, err = parseInt(v["port"], 1, 65535); err != nil {
+				return errs.Invalidf("invalid --port %q: must be an integer 1..65535", v["port"])
+			}
 		}
 	}
 	if c.Has("endpoint") {
@@ -320,6 +342,28 @@ func (c *Command) fill(v map[string]string) error {
 				return errs.Invalidf("invalid --allowed-ips %q: must be a comma-separated list of CIDR prefixes", v["allowed-ips"])
 			}
 			c.AllowedIPs = append(c.AllowedIPs, p)
+		}
+	}
+	if c.Has("address") {
+		if !validEndpoint(v["address"]) {
+			return errs.Invalidf("invalid --address %q: must be an IPv4 address, IPv6 address or hostname (without port)", v["address"])
+		}
+		c.Address = v["address"]
+	}
+	if c.Has("timeout") {
+		c.Timeout, err = time.ParseDuration(v["timeout"])
+		if err != nil || c.Timeout <= 0 {
+			return errs.Invalidf("invalid --timeout %q: must be a positive duration, e.g. 2s or 500ms", v["timeout"])
+		}
+	}
+	if c.Has("count") {
+		if c.Count, err = parseInt(v["count"], 1, 100); err != nil {
+			return errs.Invalidf("invalid --count %q: must be an integer 1..100", v["count"])
+		}
+	}
+	if c.Has("echo-size") {
+		if c.EchoSize, err = parseInt(v["echo-size"], 1, 1400); err != nil {
+			return errs.Invalidf("invalid --echo-size %q: must be an integer 1..1400", v["echo-size"])
 		}
 	}
 	c.PSK, c.QR, c.AmneziaKey, c.Keenetic, c.JSON, c.Yes = c.Has("psk"), c.Has("qr"), c.Has("amnezia-key"), c.Has("keenetic"), c.Has("json"), c.Has("yes")

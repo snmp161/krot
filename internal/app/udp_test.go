@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strings"
 	"testing"
@@ -40,24 +41,14 @@ func TestUDPRequiresRoot(t *testing.T) {
 // SPEC 6.14: --udp-listener не стартует, если порт занят (код 5).
 func TestUDPListenerPortConflict(t *testing.T) {
 	port := freeUDPPort(t)
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: port})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-
 	e := newEnv(t)
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		e.run("--udp-listener", "--port", itoa(port))
-	}()
-	select {
-	case <-done:
-	case <-time.After(2 * time.Second):
-		t.Fatal("listener did not exit")
-	}
-	if got := errs.Code(e.app.Run([]string{"--udp-listener", "--port", itoa(port)})); got != errs.Conflict {
+	// Помечаем порт занятым в фейковом /proc/net/udp, чтобы checkUDPPortsFree
+	// сработала без root и без реального слушающего процесса.
+	hexPort := fmt.Sprintf("%04X", port)
+	e.write(e.app.Paths.ProcNet+"/udp", udpHdr+
+		"  123: 00000000:"+hexPort+" 00000000:0000 07 00000000:00000000 00:00000000 00000000     0        0 4242 2 0000000000000000 0\n")
+
+	if got := e.run("--udp-listener", "--port", itoa(port)); got != errs.Conflict {
 		t.Fatalf("exit code %d; want %d (conflict)", got, errs.Conflict)
 	}
 }

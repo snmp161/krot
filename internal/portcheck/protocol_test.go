@@ -23,10 +23,10 @@ func TestPingPong(t *testing.T) {
 	}
 	// Некорректные ответы.
 	for _, bad := range [][]byte{
-		[]byte("pong SEQ:1"),
 		[]byte("pong SEQ:"),
 		[]byte("pong"),
 		[]byte("pong SEQ:abc"),
+		[]byte("pong SEQ:0"),
 		[]byte("ping SEQ:1"),
 	} {
 		if _, ok := ParsePong(bad); ok {

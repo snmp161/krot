@@ -124,6 +124,10 @@ func (a *App) run(args []string) error {
 		return a.list(cmd)
 	case cli.ActListClient:
 		return a.listClient(cmd)
+	case cli.ActUDPListener:
+		return a.udpListener(cmd)
+	case cli.ActUDPChecker:
+		return a.udpChecker(cmd)
 	}
 	return errs.New(errs.Internal, "action --%s is not implemented", cmd.Action)
 }

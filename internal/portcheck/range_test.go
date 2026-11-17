@@ -21,7 +21,6 @@ func TestParsePortRange(t *testing.T) {
 		{"0", PortRange{}, true},
 		{"65536", PortRange{}, true},
 		{"51822:51820", PortRange{}, true},
-		{"51820:51945", PortRange{}, true}, // 126 портов > 1024? wait 51945-51820+1=126, ok
 		{"51820:52852", PortRange{}, true}, // 1033 порта > 1024
 		{"abc", PortRange{}, true},
 		{"51820:", PortRange{}, true},
