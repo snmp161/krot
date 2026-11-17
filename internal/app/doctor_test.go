@@ -30,8 +30,14 @@ func TestDoctorNotRoot(t *testing.T) {
 	e := newEnv(t)
 	e.app.Euid = func() int { return 1000 }
 	e.mustRun(0, "--doctor")
-	if !strings.Contains(e.stdout.String(), "root") || !strings.Contains(e.stdout.String(), "warn") {
-		t.Fatalf("stdout:\n%s", e.stdout)
+	out := e.stdout.String()
+	if !strings.Contains(out, "root") || !strings.Contains(out, "warn") {
+		t.Fatalf("stdout:\n%s", out)
+	}
+	for _, want := range []string{"--udp-checker", "--udp-listener"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("root warning does not describe %s", want)
+		}
 	}
 }
 

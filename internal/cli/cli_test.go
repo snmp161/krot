@@ -267,6 +267,20 @@ func TestHelpVersion(t *testing.T) {
 	}
 }
 
+// SPEC 2.4: встроенная справка точно описывает исключения из требования root.
+func TestUsageRootPrivileges(t *testing.T) {
+	got := Usage()
+	for _, want := range []string{
+		"Not required for --help, --version, --doctor, or --udp-checker.",
+		"--udp-listener requires root only for ports below 1024",
+		"/proc/net/udp and /proc/net/udp6 are not readable",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("usage text does not contain %q", want)
+		}
+	}
+}
+
 // SPEC 4.4: форматы значений → код 3.
 func TestValues(t *testing.T) {
 	create := func(kv ...string) []string {

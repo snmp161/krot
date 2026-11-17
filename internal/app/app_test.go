@@ -197,7 +197,7 @@ func TestHelpVersionWithoutRoot(t *testing.T) {
 	}
 }
 
-// SPEC 2.4: все действия, кроме --help и --version, требуют root (код 6).
+// SPEC 2.4: управление туннелями и клиентами требует root (код 6).
 func TestRequiresRoot(t *testing.T) {
 	e := newEnv(t)
 	e.app.Euid = func() int { return 1000 }
