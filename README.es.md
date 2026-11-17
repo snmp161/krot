@@ -7,6 +7,9 @@
 eliminar interfaces, administrar clientes (peers) y generar configuraciones
 de cliente, códigos QR y claves de AmneziaVPN (`vpn://…`).
 
+El nombre **krot** significa "topo" en ruso y en varios otros idiomas
+eslavos — un animal que excava túneles.
+
 - Un solo binario estático sin dependencias (Go, `CGO_ENABLED=0`).
 - Las operaciones con clientes **nunca reinician ni recrean la interfaz**:
   solo llamadas puntuales a `wg|awg set <if> peer …` — los demás clientes

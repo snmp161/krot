@@ -7,6 +7,9 @@
 managing clients (peers), and generating client configs, QR codes, and
 AmneziaVPN keys (`vpn://…`).
 
+The name **krot** means "mole" in Russian and several other Slavic languages —
+an animal that digs tunnels.
+
 - A single static binary with no dependencies (Go, `CGO_ENABLED=0`).
 - Client operations **never restart or recreate the interface**: only targeted
   `wg|awg set <if> peer …` calls — other clients are unaffected.
