@@ -197,6 +197,28 @@ func TestHelpVersionWithoutRoot(t *testing.T) {
 	}
 }
 
+// SPEC 4.1: при ошибке использования выводится короткая подсказка --help.
+func TestUsageErrorHelpHint(t *testing.T) {
+	e := newEnv(t)
+	const hint = "Try 'krot --help' for more information.\n"
+	for _, args := range [][]string{
+		nil,
+		{"--bogus"},
+		{"--up"},
+		{"--list", "--create"},
+	} {
+		e.mustRun(errs.Usage, args...)
+		if got := e.stderr.String(); !strings.HasSuffix(got, hint) || strings.Count(got, hint) != 1 {
+			t.Errorf("%q: stderr = %q; want exactly one trailing help hint", args, got)
+		}
+	}
+
+	e.mustRun(errs.Invalid, "--list", "--port", "invalid")
+	if strings.Contains(e.stderr.String(), hint) {
+		t.Errorf("invalid value produced a usage hint: %q", e.stderr)
+	}
+}
+
 // SPEC 2.4: управление туннелями и клиентами требует root (код 6).
 func TestRequiresRoot(t *testing.T) {
 	e := newEnv(t)
