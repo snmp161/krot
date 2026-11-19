@@ -62,7 +62,7 @@ Effectuez l'installation depuis les paquets ou les binaires de la page des relea
 <https://github.com/snmp161/krot/releases>, et vérifiez toujours la somme de contrôle.
 
 ```sh
-VERSION=0.7.1
+VERSION=0.7.2
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # télécharger le paquet et la liste des sommes de contrôle

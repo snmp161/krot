@@ -62,7 +62,7 @@ Installieren Sie krot aus Paketen oder Binärdateien auf der Release-Seite
 <https://github.com/snmp161/krot/releases>, und prüfen Sie stets die Prüfsumme.
 
 ```sh
-VERSION=0.7.1
+VERSION=0.7.2
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # Paket und Liste der Prüfsummen herunterladen

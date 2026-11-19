@@ -56,7 +56,7 @@ krot은 이러한 구성 요소를 직접 설치하지 않습니다. 필요한 �
 설치하고, 항상 체크섬을 검증하십시오.
 
 ```sh
-VERSION=0.7.1
+VERSION=0.7.2
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # 패키지와 체크섬 목록 다운로드
