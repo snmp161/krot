@@ -13,8 +13,8 @@ func TestReadmeInstallVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(files) != 9 {
-		t.Fatalf("found %d README files, want 9", len(files))
+	if len(files) != 11 {
+		t.Fatalf("found %d README files, want 11", len(files))
 	}
 	for _, name := range files {
 		data, err := os.ReadFile(name)
