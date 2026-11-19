@@ -165,7 +165,7 @@ func (a *App) deleteTunnel(cmd *cli.Command) error {
 		fmt.Fprint(a.Stderr, i18n.Sprintf("Interface %s has %d %s. Delete? [y/N] ", t.name, n, clients))
 		line, _ := bufio.NewReader(a.Stdin).ReadString('\n')
 		if ans := strings.ToLower(strings.TrimSpace(line)); ans != "y" && ans != "yes" {
-			return errs.Cancelledf("deletion of interface %s cancelled", t.name)
+			return errs.Cancelledf("deletion of interface %s canceled", t.name)
 		}
 	}
 	return a.withLock(func() error {

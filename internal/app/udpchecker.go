@@ -75,7 +75,7 @@ func (a *App) runUDPChecker(ctx context.Context, cmd *cli.Command) error {
 		}
 	}
 	if checkErr != nil {
-		return errs.Cancelledf("UDP check cancelled; partial results for %d of %d ports", len(results), len(cmd.PortRange.Ports()))
+		return errs.Cancelledf("UDP check canceled; partial results for %d of %d ports", len(results), len(cmd.PortRange.Ports()))
 	}
 	return nil
 }

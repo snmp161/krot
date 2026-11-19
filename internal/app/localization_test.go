@@ -118,7 +118,7 @@ func TestRussianUDPCheckerOutput(t *testing.T) {
 		t.Errorf("Russian UDP table:\n%s", e.stdout)
 	}
 	for _, want := range []string{
-		"Проверка UDP-портов " + itoa(port) + " на 127.0.0.1, работников: 2",
+		"Проверка UDP-портов " + itoa(port) + " на 127.0.0.1, параллельных проверок: 2",
 		"UDP-порт " + itoa(port) + ": ok",
 	} {
 		if !strings.Contains(e.stderr.String(), want) {

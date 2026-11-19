@@ -83,7 +83,7 @@ Exit codes:
   0 success                 5 conflict (already exists, address or port in use)
   1 internal error          6 environment (not root, missing tools, AmneziaWG version)
   2 usage error             7 could not acquire the lock
-  3 invalid value           10 cancelled by user
+  3 invalid value           10 canceled by user
   4 not found
 
 Root privileges:
