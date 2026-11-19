@@ -34,8 +34,9 @@ func TestManPages(t *testing.T) {
 				t.Errorf("%s: missing section %q", name, section)
 			}
 		}
+		plainText := strings.ReplaceAll(text, `\-`, "-")
 		for _, flag := range flags {
-			if !strings.Contains(text, `\-\-`+flag) {
+			if !strings.Contains(plainText, "--"+flag) {
 				t.Errorf("%s: missing --%s", name, flag)
 			}
 		}

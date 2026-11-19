@@ -1,0 +1,276 @@
+.TH KROT 1 "" "krot" "User Commands"
+.SH NAME
+krot \- manage WireGuard and AmneziaWG tunnels on Linux servers
+.SH SYNOPSIS
+.B krot
+.I action
+.RI [ flags ]
+.PP
+Exactly one action is required per invocation. Flags use the long forms
+.B \-\-flag value
+or
+.BR \-\-flag = value .
+Run
+.B krot \-\-help
+for a compact command summary.
+.SH DESCRIPTION
+.B krot
+creates, deletes, starts, and stops WireGuard and AmneziaWG 1.x, 2.0, and 3.1
+tunnels. It manages clients without restarting or recreating the interface and
+prints client configurations, QR codes, AmneziaVPN keys, and KeeneticOS commands.
+.PP
+The interface configuration is the single source of truth. Client operations use
+only targeted
+.B wg
+or
+.B awg set
+peer calls, so other connected clients are unaffected.
+.SH ACTIONS
+.TP
+.B \-\-list
+List tunnels. Supports filters and table or JSON output.
+.TP
+.B \-\-create
+Create a tunnel, write its configuration atomically, and enable its systemd unit.
+.TP
+.B \-\-delete
+Delete a tunnel after confirmation when it has clients. Use
+.B \-\-yes
+to skip the question.
+.TP
+.BR \-\-up , " " \-\-down
+Start or stop an existing interface through its systemd unit.
+.TP
+.B \-\-add\-client
+Create a client and print its configuration. Optional output includes a QR code,
+an AmneziaVPN key, and KeeneticOS CLI commands.
+.TP
+.B \-\-delete\-client
+Delete a client from the configuration and a running interface.
+.TP
+.BR \-\-lock\-client , " " \-\-unlock\-client
+Disable or restore a client without changing other peers.
+.TP
+.B \-\-list\-client
+List clients, addresses, status, latest handshake, and traffic counters.
+.TP
+.B \-\-doctor
+Read-only environment diagnostics. This action does not require root and does
+not take the global lock.
+.TP
+.B \-\-udp\-listener
+Run a UDP diagnostic listener on one port or a range of ports.
+.TP
+.B \-\-udp\-checker
+Check a remote krot UDP listener and report packet loss and round-trip time.
+.SH OPTIONS
+.TP
+.B \-\-help
+Print command help. Does not require root.
+.TP
+.B \-\-version
+Print the version, commit, and build date. Does not require root.
+.TP
+.BI \-\-type " wg|awg|awg2|awg3"
+Protocol type. Required for creation; optional as a list filter.
+.TP
+.BI \-\-interface " NAME"
+Interface name, up to 15 characters matching
+.BR [a-zA-Z0-9_.=+-] .
+Required by most tunnel and client actions; optional as a list filter.
+.TP
+.BI \-\-ip " CIDR[,CIDR]"
+Server addresses for creation, client addresses for addition, or an address
+filter for listing. One IPv4 and one IPv6 address are allowed. Client addresses
+use /32 and /128 prefixes.
+.TP
+.BI \-\-port " N|N:M"
+UDP port or inclusive port range from 1 to 65535. UDP diagnostics accept at most
+1024 ports. Required for creation and UDP modes; optional as a list filter.
+.TP
+.BI \-\-endpoint " HOST"
+Public server address for client configurations, without a port. Required for
+creation and a per-client override during addition.
+.TP
+.BI \-\-address " HOST"
+Remote listener address for the UDP checker, without a port.
+.TP
+.BI \-\-mtu " N"
+MTU from 576 to 9000. Defaults: wg 1420, awg/awg2 1376, awg3 1280.
+.TP
+.BI \-\-dns " IP[,IP]"
+DNS servers for generated client configurations.
+.TP
+.BI \-\-i1 " CPS"
+AmneziaWG I1 signature packet, at most 2048 characters. Valid only for awg types
+and incompatible with
+.BR \-\-mimic .
+.TP
+.BI \-\-mimic " PROFILE"
+Generate an I1-I5 mimicry chain. Profiles are
+.BR dns , " " stun , " " ntp , " " ssdp , " and " dtls .
+Valid only for awg types.
+.TP
+.BI \-\-id " ID"
+Client identifier, 1 to 64 characters matching
+.BR [a-zA-Z0-9_.-] ,
+unique within an interface.
+.TP
+.BI \-\-allowed\-ips " CIDR[,CIDR]"
+AllowedIPs value written to the client configuration, for example
+.BR 0.0.0.0/0,::/0 .
+.TP
+.B \-\-psk
+Generate a PresharedKey for the client.
+.TP
+.B \-\-qr
+Also print the client configuration as a terminal QR code.
+.TP
+.B \-\-amnezia\-key
+Also print the client configuration as an AmneziaVPN
+.B vpn://
+key.
+.TP
+.B \-\-keenetic
+Also print KeeneticOS CLI commands. Supports wg and awg 1.0/1.5/2.0 with IPv4
+only; awg3 is not supported.
+.TP
+.B \-\-json
+Print JSON instead of a table for list, list-client, and UDP modes. JSON keys,
+status values, and detail values are not localized.
+.TP
+.B \-\-yes
+Do not ask for confirmation when deleting a tunnel.
+.TP
+.BI \-\-timeout " DURATION"
+Response timeout for one UDP packet, for example
+.B 2s
+or
+.BR 500ms .
+The default is 2s.
+.TP
+.BI \-\-count " N"
+Packets of each type per UDP port, from 1 to 100. The default is 3.
+.TP
+.BI \-\-echo\-size " N"
+Random echo payload size from 1 to 1400 bytes. The default is 64.
+.TP
+.BI \-\-workers " N"
+Concurrent UDP port checks from 1 to 100. The default is 32. Requests within one
+port remain sequential.
+.TP
+.B \-\-verbose
+Write UDP diagnostic progress to standard error without changing standard output.
+.SH UDP DIAGNOSTICS
+The listener accepts
+.B ping SEQ:N
+and returns
+.BR "pong SEQ:N" ;
+it returns the payload of
+.B ECHO text
+and replies to
+.B TIME
+with Unix time in milliseconds. The protocol is unencrypted.
+.PP
+The checker reports
+.B ok
+when all ping and echo replies are valid,
+.B filtered
+when a reply times out, and
+.B error
+for an invalid response or local network error. SIGINT or SIGTERM prints results
+for completed ports only and exits with status 10.
+.SH ENVIRONMENT
+.TP
+.B LC_ALL
+Highest-priority locale selection variable.
+.TP
+.B LC_MESSAGES
+Used when LC_ALL is empty or unset.
+.TP
+.B LANG
+Used when both variables above are empty or unset.
+.PP
+The supported languages are English (en_US) and Russian (ru_RU). A locale whose
+name is ru or begins with ru followed by _, -, ., or @ selects Russian. All other
+values, including C and POSIX, select English. Command names, flags, JSON,
+configuration files, KeeneticOS commands, shell completion, and the UDP protocol
+are not localized. Errors from the operating system and external programs are
+preserved verbatim.
+.SH "EXIT STATUS"
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Internal or unexpected error.
+.TP
+.B 2
+Command-line usage error.
+.TP
+.B 3
+Invalid value.
+.TP
+.B 4
+Interface or client not found.
+.TP
+.B 5
+Conflict: an object already exists, or an address or port is in use.
+.TP
+.B 6
+Environment error: missing privileges, tools, or a required AmneziaWG version.
+.TP
+.B 7
+Could not acquire the global lock.
+.TP
+.B 10
+Cancelled by the user.
+.SH FILES
+.TP
+.I /etc/wireguard/*.conf
+WireGuard interface configurations.
+.TP
+.I /etc/amnezia/amneziawg/*.conf
+AmneziaWG interface configurations.
+.TP
+.I /run/lock/krot.lock
+Global krot lock.
+.TP
+.I /usr/share/man/man1/krot.1
+English manual page.
+.TP
+.I /usr/share/man/ru/man1/krot.1
+Russian manual page.
+.SH EXAMPLES
+Create an AmneziaWG 2.0 tunnel:
+.PP
+.nf
+sudo krot \-\-create \-\-type awg2 \-\-ip 10.8.0.1/24 \e
+    \-\-port 51820 \-\-endpoint vpn.example.com
+.fi
+.PP
+Add a client and display a QR code:
+.PP
+.nf
+sudo krot \-\-add\-client \-\-interface awg0 \-\-id phone \e
+    \-\-allowed\-ips 0.0.0.0/0,::/0 \-\-qr
+.fi
+.PP
+Check a UDP port range with 64 workers and progress messages:
+.PP
+.nf
+krot \-\-udp\-checker \-\-address 203.0.113.1 \e
+    \-\-port 51820:51830 \-\-workers 64 \-\-verbose
+.fi
+.SH NOTES
+Root is not required for help, version, doctor, or UDP checking. The UDP listener
+requires root only for ports below 1024 or when /proc/net/udp and /proc/net/udp6
+are unreadable. Other actions require root.
+.PP
+krot does not install WireGuard or AmneziaWG and does not configure NAT,
+forwarding, firewall rules, or sysctl settings.
+.SH "SEE ALSO"
+.BR wg (8),
+.BR wg\-quick (8),
+.BR systemctl (1),
+.BR ip (8)

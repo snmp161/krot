@@ -30,6 +30,14 @@ contents:
     dst: /usr/share/zsh/site-functions/_krot
     file_info:
       mode: 0644
+  - src: ./packaging/krot.1
+    dst: /usr/share/man/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.ru.1
+    dst: /usr/share/man/ru/man1/krot.1
+    file_info:
+      mode: 0644
   - src: ./LICENSE
     dst: /usr/share/doc/krot/LICENSE
     file_info:
