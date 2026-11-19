@@ -1,6 +1,6 @@
 # krot
 
-[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Português](README.pt.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | **العربية**
+[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Português](README.pt.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | **العربية** | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 `krot` هي أداة سطر أوامر لإدارة أنفاق **WireGuard** و**AmneziaWG**
 (1.x و2.0 و3.1) على خوادم Linux: إنشاء الواجهات وحذفها، وإدارة العملاء (peers)،

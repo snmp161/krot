@@ -27,7 +27,7 @@ var readmeLanguages = []readmeLanguage{
 	{"README.de.md", "Deutsch"},
 }
 
-// SPEC 10 T33, T34: все README связывают все доступные языковые версии.
+// SPEC 10 T33: все README связывают все доступные языковые версии.
 func TestReadmeLanguageLinks(t *testing.T) {
 	for _, current := range readmeLanguages {
 		text := readRepoFile(t, current.name)
@@ -43,7 +43,7 @@ func TestReadmeLanguageLinks(t *testing.T) {
 	}
 }
 
-// SPEC 10 T33, T34: переводы сохраняют техническую структуру английского README.
+// SPEC 10 T33: переводы сохраняют техническую структуру английского README.
 func TestFrenchGermanReadmeStructure(t *testing.T) {
 	english := readRepoFile(t, "README.md")
 	for _, name := range []string{"README.fr.md", "README.de.md"} {
@@ -63,7 +63,7 @@ func TestFrenchGermanReadmeStructure(t *testing.T) {
 	}
 }
 
-// SPEC 10 T33, T34: локальные ссылки во всех README указывают на файлы.
+// SPEC 10 T33: локальные ссылки во всех README указывают на файлы.
 func TestReadmeLocalLinks(t *testing.T) {
 	link := regexp.MustCompile(`\]\(([^)]+)\)`)
 	for _, language := range readmeLanguages {
@@ -104,7 +104,18 @@ func tableShapes(text string) string {
 
 func inlineCode(text string) string {
 	re := regexp.MustCompile("`[^`]+`")
-	return strings.Join(re.FindAllString(text, -1), "\n")
+	var out []string
+	fenced := false
+	for _, line := range strings.Split(text, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			fenced = !fenced
+			continue
+		}
+		if !fenced {
+			out = append(out, re.FindAllString(line, -1)...)
+		}
+	}
+	return strings.Join(out, "\n")
 }
 
 func technicalCodeLines(text string) string {

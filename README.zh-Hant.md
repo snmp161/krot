@@ -1,6 +1,6 @@
 # krot
 
-[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | **繁體中文** | [Español](README.es.md) | [Português](README.pt.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [العربية](README.ar.md)
+[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | **繁體中文** | [Español](README.es.md) | [Português](README.pt.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 `krot` 是一款用於在 Linux 伺服器上管理 **WireGuard** 與 **AmneziaWG**
 （1.x、2.0、3.1）隧道的命令列工具：建立與刪除介面、管理客戶端（peer）、

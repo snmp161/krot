@@ -1,6 +1,6 @@
 # krot
 
-[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Português](README.pt.md) | **한국어** | [日本語](README.ja.md) | [العربية](README.ar.md)
+[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Português](README.pt.md) | **한국어** | [日本語](README.ja.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 `krot`은 Linux 서버에서 **WireGuard** 및 **AmneziaWG**
 (1.x, 2.0, 3.1) 터널을 관리하는 명령줄 유틸리티입니다. 인터페이스를 생성하고 삭제하며,

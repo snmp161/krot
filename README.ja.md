@@ -1,6 +1,6 @@
 # krot
 
-[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Português](README.pt.md) | [한국어](README.ko.md) | **日本語** | [العربية](README.ar.md)
+[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | [Español](README.es.md) | [Português](README.pt.md) | [한국어](README.ko.md) | **日本語** | [العربية](README.ar.md) | [Français](README.fr.md) | [Deutsch](README.de.md)
 
 `krot` は、Linux サーバー上で **WireGuard** および **AmneziaWG**
 （1.x、2.0、3.1）トンネルを管理するコマンドラインユーティリティです。
