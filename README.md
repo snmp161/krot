@@ -60,7 +60,7 @@ Install from packages or binaries on the releases page
 <https://github.com/snmp161/krot/releases>, and always verify the checksum.
 
 ```sh
-VERSION=0.1.0
+VERSION=0.7.1
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # download the package and the checksum list

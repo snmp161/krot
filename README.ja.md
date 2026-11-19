@@ -58,7 +58,7 @@ krot はこれらのコンポーネントを自動的にはインストールし
 バイナリをインストールし、必ずチェックサムを検証してください。
 
 ```sh
-VERSION=0.1.0
+VERSION=0.7.1
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # パッケージとチェックサム一覧をダウンロード

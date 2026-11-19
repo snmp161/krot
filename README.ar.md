@@ -55,7 +55,7 @@
 <https://github.com/snmp161/krot/releases>، وتحقق دائمًا من المجموع الاختباري.
 
 ```sh
-VERSION=0.1.0
+VERSION=0.7.1
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # تنزيل الحزمة وقائمة المجاميع الاختبارية

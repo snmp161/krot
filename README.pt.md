@@ -63,7 +63,7 @@ Instale a partir de pacotes ou binários na página de releases
 verificação.
 
 ```sh
-VERSION=0.1.0
+VERSION=0.7.1
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # baixar o pacote e a lista de somas de verificação

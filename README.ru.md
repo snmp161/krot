@@ -54,7 +54,7 @@ krot сам ничего из этого не устанавливает. Есл
 <https://github.com/snmp161/krot/releases>, обязательно проверяя контрольную сумму.
 
 ```sh
-VERSION=0.1.0
+VERSION=0.7.1
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # скачать пакет и список контрольных сумм
