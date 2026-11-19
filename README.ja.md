@@ -135,7 +135,7 @@ krot --doctor   # root 不要: ツール、カーネルモジュール、Amnezia
 ホスティング事業者やそのアップリンクが DDoS 対策ルールなどによって
 一部のポートをフィルタリングしている場合に便利です。
 
-サーバーで listener を起動します:
+サーバーでリスナーを起動します:
 
 ```sh
 # 単一ポート
@@ -145,12 +145,12 @@ sudo krot --udp-listener --port 51820
 sudo krot --udp-listener --port 51820:51830
 ```
 
-Listener は 3 種類のデータグラムに応答します:
+リスナー は 3 種類のデータグラムに応答します:
 - `ping SEQ:N` → `pong SEQ:N`;
 - `ECHO <text>` → `<text>`;
 - `TIME` → 現在の Unix 時刻（ミリ秒）。
 
-クライアントで checker を実行します:
+クライアントでチェッカーを実行します:
 
 ```sh
 # 単一ポートを確認
@@ -162,15 +162,15 @@ krot --udp-checker --address 203.0.113.1 --port 51820:51830
 # echo ペイロードサイズを増やす（1–1400 バイト、デフォルト 64）— 最適な MTU の確認に有用
 krot --udp-checker --address 203.0.113.1 --port 51820 --echo-size 1400
 
-# worker 数を設定して進捗を表示
+# ワーカー数を設定して進捗を表示
 krot --udp-checker --address 203.0.113.1 --port 51820:51830 --workers 64 --verbose
 ```
 
-デフォルトでは、checker はポートごとに各タイプのパケットを 3 個ずつ送信し
+デフォルトでは、チェッカーはポートごとに各タイプのパケットを 3 個ずつ送信し
 （`--count`、1–100）、`--timeout`（デフォルト 2s）内に応答を待ちます。
-デフォルトで 32 ポートを並行して確認し、`--workers` で 1–100 個の worker を設定できます。
+デフォルトで 32 ポートを並行して確認し、`--workers` で 1–100 個のワーカー を設定できます。
 `--verbose` を指定すると、範囲と各ポートの完了結果を stderr に記録します。
-listener ではクライアントアドレスとリクエストタイプを記録します。出力例:
+リスナーではクライアントアドレスとリクエストタイプを記録します。出力例:
 
 ```
 PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
@@ -187,12 +187,12 @@ PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
 `time_sent`、`time_ok`、`rtt_min_ms`、`rtt_avg_ms`、`rtt_max_ms`、`detail` の各フィールドを持つ
 オブジェクトの配列を出力します。
 
-`Ctrl+C`/`SIGTERM` を受け取ると、checker は完全に確認できたポートの結果を選択された形式で出力し、
+`Ctrl+C`/`SIGTERM` を受け取ると、チェッカーはチェックが完了したポートの結果を選択された形式で出力し、
 終了コード `10` で終了します。未完了のポートは省略されます。
 
 `--udp-checker` は root 不要で動作します。`--udp-listener` は、範囲に `<1024` のポートが含まれる場合、
 または現在のユーザーが `/proc/net/udp` と `/proc/net/udp6` を読み取れない場合のみ root が必要です。
-Listener は `Ctrl+C`/`SIGTERM` まで実行を続けます。
+リスナー は `Ctrl+C`/`SIGTERM` まで実行を続けます。
 
 `--list` の例:
 
@@ -225,7 +225,7 @@ sudo krot --add-client --interface wg0 --id keenetic --allowed-ips 0.0.0.0/0 --k
 # クライアントアドレスを明示
 sudo krot --add-client --interface awg0 --id router --allowed-ips 10.8.0.0/24 --ip 10.8.0.50/32
 
-# krot メタデータのない外部設定: endpoint を明示（サーバー設定には書き込みません）
+# krot メタデータがなく外部で作成された設定: endpoint を明示（サーバー設定には書き込みません）
 sudo krot --add-client --interface office --id guest --allowed-ips 0.0.0.0/0 --endpoint 203.0.113.10
 
 # 単一クライアント用のカスタム DNS（サーバー設定には書き込みません）
@@ -297,11 +297,11 @@ krot --add-client --interface awg0 --id phone --allowed-ips 0.0.0.0/0 --mimic st
 サーバーには不要です。クライアントには AmneziaWG 1.5 以降が必要です。
 仕様の第 6.12 節を参照してください。
 
-krot は組み込みプロファイルに加えて、`--create` の `--i1` で既成の CPS 文字列も受け付けます。
+krot は組み込みプロファイルに加えて、`--create` の `--i1` で用意された CPS 文字列も受け付けます。
 例えば QUIC 用の文字列を指定できますが、組み込み QUIC プロファイルは生成されません。
 単一の QUIC Initial が 2400–2500 文字となり、2048 文字の制限を超えるためです
 （[amneziawg-tools#69](https://github.com/amnezia-vpn/amneziawg-tools/issues/69)）。
-既成の文字列は、以下のサードパーティー製ジェネレーターで取得できます。
+用意された文字列は、以下のサードパーティー製ジェネレーターで取得できます。
 どちらも MIT ライセンスで、krot とは関係ありません。
 
 - [payloadGen](https://github.com/Sketchystan1/payloadGen) — Web ページです。
@@ -448,15 +448,15 @@ make integration  # systemd を備えた特権 Docker コンテナで統合テ�
   外部コマンド（`wg`、`awg`、`systemctl`、`ip` など）は呼び出しを記録するフェイクで処理します。
   クライアント操作が `wg|awg show` と `wg|awg set <if> peer …` のみを呼び出すことを
   個別のテストで検証します。
-- **Golden ファイル**は各パッケージの `testdata/` にあります。生成された出力（`internal/app`、`internal/qr`）は、
+- **ゴールデンファイル**は各パッケージの `testdata/` にあります。生成された出力（`internal/app`、`internal/qr`）は、
   `go test ./internal/app ./internal/qr -update` を使って意図的に更新する場合のみ変更し、
-  コミットで理由を説明します。その他の golden ファイルは仕様に基づいて手動で作成します。
+  コミットで理由を説明します。その他の ゴールデン ファイルは仕様に基づいて手動で作成します。
 - **統合テスト**（`test/integration`、ビルドタグ `integration`）には root と systemd が必要で、
   分離されたネットワークネームスペース内でのみ実行されます。テスト用インターフェースユニットは
   `NetworkNamespacePath` drop-in によって netns に配置されます。すべてのタイプの完全なライフサイクル、
   クライアント操作の透過性（パケットロスのない継続的な ping、変化しない ifindex とハンドシェイク）、IPv6、
-  外部設定、同時実行をカバーします。ローカルでは `scripts/integration-docker.sh`、CI では `sudo` で実行します。
-- `scripts/collect-versions.sh` は golden テスト用に実際の AmneziaWG バージョン出力を再収集します。
+  外部で作成された設定、同時実行をカバーします。ローカルでは `scripts/integration-docker.sh`、CI では `sudo` で実行します。
+- `scripts/collect-versions.sh` は ゴールデン テスト用に実際の AmneziaWG バージョン出力を再収集します。
 - **CI**（`.github/workflows/ci.yml`）: gofmt、vet、`-race` とカバレッジ付きの単体テスト、
   `govulncheck` + `gosec` によるセキュリティ監査、`staticcheck`、統合テスト、`amd64`/`arm64` ビルド。
   **リリース**（`release.yml`、タグ `v*`）: バイナリ、`.deb`/`.rpm` パッケージ

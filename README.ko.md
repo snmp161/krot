@@ -12,7 +12,7 @@
 - 의존성이 없는 단일 정적 바이너리입니다(Go, `CGO_ENABLED=0`).
 - 클라이언트 작업은 **인터페이스를 재시작하거나 재생성하지 않습니다**.
   `wg|awg set <if> peer …` 호출만 대상으로 수행하므로 다른 클라이언트에는 영향이 없습니다.
-- 인터페이스 구성이 유일한 신뢰 기준입니다. 별도의 데이터베이스가 없으며,
+- 인터페이스 구성 파일을 유일하게 신뢰할 수 있는 정보 소스로 사용합니다. 별도의 데이터베이스가 없으며,
   krot 메타데이터는 주석에 저장됩니다. krot이 생성하지 않은 구성도 읽고 보존합니다.
 - 사람이 읽기 위한 표와 자동화를 위한 `--json` 및 종료 코드를 제공하는 예측 가능한 출력입니다.
 - krot은 NAT, 포워딩 또는 방화벽 규칙을 구성하지 않습니다.
@@ -159,13 +159,13 @@ krot --udp-checker --address 203.0.113.1 --port 51820:51830
 # echo 페이로드 크기 늘리기(1–1400바이트, 기본값 64) — 최적 MTU를 찾는 데 유용함
 krot --udp-checker --address 203.0.113.1 --port 51820 --echo-size 1400
 
-# worker 수를 설정하고 진행 상황 표시
+# 워커 수를 설정하고 진행 상황 표시
 krot --udp-checker --address 203.0.113.1 --port 51820:51830 --workers 64 --verbose
 ```
 
 기본적으로 checker는 포트마다 각 유형의 패킷을 3개씩 보내고(`--count`, 1–100)
 `--timeout`(기본값 2s) 이내에 응답을 기다립니다. 기본적으로 32개 포트를 동시에 검사하며,
-`--workers`로 1–100개의 worker를 설정할 수 있습니다. `--verbose`는 범위와 각 포트의
+`--workers`로 1–100개의 워커를 설정할 수 있습니다. `--verbose`는 범위와 각 포트의
 검사 완료 결과를 stderr에 기록합니다. listener에서는 클라이언트 주소와 요청 유형을 기록합니다.
 출력 예:
 
@@ -177,7 +177,7 @@ PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
 
 상태:
 - `ok` — 모든 ping 및 echo 패킷이 유효한 응답을 받았습니다.
-- `filtered` — 하나 이상의 패킷 시간이 초과되었습니다(포트가 필터링되었을 가능성이 높습니다).
+- `filtered` — 하나 이상의 패킷에 대한 응답이 제한 시간 내에 도착하지 않았습니다(포트가 필터링되었을 가능성이 높습니다).
 - `error` — 잘못된 응답을 받았습니다.
 
 `--json`을 사용하면 `port`, `status`, `ping_sent`, `ping_ok`, `echo_sent`, `echo_ok`,
@@ -242,7 +242,7 @@ sudo krot --delete-client --interface awg0 --id laptop
 클라이언트 구성에 `DNS` 줄이 포함되지 않습니다.
 
 클라이언트 주소는 네트워크 주소, 브로드캐스트 주소, 서버 주소를 제외하고
-인터페이스 서브넷에서 할당됩니다. 포인트 투 포인트 서브넷 `/31`과 `/127`
+인터페이스 서브넷에서 할당됩니다. 포인트-투-포인트 서브넷 `/31`과 `/127`
 (RFC 3021, RFC 6164)도 지원합니다. 두 주소를 모두 사용할 수 있으므로
 `--create … --ip 10.8.0.0/31,fd00:8::/127`로 "서버 + 클라이언트 하나" 터널을 만들 수 있습니다.
 
@@ -292,11 +292,11 @@ krot --add-client --interface awg0 --id phone --allowed-ips 0.0.0.0/0 --mimic st
 내므로 서버에는 필요하지 않습니다. 클라이언트에는 AmneziaWG 1.5 이상이 필요합니다.
 명세 6.12절을 참조하십시오.
 
-krot은 내장 프로필 외에도 `--create`에서 `--i1`을 통해 기성 CPS 문자열을 받을 수 있습니다.
+krot은 내장 프로필 외에도 `--create`에서 `--i1`을 통해 미리 만들어진 CPS 문자열을 받을 수 있습니다.
 예를 들어 QUIC이 가능하지만, 내장 QUIC 프로필은 생성하지 않습니다. 단일 QUIC Initial이
 2400–2500자로 2048자 제한을 초과하기 때문입니다
 ([amneziawg-tools#69](https://github.com/amnezia-vpn/amneziawg-tools/issues/69)).
-기성 문자열은 다음 서드파티 생성기에서 얻을 수 있습니다. 두 프로젝트 모두 MIT 라이선스이며
+미리 만들어진 문자열은 다음 서드파티 생성기에서 얻을 수 있습니다. 두 프로젝트 모두 MIT 라이선스이며
 krot과 관련이 없습니다.
 
 - [payloadGen](https://github.com/Sketchystan1/payloadGen) — 웹 페이지입니다.
@@ -428,7 +428,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 make check        # gofmt, go vet(integration 태그 포함), go test -race ./..., gosec, staticcheck
 make build        # 정적 bin/krot(CGO_ENABLED=0), 버전은 git describe에서 가져옴
 make build-arm64
-make integration  # systemd가 있는 권한 부여 Docker 컨테이너에서 통합 테스트 실행
+make integration  # systemd를 실행하는 특권 Docker 컨테이너에서 통합 테스트 실행
 ```
 
 리포지터리 규칙: [`AGENTS.md`](AGENTS.md) — 명세 우선, 코드보다 테스트 먼저,
@@ -437,16 +437,16 @@ make integration  # systemd가 있는 권한 부여 Docker 컨테이너에서 �
 - **단위 테스트**는 root가 필요 없고 시스템을 변경하지 않습니다. 디렉터리는 임시 디렉터리로
   대체하고 외부 명령(`wg`, `awg`, `systemctl`, `ip` 등)은 호출을 기록하는 가짜 실행기로 처리합니다.
   별도의 테스트는 클라이언트 작업이 `wg|awg show`와 `wg|awg set <if> peer …`만 호출하는지 검증합니다.
-- **Golden 파일**은 각 패키지의 `testdata/`에 있습니다. 생성된 출력(`internal/app`, `internal/qr`)은
+- **골든 파일**은 각 패키지의 `testdata/`에 있습니다. 생성된 출력(`internal/app`, `internal/qr`)은
   `go test ./internal/app ./internal/qr -update`로만 의도적으로 업데이트하고 커밋에 이유를 기록합니다.
-  다른 golden 파일은 명세에 따라 수동으로 작성합니다.
+  다른 골든 파일은 명세에 따라 수동으로 작성합니다.
 - **통합 테스트**(`test/integration`, 빌드 태그 `integration`)에는 root와 systemd가 필요하며,
   별도의 네트워크 네임스페이스에서만 실행됩니다. 테스트 인터페이스 유닛은
   `NetworkNamespacePath` drop-in을 통해 netns에 배치됩니다. 모든 유형의 전체 수명 주기,
   클라이언트 작업의 투명성(손실 없는 연속 ping, 변경되지 않는 ifindex와 핸드셰이크), IPv6,
   외부 구성, 동시 실행을 검증합니다. 로컬에서는 `scripts/integration-docker.sh`를 사용하고,
   CI에서는 `sudo`로 실행합니다.
-- `scripts/collect-versions.sh`는 golden 테스트를 위해 실제 AmneziaWG 버전 출력을 다시 수집합니다.
+- `scripts/collect-versions.sh`는 골든 테스트를 위해 실제 AmneziaWG 버전 출력을 다시 수집합니다.
 - **CI**(`.github/workflows/ci.yml`): gofmt, vet, `-race` 및 커버리지를 포함한 단위 테스트,
   `govulncheck` + `gosec` 보안 감사, `staticcheck`, 통합 테스트, `amd64`/`arm64` 빌드.
   **릴리스**(`release.yml`, 태그 `v*`): 바이너리, `.deb`/`.rpm` 패키지(nfpm, `packaging/nfpm.yaml`),

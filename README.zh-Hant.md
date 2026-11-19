@@ -100,7 +100,7 @@ sudo krot --create --type awg2 --ip 10.8.0.1/24,fd00:8::1/64 --port 51820 \
 sudo krot --create --type wg --interface wg0 --ip 10.9.0.1/24 --port 51821 \
           --endpoint 203.0.113.10 --mtu 1420
 
-# 含 I1 簽章封包的 AmneziaWG 1.5（krot 會驗證 CPS 語法與長度——最多 2048 字元）
+# 含 I1 特徵封包的 AmneziaWG 1.5（krot 會驗證 CPS 語法與長度——最多 2048 字元）
 sudo krot --create --type awg --ip 10.10.0.1/24 --port 51822 --endpoint vpn.example.com \
           --i1 '<b 0xf6ab3267fa><r 16>'
 
@@ -270,9 +270,9 @@ laptop-old    Qw7e…Zz1=   10.8.0.3/32                locked  -               -
 
 ### 偽裝（I1–I5 封包）
 
-自 1.5 版起，AmneziaWG 可在每次握手前發送最多五個簽章封包
+自 1.5 版起，AmneziaWG 可在每次握手前發送最多五個特徵封包
 `I1`–`I5`：這些封包看起來像其他協定（DNS、STUN、NTP、SSDP、DTLS）
-的開頭。krot 透過 `--mimic <profile>` 旗標自行產生此類鏈結：
+的開頭。krot 透過 `--mimic <profile>` 旗標自行產生此類封包序列：
 
 ```sh
 # 介面所有客戶端的預設 profile
@@ -282,7 +282,7 @@ krot --add-client --interface awg0 --id phone --allowed-ips 0.0.0.0/0 --mimic st
 ```
 
 Profile：`dns`（三個 A/AAAA/HTTPS 查詢）、`stun`（Binding Request）、
-`ntp`、`ssdp`（M-SEARCH）、`dtls`（ClientHello）。鏈結會在 `--add-client`
+`ntp`、`ssdp`（M-SEARCH）、`dtls`（ClientHello）。封包序列會在 `--add-client`
 時產生（每個客戶端各自獨立），且僅寫入客戶端設定檔：I 封包由握手發起方
 發送，伺服器不需要這些封包。客戶端需要 AmneziaWG 1.5+——請見規格第 6.12 節。
 
@@ -409,7 +409,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 - NAT、轉送、防火牆、sysctl 不在 krot 的範圍內（請使用
   `PostUp`/`PostDown` hook）。
 - 不支援安裝 WireGuard/AmneziaWG，以及在不同類型之間遷移隧道。
-  偽裝簽章產生使用內建 profile（`--mimic`）；QUIC profile 與自訂簽章
+  偽裝特徵產生使用內建 profile（`--mimic`）；QUIC profile 與自訂特徵
   則透過 `--i1` 與第三方產生器處理，見[偽裝](#偽裝i1i5-封包)。
 - `--i1` 不得超過 2048 字元：由於
   [amneziawg-tools#69](https://github.com/amnezia-vpn/amneziawg-tools/issues/69)，
