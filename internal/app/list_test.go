@@ -182,7 +182,7 @@ func TestListFilters(t *testing.T) {
 	}
 }
 
-// Нет каталогов и конфигов — пустой список; утилиты нужны только для существующих конфигов.
+// SPEC 6.1: без awg конфиг выводится со статусом unknown и без вызова show.
 func TestListEmptyAndTools(t *testing.T) {
 	e := newEnv(t)
 	e.fake.Missing = map[string]bool{"awg": true}
@@ -191,12 +191,55 @@ func TestListEmptyAndTools(t *testing.T) {
 		t.Fatalf("got %q", e.stdout)
 	}
 	e.write(e.awgConf("awg0"), fixture(t, "awg0_two_clients.conf"))
-	e.mustRun(errs.Env, "--list")
-	if !strings.Contains(e.stderr.String(), "amneziawg-tools") {
-		t.Fatalf("stderr %q", e.stderr)
+	e.mustRun(0, "--list")
+	if out := e.stdout.String(); !strings.Contains(out, "awg0") || !strings.Contains(out, "unknown") {
+		t.Fatalf("table without awg:\n%s", out)
+	}
+	items := listJSON(t, e)
+	if len(items) != 1 || items[0].Status != "unknown" {
+		t.Fatalf("JSON without awg: %+v", items)
+	}
+	if e.calledPrefix("awg show interfaces") {
+		t.Fatal("show interfaces must not be called without awg")
 	}
 	if e.exists(e.app.Paths.LockFile) {
 		t.Fatal("--list must not take the lock")
+	}
+}
+
+// SPEC 6.1: отсутствие wg не мешает получить состояние AWG; статусы смешанные.
+func TestListWithoutWG(t *testing.T) {
+	e := listEnv(t)
+	e.fake.Missing = map[string]bool{"wg": true}
+	items := listJSON(t, e)
+	want := map[string]string{"awg0": "up", "awg30": "down", "office": "unknown", "wg0": "unknown"}
+	for name, status := range want {
+		var got string
+		for _, item := range items {
+			if item.Interface == name {
+				got = item.Status
+			}
+		}
+		if got != status {
+			t.Errorf("%s status = %q, want %q", name, got, status)
+		}
+	}
+	if e.calledPrefix("wg show interfaces") {
+		t.Fatal("wg show interfaces was called without wg")
+	}
+	if !e.calledPrefix("awg show interfaces") {
+		t.Fatal("awg show interfaces was not called although awg is available")
+	}
+}
+
+// SPEC 6.1: ошибка show при установленной утилите не маскируется статусом unknown.
+func TestListShowFailureIsNotUnknown(t *testing.T) {
+	e := newEnv(t)
+	e.write(e.wgConf("wg0"), fixture(t, "wg0_empty.conf"))
+	e.fake.Fail("wg show interfaces", 1, "injected failure")
+	e.mustRun(errs.Internal, "--list")
+	if !strings.Contains(e.stderr.String(), "cannot list live interfaces") {
+		t.Fatalf("stderr: %q", e.stderr.String())
 	}
 }
 
