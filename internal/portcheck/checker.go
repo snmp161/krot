@@ -8,6 +8,7 @@ import (
 	"math"
 	"net"
 	"slices"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,8 @@ type Result struct {
 	RTTMin, RTTAvg, RTTMax time.Duration
 	Detail                 string
 }
+
+const maxConcurrentPorts = 32
 
 // Checker проверяет UDP-порты удалённого listener.
 type Checker struct {
@@ -49,13 +52,36 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 	}
 
 	results := make([]Result, len(c.Ports))
-	for i, port := range c.Ports {
+	if len(c.Ports) == 0 {
+		return results, nil
+	}
+	rng = &lockedReader{reader: rng}
+
+	jobs := make(chan int)
+	workers := min(maxConcurrentPorts, len(c.Ports))
+	var wg sync.WaitGroup
+	wg.Add(workers)
+	for range workers {
+		go func() {
+			defer wg.Done()
+			for i := range jobs {
+				results[i] = c.checkPort(ctx, rng, c.Ports[i])
+			}
+		}()
+	}
+
+sendJobs:
+	for i := range c.Ports {
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
+			break sendJobs
+		case jobs <- i:
 		}
-		results[i] = c.checkPort(ctx, rng, port)
+	}
+	close(jobs)
+	wg.Wait()
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	return results, nil
 }
@@ -142,6 +168,17 @@ func (c *Checker) exchangeRTT(ctx context.Context, conn *net.UDPConn, req []byte
 		return 0, false
 	}
 	return rtt, true
+}
+
+type lockedReader struct {
+	mu     sync.Mutex
+	reader io.Reader
+}
+
+func (r *lockedReader) Read(p []byte) (int, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.reader.Read(p)
 }
 
 func randomText(rng io.Reader, size int) string {
