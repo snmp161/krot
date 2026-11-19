@@ -10,9 +10,12 @@ import (
 
 // Listener слушает UDP-порты и отвечает на ping/echo/time.
 type Listener struct {
-	ports []int
-	conns []*net.UDPConn
-	wg    sync.WaitGroup
+	ports     []int
+	conns     []*net.UDPConn
+	wg        sync.WaitGroup
+	requestMu sync.Mutex
+
+	OnRequest func(client *net.UDPAddr, port int, request string)
 }
 
 // NewListener создаёт listener для заданных портов.
@@ -62,12 +65,37 @@ func (l *Listener) serve(ctx context.Context, conn *net.UDPConn) {
 			return
 		}
 		reply := l.handle(buf[:n])
-		if reply == nil {
-			continue
+		if reply != nil {
+			_ = conn.SetWriteDeadline(time.Now().Add(time.Second))
+			_, _ = conn.WriteToUDP(reply, client)
 		}
-		_ = conn.SetWriteDeadline(time.Now().Add(time.Second))
-		_, _ = conn.WriteToUDP(reply, client)
+		l.reportRequest(conn, client, buf[:n])
 	}
+}
+
+func (l *Listener) reportRequest(conn *net.UDPConn, client *net.UDPAddr, data []byte) {
+	if l.OnRequest == nil {
+		return
+	}
+	port := conn.LocalAddr().(*net.UDPAddr).Port
+	l.requestMu.Lock()
+	l.OnRequest(client, port, requestType(data))
+	l.requestMu.Unlock()
+}
+
+func requestType(data []byte) string {
+	s := string(data)
+	switch {
+	case s == "TIME":
+		return "time"
+	case len(data) > len(echoPrefix) && s[:len(echoPrefix)] == echoPrefix:
+		return "echo"
+	default:
+		if _, ok := parseSeq("ping", data); ok {
+			return "ping"
+		}
+	}
+	return "unknown"
 }
 
 func (l *Listener) handle(data []byte) []byte {

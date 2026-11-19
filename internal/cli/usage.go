@@ -56,6 +56,8 @@ Flags (--flag value or --flag=value):
   --timeout DURATION        packet timeout, e.g. 2s or 500ms (default 2s)
   --count N                 packets of each type per port, 1..100 (default 3)
   --echo-size N             echo payload size, 1..1400 (default 64, udp-checker only)
+  --workers N               concurrent port checks, 1..100 (default 32, udp-checker only)
+  --verbose                 diagnostic progress (udp-listener, udp-checker; stderr)
 
 Flags per action:
   --list           [--type] [--interface] [--ip] [--port] [--json]
@@ -69,8 +71,8 @@ Flags per action:
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         (no flags; works without root)
-  --udp-listener   --port [--timeout] [--count] [--json]
-  --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--json]
+  --udp-listener   --port [--timeout] [--count] [--json] [--verbose]
+  --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--workers] [--json] [--verbose]
 
 Exit codes:
   0 success                 5 conflict (already exists, address or port in use)

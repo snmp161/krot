@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -24,6 +26,11 @@ func (a *App) udpListener(cmd *cli.Command) error {
 	}
 
 	listener := portcheck.NewListener(ports)
+	if cmd.Verbose {
+		listener.OnRequest = func(client *net.UDPAddr, port int, request string) {
+			fmt.Fprintf(a.Stderr, "UDP request from %s to port %d: %s\n", client, port, request)
+		}
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

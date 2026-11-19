@@ -23,7 +23,12 @@ type Result struct {
 	Detail                 string
 }
 
-const maxConcurrentPorts = 32
+const (
+	// DefaultWorkers — число одновременно проверяемых портов по умолчанию.
+	DefaultWorkers = 32
+	// MaxWorkers — максимальное число одновременно проверяемых портов.
+	MaxWorkers = 100
+)
 
 // Checker проверяет UDP-порты удалённого listener.
 type Checker struct {
@@ -32,6 +37,8 @@ type Checker struct {
 	Timeout  time.Duration
 	Count    int
 	EchoSize int
+	Workers  int
+	OnResult func(Result)
 	Rand     io.Reader
 }
 
@@ -46,6 +53,9 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 	if c.EchoSize <= 0 {
 		c.EchoSize = 64
 	}
+	if c.Workers <= 0 {
+		c.Workers = DefaultWorkers
+	}
 	rng := c.Rand
 	if rng == nil {
 		rng = rand.Reader
@@ -58,14 +68,21 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 	rng = &lockedReader{reader: rng}
 
 	jobs := make(chan int)
-	workers := min(maxConcurrentPorts, len(c.Ports))
+	workers := min(c.Workers, MaxWorkers, len(c.Ports))
 	var wg sync.WaitGroup
+	var resultMu sync.Mutex
 	wg.Add(workers)
 	for range workers {
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
-				results[i] = c.checkPort(ctx, rng, c.Ports[i])
+				result := c.checkPort(ctx, rng, c.Ports[i])
+				results[i] = result
+				if c.OnResult != nil {
+					resultMu.Lock()
+					c.OnResult(result)
+					resultMu.Unlock()
+				}
 			}
 		}()
 	}

@@ -163,10 +163,16 @@ krot --udp-checker --address 203.0.113.1 --port 51820:51830
 
 # increase echo payload size (1–1400 bytes, default 64) — helps find the best MTU
 krot --udp-checker --address 203.0.113.1 --port 51820 --echo-size 1400
+
+# set the worker count and show progress
+krot --udp-checker --address 203.0.113.1 --port 51820:51830 --workers 64 --verbose
 ```
 
 By default, the checker sends 3 packets of each type per port (`--count`,
-1–100) and waits for a response within `--timeout` (default 2s). Output:
+1–100) and waits for a response within `--timeout` (default 2s). It checks
+32 ports concurrently; use `--workers` to set 1–100 workers. `--verbose` logs
+the range and per-port results to stderr as they complete; on the listener,
+it logs client addresses and request types. Output:
 
 ```
 PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL

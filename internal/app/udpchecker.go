@@ -25,6 +25,10 @@ func (a *App) udpChecker(cmd *cli.Command) error {
 	if echoSize == 0 {
 		echoSize = 64
 	}
+	workers := cmd.Workers
+	if workers == 0 {
+		workers = portcheck.DefaultWorkers
+	}
 
 	checker := &portcheck.Checker{
 		Address:  cmd.Address,
@@ -32,7 +36,18 @@ func (a *App) udpChecker(cmd *cli.Command) error {
 		Timeout:  timeout,
 		Count:    count,
 		EchoSize: echoSize,
+		Workers:  workers,
 		Rand:     a.Rand,
+	}
+	if cmd.Verbose {
+		fmt.Fprintf(a.Stderr, "Checking UDP ports %s on %s with %d workers\n", cmd.PortRange, cmd.Address, workers)
+		checker.OnResult = func(r portcheck.Result) {
+			if r.Detail != "" {
+				fmt.Fprintf(a.Stderr, "UDP port %d: %s (%s)\n", r.Port, r.Status, r.Detail)
+				return
+			}
+			fmt.Fprintf(a.Stderr, "UDP port %d: %s\n", r.Port, r.Status)
+		}
 	}
 	results, err := checker.Check(context.Background())
 	if err != nil {

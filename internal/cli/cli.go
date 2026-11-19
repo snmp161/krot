@@ -85,6 +85,8 @@ var paramTable = []param{
 	{"timeout", false, map[Action]need{ActUDPListener: opt, ActUDPChecker: opt}},
 	{"count", false, map[Action]need{ActUDPListener: opt, ActUDPChecker: opt}},
 	{"echo-size", false, map[Action]need{ActUDPChecker: opt}},
+	{"workers", false, map[Action]need{ActUDPChecker: opt}},
+	{"verbose", true, map[Action]need{ActUDPListener: opt, ActUDPChecker: opt}},
 }
 
 // Command — результат разбора.
@@ -116,6 +118,8 @@ type Command struct {
 	Timeout   time.Duration
 	Count     int
 	EchoSize  int
+	Workers   int
+	Verbose   bool
 	PortRange portcheck.PortRange
 
 	set map[string]bool
@@ -380,7 +384,13 @@ func (c *Command) fill(v map[string]string) error {
 			return errs.Invalidf("invalid --echo-size %q: must be an integer 1..1400", v["echo-size"])
 		}
 	}
+	if c.Has("workers") {
+		if c.Workers, err = parseInt(v["workers"], 1, portcheck.MaxWorkers); err != nil {
+			return errs.Invalidf("invalid --workers %q: must be an integer 1..%d", v["workers"], portcheck.MaxWorkers)
+		}
+	}
 	c.PSK, c.QR, c.AmneziaKey, c.Keenetic, c.JSON, c.Yes = c.Has("psk"), c.Has("qr"), c.Has("amnezia-key"), c.Has("keenetic"), c.Has("json"), c.Has("yes")
+	c.Verbose = c.Has("verbose")
 	return nil
 }
 

@@ -155,10 +155,15 @@ krot --udp-checker --address 203.0.113.1 --port 51820:51830
 
 # 增加 echo 负载大小（1–1400 字节，默认 64）——有助于找到最佳 MTU
 krot --udp-checker --address 203.0.113.1 --port 51820 --echo-size 1400
+
+# 设置 worker 数量并显示进度
+krot --udp-checker --address 203.0.113.1 --port 51820:51830 --workers 64 --verbose
 ```
 
 默认情况下，checker 每个端口发送 3 个每种类型的数据包（`--count`，
-1–100），并在 `--timeout`（默认 2s）内等待响应。输出：
+1–100），并在 `--timeout`（默认 2s）内等待响应。默认并行检查 32 个端口，
+`--workers` 可设置为 1–100。`--verbose` 将端口范围和完成结果输出到 stderr；
+在 listener 中则记录客户端地址和请求类型。输出：
 
 ```
 PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
