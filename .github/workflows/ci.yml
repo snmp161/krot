@@ -8,12 +8,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: gofmt
@@ -27,9 +32,10 @@ jobs:
 
   unit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: unit tests (race)
@@ -41,7 +47,7 @@ jobs:
           total="$(go tool cover -func=coverage.out | awk '/^total:/ {gsub(/%/, "", $3); print $3}')"
           echo "total coverage: ${total}%"
           awk -v t="$total" 'BEGIN { exit !(t >= 90.0) }'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage
           path: coverage.out
@@ -50,9 +56,10 @@ jobs:
   # падает, только если уязвимый код реально вызывается.
   vulncheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: govulncheck
@@ -64,9 +71,10 @@ jobs:
   # известные false positives размечены в коде // #nosec с обоснованием.
   gosec:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: gosec
@@ -78,24 +86,26 @@ jobs:
   # (GOTOOLCHAIN=local), иначе toolchain переключается на более старую версию.
   staticcheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: staticcheck
         run: |
-          GOTOOLCHAIN=local go install honnef.co/go/tools/cmd/staticcheck@latest
+          GOTOOLCHAIN=local go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
           "$(go env GOPATH)/bin/staticcheck" ./...
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         goarch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: build
@@ -104,22 +114,25 @@ jobs:
           GOOS: linux
           GOARCH: ${{ matrix.goarch }}
         run: go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_SHA::7} -X main.commit=${GITHUB_SHA::7}" -o dist/krot-linux-${{ matrix.goarch }} ./cmd/krot
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: krot-linux-${{ matrix.goarch }}
           path: dist/krot-linux-${{ matrix.goarch }}
 
   # SPEC 8.3, 9.1: интеграционные тесты под sudo в отдельных network namespace.
-  # AmneziaWG работает на userspace amneziawg-go; tools и amneziawg-go собираются
-  # из исходников на закреплённых тегах, результат кэшируется.
+  # AmneziaWG работает на userspace amneziawg-go; теги сверяются с полными SHA,
+  # а кэш результата привязан к этим SHA.
   integration:
     runs-on: ubuntu-24.04
+    timeout-minutes: 40
     env:
       AWG_TOOLS_TAG: v3.1.20260812
+      AWG_TOOLS_REV: ee0f0a9aa34ff0a0da4b3433b9512781cfe02843
       AWG_GO_TAG: v3.1.20260828
+      AWG_GO_REV: b5928efb6ca19f0153958460c3d141f04abc5c2e
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
       - name: system packages
@@ -128,18 +141,20 @@ jobs:
           sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod
       - name: cache AmneziaWG build
         id: awg-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: awg-out
-          key: awg-${{ runner.os }}-${{ env.AWG_TOOLS_TAG }}-${{ env.AWG_GO_TAG }}
-      - name: build AmneziaWG from pinned tags
+          key: awg-${{ runner.os }}-${{ env.AWG_TOOLS_REV }}-${{ env.AWG_GO_REV }}
+      - name: build AmneziaWG from verified revisions
         if: steps.awg-cache.outputs.cache-hit != 'true'
         run: |
           git clone -q --depth 1 --branch "$AWG_TOOLS_TAG" https://github.com/amnezia-vpn/amneziawg-tools awg-tools
+          (cd awg-tools && test "$(git rev-parse HEAD)" = "$AWG_TOOLS_REV")
           make -s -C awg-tools/src
           make -s -C awg-tools/src install DESTDIR="$PWD/awg-out" PREFIX=/usr SYSCONFDIR=/etc \
             WITH_WGQUICK=yes WITH_SYSTEMDUNITS=yes WITH_BASHCOMPLETION=no
           git clone -q --depth 1 --branch "$AWG_GO_TAG" https://github.com/amnezia-vpn/amneziawg-go awg-go
+          (cd awg-go && test "$(git rev-parse HEAD)" = "$AWG_GO_REV")
           make -s -C awg-go
           install -D -m 0755 awg-go/amneziawg-go awg-out/usr/bin/amneziawg-go
       - name: install AmneziaWG
