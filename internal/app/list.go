@@ -97,23 +97,29 @@ func (a *App) list(cmd *cli.Command) error {
 		return err
 	}
 	var infos []tunnelInfo
-	live := map[string][]string{} // утилита → живые интерфейсы; опрашиваются только при наличии конфигов
+	type toolState struct {
+		names     []string
+		available bool
+	}
+	live := map[string]toolState{} // утилита → живые интерфейсы; опрашиваются только при наличии конфигов
 	for _, t := range tunnels {
 		info := describe(t)
 		if !info.matches(cmd) {
 			continue
 		}
-		names, ok := live[t.tool()]
+		state, ok := live[t.tool()]
 		if !ok {
-			if err := a.need(t.tool()); err != nil {
-				return err
+			if _, lookErr := a.Exec.LookPath(t.tool()); lookErr == nil {
+				state.available = true
+				if state.names, err = a.liveInterfaces(t.tool()); err != nil {
+					return err
+				}
 			}
-			if names, err = a.liveInterfaces(t.tool()); err != nil {
-				return err
-			}
-			live[t.tool()] = names
+			live[t.tool()] = state
 		}
-		if slices.Contains(names, t.name) {
+		if !state.available {
+			info.Status = "unknown"
+		} else if slices.Contains(state.names, t.name) {
 			info.Status = "up"
 		}
 		infos = append(infos, info)
