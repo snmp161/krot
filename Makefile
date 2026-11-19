@@ -3,6 +3,10 @@ COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 DATE    ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)
 
+GO_VERSION := $(shell awk '$$1 == "go" { print $$2 }' go.mod)
+export GOTOOLCHAIN := go$(GO_VERSION)
+GOFMT := $(shell GOTOOLCHAIN=$(GOTOOLCHAIN) go env GOROOT)/bin/gofmt
+
 .PHONY: all build build-arm64 fmt-check vet test gosec staticcheck check integration
 
 all: check build
@@ -14,7 +18,7 @@ build-arm64:
 	CGO_ENABLED=0 GOARCH=arm64 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/krot-arm64 ./cmd/krot
 
 fmt-check:
-	@out="$$(gofmt -l .)"; if [ -n "$$out" ]; then echo "gofmt needed:"; echo "$$out"; exit 1; fi
+	@out="$$($(GOFMT) -l .)"; if [ -n "$$out" ]; then echo "gofmt needed:"; echo "$$out"; exit 1; fi
 
 vet:
 	go vet ./...
@@ -29,7 +33,7 @@ gosec:
 	"$$(go env GOPATH)/bin/gosec" ./...
 
 staticcheck:
-	GOTOOLCHAIN=local go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
 	"$$(go env GOPATH)/bin/staticcheck" ./...
 
 check: fmt-check vet test gosec staticcheck

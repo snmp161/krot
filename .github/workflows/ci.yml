@@ -82,8 +82,7 @@ jobs:
           go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
           "$(go env GOPATH)/bin/gosec" ./...
 
-  # Статический анализ кода staticcheck. Собирается с тем же Go, что и проект
-  # (GOTOOLCHAIN=local), иначе toolchain переключается на более старую версию.
+  # Статический анализ кода staticcheck; Go выбирается из go.mod, как локально.
   staticcheck:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -94,7 +93,7 @@ jobs:
           go-version-file: go.mod
       - name: staticcheck
         run: |
-          GOTOOLCHAIN=local go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
+          go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
           "$(go env GOPATH)/bin/staticcheck" ./...
 
   build:
