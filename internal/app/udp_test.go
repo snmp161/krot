@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/portcheck"
 )
@@ -169,6 +170,55 @@ func TestUDPCheckerVerbose(t *testing.T) {
 		if !strings.Contains(e.stderr.String(), want) {
 			t.Errorf("stderr misses %q:\n%s", want, e.stderr.String())
 		}
+	}
+}
+
+// SPEC 6.15: отменённый checker печатает предварительные результаты и возвращает код 10.
+func TestUDPCheckerCancellationPrintsResults(t *testing.T) {
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	port := conn.LocalAddr().(*net.UDPAddr).Port
+	started := make(chan struct{})
+	go func() {
+		buf := make([]byte, 2048)
+		_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		if _, _, err := conn.ReadFromUDP(buf); err == nil {
+			close(started)
+		}
+	}()
+
+	cmd, err := cli.Parse([]string{"--udp-checker", "--address", "127.0.0.1", "--port", itoa(port),
+		"--timeout", "5s", "--count", "1", "--workers", "1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := newEnv(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	checkDone := make(chan error, 1)
+	go func() { checkDone <- e.app.runUDPChecker(ctx, cmd) }()
+	select {
+	case <-started:
+		cancel()
+	case <-time.After(time.Second):
+		t.Fatal("checker did not send a request")
+	}
+	select {
+	case err := <-checkDone:
+		if got := errs.Code(err); got != errs.Cancelled {
+			t.Fatalf("exit code = %d, want %d; error: %v", got, errs.Cancelled, err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("cancelled checker did not finish")
+	}
+	if !strings.Contains(e.stdout.String(), "PORT") {
+		t.Fatalf("partial table was not printed:\n%s", e.stdout.String())
+	}
+	if strings.Contains(e.stdout.String(), itoa(port)) {
+		t.Fatalf("unfinished port %d appeared in partial results:\n%s", port, e.stdout.String())
 	}
 }
 

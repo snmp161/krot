@@ -3,6 +3,7 @@ package portcheck
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"net"
@@ -239,6 +240,70 @@ func TestCheckerParallelRangeWithListener(t *testing.T) {
 	case <-listenerDone:
 	case <-time.After(time.Second):
 		t.Fatal("listener did not stop")
+	}
+}
+
+// SPEC 6.15: при отмене checker возвращает только полностью проверенные порты.
+func TestCheckerCancellationReturnsPartialResults(t *testing.T) {
+	goodPort := freeUDPPort(t)
+	listenerCtx, stopListener := context.WithCancel(context.Background())
+	defer stopListener()
+	l := NewListener([]int{goodPort})
+	go l.Listen(listenerCtx)
+	time.Sleep(50 * time.Millisecond)
+
+	blockedConn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer blockedConn.Close()
+	blockedPort := blockedConn.LocalAddr().(*net.UDPAddr).Port
+	blockedStarted := make(chan struct{})
+	go func() {
+		buf := make([]byte, 2048)
+		_ = blockedConn.SetReadDeadline(time.Now().Add(5 * time.Second))
+		if _, _, err := blockedConn.ReadFromUDP(buf); err == nil {
+			close(blockedStarted)
+		}
+	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c := &Checker{
+		Address:  "127.0.0.1",
+		Ports:    []int{goodPort, blockedPort},
+		Timeout:  5 * time.Second,
+		Count:    1,
+		EchoSize: 64,
+		Workers:  1,
+		Rand:     seededReader(4),
+	}
+	type outcome struct {
+		results []Result
+		err     error
+	}
+	checkDone := make(chan outcome, 1)
+	go func() {
+		results, err := c.Check(ctx)
+		checkDone <- outcome{results: results, err: err}
+	}()
+
+	select {
+	case <-blockedStarted:
+		cancel()
+	case <-time.After(time.Second):
+		t.Fatal("checker did not start the second port")
+	}
+	select {
+	case got := <-checkDone:
+		if !errors.Is(got.err, context.Canceled) {
+			t.Fatalf("Check error = %v, want context.Canceled", got.err)
+		}
+		if len(got.results) != 1 || got.results[0].Port != goodPort || got.results[0].Status != "ok" {
+			t.Fatalf("partial results = %+v, want only completed port %d", got.results, goodPort)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("cancellation did not interrupt the in-flight UDP read")
 	}
 }
 
