@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -137,6 +138,37 @@ func TestUDPCheckerJSON(t *testing.T) {
 	out := e.stdout.String()
 	if !strings.Contains(out, "\"port\"") || !strings.Contains(out, "\"status\"") {
 		t.Fatalf("json output: %s", out)
+	}
+}
+
+// SPEC 6.15: --verbose сообщает диапазон и промежуточные результаты в stderr,
+// не смешивая их с JSON в stdout; --workers задаёт число работников.
+func TestUDPCheckerVerbose(t *testing.T) {
+	port := freeUDPPort(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	l := portcheck.NewListener([]int{port})
+	go l.Listen(ctx)
+	time.Sleep(50 * time.Millisecond)
+
+	e := newEnv(t)
+	e.mustRun(0, "--udp-checker", "--address", "127.0.0.1", "--port", itoa(port),
+		"--timeout", "500ms", "--count", "1", "--workers", "2", "--verbose", "--json")
+	var results []map[string]any
+	if err := json.Unmarshal(e.stdout.Bytes(), &results); err != nil {
+		t.Fatalf("stdout is not clean JSON: %v\n%s", err, e.stdout.Bytes())
+	}
+	if len(results) != 1 || results[0]["status"] != "ok" {
+		t.Fatalf("JSON results: %+v", results)
+	}
+	for _, want := range []string{
+		"Checking UDP ports " + itoa(port) + " on 127.0.0.1 with 2 workers",
+		"UDP port " + itoa(port) + ": ok",
+	} {
+		if !strings.Contains(e.stderr.String(), want) {
+			t.Errorf("stderr misses %q:\n%s", want, e.stderr.String())
+		}
 	}
 }
 

@@ -88,6 +88,68 @@ func TestListenerReplies(t *testing.T) {
 	}
 }
 
+// SPEC 6.14: listener сообщает о клиентских ping, echo и time через OnRequest.
+func TestListenerOnRequest(t *testing.T) {
+	port := freeUDPPort(t)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	type event struct {
+		client  string
+		port    int
+		request string
+	}
+	events := make(chan event, 3)
+	l := NewListener([]int{port})
+	l.OnRequest = func(client *net.UDPAddr, localPort int, request string) {
+		events <- event{client: client.String(), port: localPort, request: request}
+	}
+	listenerDone := make(chan error, 1)
+	go func() { listenerDone <- l.Listen(ctx) }()
+	defer func() {
+		cancel()
+		select {
+		case <-listenerDone:
+		case <-time.After(time.Second):
+			t.Error("listener did not stop")
+		}
+	}()
+	time.Sleep(50 * time.Millisecond)
+
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: port})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	requests := []struct {
+		data []byte
+		kind string
+	}{
+		{PingRequest(7), "ping"},
+		{EchoRequest("hello"), "echo"},
+		{TimeRequest(), "time"},
+	}
+	for _, req := range requests {
+		if _, err := conn.Write(req.data); err != nil {
+			t.Fatal(err)
+		}
+		if err := conn.SetReadDeadline(time.Now().Add(time.Second)); err != nil {
+			t.Fatal(err)
+		}
+		buf := make([]byte, 1024)
+		if _, err := conn.Read(buf); err != nil {
+			t.Fatal(err)
+		}
+		select {
+		case got := <-events:
+			if got.client != conn.LocalAddr().String() || got.port != port || got.request != req.kind {
+				t.Errorf("event = %+v, want client %s, port %d, request %s", got, conn.LocalAddr(), port, req.kind)
+			}
+		case <-time.After(time.Second):
+			t.Fatalf("no %s event", req.kind)
+		}
+	}
+}
+
 // SPEC 6.14: listener на диапазоне — отдельный сокет на каждый порт.
 func TestListenerRange(t *testing.T) {
 	port := freeUDPPort(t)

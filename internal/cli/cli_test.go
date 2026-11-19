@@ -19,10 +19,10 @@ var actions = []Action{
 var params = []string{
 	"type", "interface", "ip", "port", "endpoint", "mtu", "dns", "i1", "mimic",
 	"id", "allowed-ips", "psk", "qr", "amnezia-key", "keenetic", "json", "yes",
-	"address", "timeout", "count", "echo-size",
+	"address", "timeout", "count", "echo-size", "workers", "verbose",
 }
 
-var boolParams = map[string]bool{"psk": true, "qr": true, "amnezia-key": true, "keenetic": true, "json": true, "yes": true}
+var boolParams = map[string]bool{"psk": true, "qr": true, "amnezia-key": true, "keenetic": true, "json": true, "yes": true, "verbose": true}
 
 // SPEC 4.3: матрица параметров. О — обязателен, н — необязателен, — — недопустим.
 var specMatrix = map[string]map[Action]string{
@@ -47,6 +47,8 @@ var specMatrix = map[string]map[Action]string{
 	"timeout":     {ActUDPListener: "н", ActUDPChecker: "н"},
 	"count":       {ActUDPListener: "н", ActUDPChecker: "н"},
 	"echo-size":   {ActUDPChecker: "н"},
+	"workers":     {ActUDPChecker: "н"},
+	"verbose":     {ActUDPListener: "н", ActUDPChecker: "н"},
 }
 
 // Валидное значение параметра для действия.
@@ -88,6 +90,8 @@ func validValue(p string, a Action) string {
 		return "3"
 	case "echo-size":
 		return "64"
+	case "workers":
+		return "32"
 	}
 	panic(p)
 }
@@ -435,7 +439,7 @@ func TestUDPValues(t *testing.T) {
 			m[kv[i]] = kv[i+1]
 		}
 		args := []string{"--udp-checker"}
-		for _, k := range []string{"address", "port", "timeout", "count", "echo-size"} {
+		for _, k := range []string{"address", "port", "timeout", "count", "echo-size", "workers"} {
 			if v, ok := m[k]; ok {
 				args = append(args, "--"+k, v)
 			}
@@ -472,14 +476,38 @@ func TestUDPValues(t *testing.T) {
 		{checker("echo-size", "0"), 3},
 		{checker("echo-size", "1401"), 3},
 		{checker("echo-size", ""), 3},
+		{checker("workers", "1"), 0},
+		{checker("workers", "100"), 0},
+		{checker("workers", "0"), 3},
+		{checker("workers", "101"), 3},
+		{checker("workers", "abc"), 3},
+		{checker("workers", ""), 3},
+		{append(checker(), "--verbose"), 0},
+		{append(listener(), "--verbose"), 0},
 		// Недопустимые комбинации флагов.
 		{append(listener(), "--address", "203.0.113.1"), 2},
+		{append(listener(), "--workers", "2"), 2},
 		{append(checker(), "--json"), 0},
 	}
 	for _, c := range cases {
 		if got := code(parseErr(c.args)); got != c.want {
 			t.Errorf("%q: code %d; want %d (%v)", c.args, got, c.want, parseErr(c.args))
 		}
+	}
+
+	c, err := Parse(append(checker("workers", "100"), "--verbose"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.Workers != 100 || !c.Verbose {
+		t.Errorf("checker workers/verbose = %d/%v, want 100/true", c.Workers, c.Verbose)
+	}
+	c, err = Parse(append(listener(), "--verbose"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !c.Verbose {
+		t.Error("listener verbose = false, want true")
 	}
 }
 

@@ -135,6 +135,7 @@ func TestCheckerChecksPortsInParallel(t *testing.T) {
 		Timeout:  3 * time.Second,
 		Count:    1,
 		EchoSize: 64,
+		Workers:  2,
 		Rand:     seededReader(2),
 	}
 	type outcome struct {
