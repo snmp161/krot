@@ -3,7 +3,8 @@ package errs
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // Коды выхода (SPEC 4.5).
@@ -31,7 +32,7 @@ func (e *Error) Unwrap() error { return e.Err }
 
 // New создаёт ошибку с кодом и форматированным текстом.
 func New(code int, format string, a ...any) error {
-	return &Error{Code: code, Msg: fmt.Sprintf(format, a...)}
+	return &Error{Code: code, Msg: i18n.Sprintf(format, a...)}
 }
 
 // Wrap присваивает существующей ошибке код выхода.

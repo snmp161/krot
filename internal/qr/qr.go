@@ -2,14 +2,15 @@
 package qr
 
 import (
-	"errors"
 	"strings"
 
 	"rsc.io/qr"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // ErrTooLarge — текст не помещается в QR-код версии 40 с уровнем коррекции L.
-var ErrTooLarge = errors.New("config too large for QR")
+var ErrTooLarge = i18n.NewError("config too large for QR")
 
 // margin — ширина «тихой зоны» в модулях.
 const margin = 2

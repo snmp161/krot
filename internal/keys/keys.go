@@ -4,8 +4,9 @@ package keys
 import (
 	"crypto/ecdh"
 	"encoding/base64"
-	"fmt"
 	"io"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // Key — 32-байтовый ключ WireGuard (приватный, публичный или PresharedKey).
@@ -19,7 +20,7 @@ func ParseKey(s string) (Key, error) {
 	var k Key
 	b, err := base64.StdEncoding.DecodeString(s)
 	if err != nil || len(b) != len(k) {
-		return k, fmt.Errorf("invalid key %q: must be 32 bytes in base64", s)
+		return k, i18n.Errorf("invalid key %q: must be 32 bytes in base64", s)
 	}
 	copy(k[:], b)
 	return k, nil
@@ -28,7 +29,7 @@ func ParseKey(s string) (Key, error) {
 func random(r io.Reader) (Key, error) {
 	var k Key
 	if _, err := io.ReadFull(r, k[:]); err != nil {
-		return k, fmt.Errorf("read random: %w", err)
+		return k, i18n.Errorf("read random: %w", err)
 	}
 	return k, nil
 }

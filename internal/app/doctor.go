@@ -12,6 +12,7 @@ import (
 
 	"github.com/snmp161/krot/internal/awg"
 	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // SPEC 6.11: --doctor — самодиагностика окружения. Только читает: без root, без блокировки.
@@ -19,21 +20,21 @@ func (a *App) doctor() error {
 	var lines []docLine
 	fails := 0
 	add := func(check, status, detail string) {
-		lines = append(lines, docLine{check, status, detail})
+		lines = append(lines, docLine{i18n.Text(check), status, detail})
 		if status == "fail" {
 			fails++
 		}
 	}
 
 	if a.Euid() == 0 {
-		add("root", "ok", "running as root")
+		add("root", "ok", i18n.Text("running as root"))
 	} else {
-		add("root", "warn", "not root: tunnel/client actions require root (code 6); --udp-checker does not, and --udp-listener needs it only for privileged ports or unreadable /proc/net/udp{,6}")
+		add("root", "warn", i18n.Text("not root: tunnel/client actions require root (code 6); --udp-checker does not, and --udp-listener needs it only for privileged ports or unreadable /proc/net/udp{,6}"))
 	}
 
 	for _, p := range []string{"ip", "systemctl", "wg", "wg-quick", "awg", "awg-quick"} {
 		if path, err := a.Exec.LookPath(p); err != nil {
-			add(p, "fail", "not found in PATH: install package "+packages[p])
+			add(p, "fail", i18n.Sprintf("not found in PATH: install package %s", packages[p]))
 		} else if p == "awg" {
 			add(p, "ok", awgToolDetail(a, path))
 		} else {
@@ -46,7 +47,7 @@ func (a *App) doctor() error {
 	a.doctorDirs(add)
 
 	w := tabwriter.NewWriter(a.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "CHECK\tSTATUS\tDETAIL")
+	fmt.Fprintln(w, i18n.Text("CHECK\tSTATUS\tDETAIL"))
 	for _, l := range lines {
 		fmt.Fprintf(w, "%s\t%s\t%s\n", l.check, l.status, l.detail)
 	}
@@ -67,7 +68,7 @@ type docLine struct {
 func awgToolDetail(a *App, path string) string {
 	if r, err := a.Exec.Run("awg", "--version"); err == nil {
 		if v, err := awg.ParseToolsOutput(string(r.Stdout)); err == nil {
-			return fmt.Sprintf("%s (amneziawg-tools %s)", path, v)
+			return i18n.Sprintf("%s (amneziawg-tools %s)", path, v)
 		}
 	}
 	return path
@@ -77,20 +78,20 @@ func awgToolDetail(a *App, path string) string {
 func (a *App) doctorWGModule(add func(string, string, string)) {
 	switch st, err := os.Stat(filepath.Join(a.Paths.SysModule, "wireguard")); {
 	case err == nil && st.IsDir():
-		add("wireguard kernel module", "ok", "loaded")
+		add("wireguard kernel module", "ok", i18n.Text("loaded"))
 	case err != nil && !errors.Is(err, fs.ErrNotExist):
 		add("wireguard kernel module", "fail", err.Error())
 	default:
 		if _, err := a.Exec.LookPath("modinfo"); err != nil {
-			add("wireguard kernel module", "fail", "modinfo not found in PATH: install package kmod to check the module")
+			add("wireguard kernel module", "fail", i18n.Text("modinfo not found in PATH: install package kmod to check the module"))
 			return
 		}
 		r, err := a.Exec.Run("modinfo", "-F", "version", "wireguard")
 		if err != nil {
-			add("wireguard kernel module", "fail", "not found")
+			add("wireguard kernel module", "fail", i18n.Text("not found"))
 			return
 		}
-		add("wireguard kernel module", "ok", "installed "+strings.TrimSpace(string(r.Stdout)))
+		add("wireguard kernel module", "ok", i18n.Sprintf("installed %s", strings.TrimSpace(string(r.Stdout))))
 	}
 }
 
@@ -105,7 +106,7 @@ func (a *App) doctorAmnezia(add func(string, string, string)) {
 			}
 			req := awg.RequirementFor(t, i1)
 			warnings, err := awg.CheckInstalled(req, in)
-			check := fmt.Sprintf("amneziawg %s (%s)", req.Gen, req.Label)
+			check := i18n.Sprintf("amneziawg %s (%s)", req.Gen, i18n.Text(req.Label))
 			switch {
 			case err != nil:
 				add(check, "fail", src+": "+err.Error())
@@ -122,28 +123,28 @@ func (a *App) doctorAmnezia(add func(string, string, string)) {
 func amneziaSource(in awg.Installed) string {
 	switch {
 	case in.ModuleLoaded:
-		s := "kernel module loaded"
+		s := i18n.Text("kernel module loaded")
 		if v, err := awg.ParseModuleOutput(in.Module); err == nil {
 			s += " " + v.String()
 		}
 		if in.Genl != "" {
 			if n, err := awg.ParseGenlOutput(in.Genl); err == nil {
-				s += fmt.Sprintf(" (netlink family %d)", n)
+				s += i18n.Sprintf(" (netlink family %d)", n)
 			}
 		}
 		return s
 	case in.ModulePresent:
 		if v, err := awg.ParseModuleOutput(in.Module); err == nil {
-			return "kernel module installed " + v.String()
+			return i18n.Sprintf("kernel module installed %s", v.String())
 		}
-		return "kernel module installed"
+		return i18n.Text("kernel module installed")
 	case in.GoPresent:
 		if v, err := awg.ParseGoOutput(in.Go); err == nil {
 			return "amneziawg-go " + v.String()
 		}
 		return "amneziawg-go"
 	}
-	return "none found"
+	return i18n.Text("none found")
 }
 
 // doctorDirs — каталоги конфигов и каталог файла блокировки (SPEC 5).
@@ -157,13 +158,13 @@ func (a *App) doctorDirs(add func(string, string, string)) {
 		case err == nil && st.IsDir():
 			add(d.check, "ok", d.path)
 		case err == nil:
-			add(d.check, "fail", d.path+" exists and is not a directory")
+			add(d.check, "fail", i18n.Sprintf("%s exists and is not a directory", d.path))
 		case !errors.Is(err, fs.ErrNotExist):
 			add(d.check, "fail", err.Error())
 		case accessWOK(filepath.Dir(d.path)):
-			add(d.check, "ok", "will be created: "+d.path)
+			add(d.check, "ok", i18n.Sprintf("will be created: %s", d.path))
 		default:
-			add(d.check, "fail", nearestExisting(filepath.Dir(d.path))+" is not writable")
+			add(d.check, "fail", i18n.Sprintf("%s is not writable", nearestExisting(filepath.Dir(d.path))))
 		}
 	}
 }

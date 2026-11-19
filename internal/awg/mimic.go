@@ -1,12 +1,13 @@
 package awg
 
 import (
-	"fmt"
 	"io"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // segTag — тег CPS переменного поля (SPEC 7.6).
@@ -50,7 +51,7 @@ var mimicProfiles = map[string]func(g *gen, now time.Time) ([]packet, error){}
 func GenerateMimicChain(profile string, r io.Reader, now time.Time) ([]string, error) {
 	genFn, ok := mimicProfiles[profile]
 	if !ok {
-		return nil, fmt.Errorf("unknown mimic profile %q: must be one of %s", profile, strings.Join(MimicProfiles(), ", "))
+		return nil, i18n.Errorf("unknown mimic profile %q: must be one of %s", profile, strings.Join(MimicProfiles(), ", "))
 	}
 	g := &gen{r: r}
 	// SPEC 7.6 п.2: неуникальное вхождение переменного поля — повтор генерации
@@ -71,7 +72,7 @@ func GenerateMimicChain(profile string, r io.Reader, now time.Time) ([]string, e
 		}
 		lastErr = err
 	}
-	return nil, fmt.Errorf("could not generate mimic chain: %w", lastErr)
+	return nil, i18n.Errorf("could not generate mimic chain: %w", lastErr)
 }
 
 // mimicTemplates собирает CPS-шаблоны пакетов и проверяет бюджет V-06.
@@ -87,7 +88,7 @@ func mimicTemplates(pkts []packet) ([]string, error) {
 		chain = append(chain, cps)
 	}
 	if total > MaxITotal {
-		return nil, fmt.Errorf("mimic chain is %d chars, exceeds I1–I5 budget %d (SPEC 7.1 V-06)", total, MaxITotal)
+		return nil, i18n.Errorf("mimic chain is %d chars, exceeds I1–I5 budget %d (SPEC 7.1 V-06)", total, MaxITotal)
 	}
 	return chain, nil
 }
@@ -103,23 +104,23 @@ func cpsTemplate(p packet) (string, error) {
 	pos := 0
 	for _, f := range dyn {
 		if f.off < pos {
-			return "", fmt.Errorf("dynamic fields overlap at offset %d", f.off)
+			return "", i18n.Errorf("dynamic fields overlap at offset %d", f.off)
 		}
 		if f.off+f.length > len(p.buf) {
-			return "", fmt.Errorf("dynamic field %s %d at %d beyond packet of %d bytes", f.kind, f.length, f.off, len(p.buf))
+			return "", i18n.Errorf("dynamic field %s %d at %d beyond packet of %d bytes", f.kind, f.length, f.off, len(p.buf))
 		}
 		if f.length < 1 || f.length > maxCPSLen {
-			return "", fmt.Errorf("dynamic field length %d out of range 1..%d (SPEC 7.1 V-05)", f.length, maxCPSLen)
+			return "", i18n.Errorf("dynamic field length %d out of range 1..%d (SPEC 7.1 V-05)", f.length, maxCPSLen)
 		}
 		val := p.buf[f.off : f.off+f.length]
 		if f.kind == tagChars && !isLetters(val) {
-			return "", fmt.Errorf("<rc> field at %d is not letters", f.off)
+			return "", i18n.Errorf("<rc> field at %d is not letters", f.off)
 		}
 		if f.kind == tagDigits && !isDigits(val) {
-			return "", fmt.Errorf("<rd> field at %d is not digits", f.off)
+			return "", i18n.Errorf("<rd> field at %d is not digits", f.off)
 		}
 		if n := bytesCount(p.buf, val); n != 1 {
-			return "", fmt.Errorf("dynamic field at %d (%d bytes) occurs %d times in packet; want 1 (SPEC 7.6 п.2)", f.off, f.length, n)
+			return "", i18n.Errorf("dynamic field at %d (%d bytes) occurs %d times in packet; want 1 (SPEC 7.6 п.2)", f.off, f.length, n)
 		}
 		writeB(&b, p.buf[pos:f.off])
 		b.WriteString("<" + f.kind.String() + " " + strconv.Itoa(f.length) + ">")
@@ -127,7 +128,7 @@ func cpsTemplate(p packet) (string, error) {
 	}
 	writeB(&b, p.buf[pos:])
 	if b.Len() == 0 {
-		return "", fmt.Errorf("empty packet")
+		return "", i18n.Errorf("empty packet")
 	}
 	return b.String(), nil
 }
@@ -192,7 +193,7 @@ func (g *gen) bytes(b *packet, n int) []byte {
 	off := len(b.buf)
 	buf := make([]byte, n)
 	if _, err := io.ReadFull(g.r, buf); err != nil {
-		g.err = fmt.Errorf("read random: %w", err)
+		g.err = i18n.Errorf("read random: %w", err)
 	}
 	b.buf = append(b.buf, buf...)
 	return b.buf[off:]

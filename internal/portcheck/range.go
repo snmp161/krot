@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // MaxRangeSize — максимальное количество портов в диапазоне (SPEC 6.14).
@@ -18,39 +20,39 @@ type PortRange struct {
 // ParsePortRange разбирает строку вида "N" или "N:M".
 func ParsePortRange(s string) (PortRange, error) {
 	if s == "" {
-		return PortRange{}, fmt.Errorf("empty port range")
+		return PortRange{}, i18n.Errorf("empty port range")
 	}
 	parts := strings.Split(s, ":")
 	if len(parts) > 2 {
-		return PortRange{}, fmt.Errorf("invalid port range %q", s)
+		return PortRange{}, i18n.Errorf("invalid port range %q", s)
 	}
 	start, err := parsePort(parts[0])
 	if err != nil {
-		return PortRange{}, fmt.Errorf("invalid port range %q: %w", s, err)
+		return PortRange{}, i18n.Errorf("invalid port range %q: %w", s, err)
 	}
 	end := start
 	if len(parts) == 2 {
 		end, err = parsePort(parts[1])
 		if err != nil {
-			return PortRange{}, fmt.Errorf("invalid port range %q: %w", s, err)
+			return PortRange{}, i18n.Errorf("invalid port range %q: %w", s, err)
 		}
 	}
 	if start > end {
-		return PortRange{}, fmt.Errorf("invalid port range %q: start > end", s)
+		return PortRange{}, i18n.Errorf("invalid port range %q: start > end", s)
 	}
 	if end-start+1 > MaxRangeSize {
-		return PortRange{}, fmt.Errorf("invalid port range %q: %d ports, at most %d allowed", s, end-start+1, MaxRangeSize)
+		return PortRange{}, i18n.Errorf("invalid port range %q: %d ports, at most %d allowed", s, end-start+1, MaxRangeSize)
 	}
 	return PortRange{Start: start, End: end}, nil
 }
 
 func parsePort(s string) (int, error) {
 	if s == "" {
-		return 0, fmt.Errorf("empty port")
+		return 0, i18n.Errorf("empty port")
 	}
 	p, err := strconv.Atoi(s)
 	if err != nil || p < 1 || p > 65535 {
-		return 0, fmt.Errorf("port must be an integer 1..65535")
+		return 0, i18n.Errorf("port must be an integer 1..65535")
 	}
 	return p, nil
 }

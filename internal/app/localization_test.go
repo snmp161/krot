@@ -1,8 +1,12 @@
 package app
 
 import (
+	"context"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/snmp161/krot/internal/portcheck"
 
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/i18n"
@@ -94,5 +98,46 @@ func TestEnglishFallbackOutput(t *testing.T) {
 	e.mustRun(0, "--list")
 	if !strings.HasPrefix(e.stdout.String(), "INTERFACE") {
 		t.Fatalf("English table changed:\n%s", e.stdout)
+	}
+}
+
+// SPEC 4.7, 6.15: UDP-таблица и verbose переводятся на русский.
+func TestRussianUDPCheckerOutput(t *testing.T) {
+	useRussian(t)
+	port := freeUDPPort(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	listener := portcheck.NewListener([]int{port})
+	go func() { _ = listener.Listen(ctx) }()
+	time.Sleep(50 * time.Millisecond)
+
+	e := newEnv(t)
+	e.mustRun(0, "--udp-checker", "--address", "127.0.0.1", "--port", itoa(port),
+		"--timeout", "500ms", "--count", "1", "--workers", "2", "--verbose")
+	if !strings.Contains(e.stdout.String(), "ПОРТ") || !strings.Contains(e.stdout.String(), "ПОДРОБНОСТИ") {
+		t.Errorf("Russian UDP table:\n%s", e.stdout)
+	}
+	for _, want := range []string{
+		"Проверка UDP-портов " + itoa(port) + " на 127.0.0.1, работников: 2",
+		"UDP-порт " + itoa(port) + ": ok",
+	} {
+		if !strings.Contains(e.stderr.String(), want) {
+			t.Errorf("Russian UDP verbose misses %q:\n%s", want, e.stderr)
+		}
+	}
+}
+
+// SPEC 4.7: значения JSON не локализуются даже при русской таблице.
+func TestRussianUDPJSONRemainsEnglish(t *testing.T) {
+	useRussian(t)
+	port := freeUDPPort(t)
+	e := newEnv(t)
+	e.mustRun(0, "--udp-checker", "--address", "127.0.0.1", "--port", itoa(port),
+		"--timeout", "10ms", "--count", "1", "--json")
+	if !strings.Contains(e.stdout.String(), `"detail":"timeout"`) {
+		t.Fatalf("JSON detail was localized:\n%s", e.stdout)
+	}
+	if strings.Contains(e.stdout.String(), "таймаут") {
+		t.Fatalf("Russian text leaked into JSON:\n%s", e.stdout)
 	}
 }

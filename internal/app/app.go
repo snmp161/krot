@@ -13,6 +13,7 @@ import (
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/execx"
 	"github.com/snmp161/krot/internal/fsutil"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // Paths — пути в системе; в тестах подменяются временными каталогами.
@@ -80,7 +81,7 @@ func (a *App) Run(args []string) int {
 	if err != nil {
 		fmt.Fprintf(a.Stderr, "krot: %v\n", err)
 		if errs.Code(err) == errs.Usage {
-			fmt.Fprintln(a.Stderr, "Try 'krot --help' for more information.")
+			fmt.Fprintln(a.Stderr, i18n.Text("Try 'krot --help' for more information."))
 		}
 	}
 	return errs.Code(err)
@@ -96,7 +97,7 @@ func (a *App) run(args []string) error {
 		fmt.Fprint(a.Stdout, cli.Usage())
 		return nil
 	case cmd.Version:
-		fmt.Fprintf(a.Stdout, "krot %s (commit %s, built %s)\n", a.Version, a.Commit, a.Date)
+		a.printf("krot %s (commit %s, built %s)\n", a.Version, a.Commit, a.Date)
 		return nil
 	case cmd.Completion != "":
 		script, err := cli.CompletionScript(cmd.Completion)
@@ -146,11 +147,11 @@ func (a *App) run(args []string) error {
 }
 
 func (a *App) warnf(format string, args ...any) {
-	fmt.Fprintf(a.Stderr, "krot: warning: "+format+"\n", args...)
+	fmt.Fprintf(a.Stderr, "krot: %s: %s\n", i18n.Text("warning"), i18n.Sprintf(format, args...))
 }
 
 func (a *App) printf(format string, args ...any) {
-	fmt.Fprintf(a.Stdout, format, args...)
+	fmt.Fprint(a.Stdout, i18n.Sprintf(format, args...))
 }
 
 // withLock выполняет изменяющее действие под глобальной блокировкой (SPEC 5.5).

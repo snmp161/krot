@@ -15,6 +15,7 @@ import (
 	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // params возвращает AWG-параметры [Interface] с каноническими именами.
@@ -121,7 +122,7 @@ func (a *App) list(cmd *cli.Command) error {
 		return printJSON(a.Stdout, infos)
 	}
 	w := tabwriter.NewWriter(a.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "INTERFACE\tTYPE\tVERSION\tADDRESS\tPORT\tSTATUS\tCLIENTS")
+	fmt.Fprintln(w, i18n.Text("INTERFACE\tTYPE\tVERSION\tADDRESS\tPORT\tSTATUS\tCLIENTS"))
 	for _, i := range infos {
 		port := "-"
 		if i.Port != nil {
@@ -129,7 +130,7 @@ func (a *App) list(cmd *cli.Command) error {
 		}
 		clients := strconv.Itoa(i.ClientsTotal)
 		if i.ClientsLocked > 0 {
-			clients += fmt.Sprintf(" (%d locked)", i.ClientsLocked)
+			clients += i18n.Sprintf(" (%d locked)", i.ClientsLocked)
 		}
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", i.Interface, i.Type, i.Version,
 			dashIfEmpty(strings.Join(i.Addresses, ",")), port, i.Status, clients)
@@ -198,7 +199,7 @@ func (a *App) listClient(cmd *cli.Command) error {
 	if up {
 		r, err := a.Exec.Run(t.tool(), "show", t.name, "dump")
 		if err != nil {
-			return fmt.Errorf("cannot read the state of %s: %w", t.name, err)
+			return i18n.Errorf("cannot read the state of %s: %w", t.name, err)
 		}
 		stats = parseDump(string(r.Stdout))
 	}
@@ -235,7 +236,7 @@ func (a *App) listClient(cmd *cli.Command) error {
 	}
 	now := a.Now()
 	w := tabwriter.NewWriter(a.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tPUBLIC KEY\tADDRESS\tSTATUS\tLAST HANDSHAKE\tRX\tTX")
+	fmt.Fprintln(w, i18n.Text("ID\tPUBLIC KEY\tADDRESS\tSTATUS\tLAST HANDSHAKE\tRX\tTX"))
 	for _, i := range infos {
 		hs, rx, tx := "-", "-", "-"
 		if i.live {
@@ -301,11 +302,11 @@ func humanAgo(ts int64, now time.Time) string {
 	d := max(now.Unix()-ts, 0)
 	switch {
 	case d < 60:
-		return fmt.Sprintf("%ds ago", d)
+		return i18n.Sprintf("%ds ago", d)
 	case d < 3600:
-		return fmt.Sprintf("%dm ago", d/60)
+		return i18n.Sprintf("%dm ago", d/60)
 	case d < 86400:
-		return fmt.Sprintf("%dh ago", d/3600)
+		return i18n.Sprintf("%dh ago", d/3600)
 	}
-	return fmt.Sprintf("%dd ago", d/86400)
+	return i18n.Sprintf("%dd ago", d/86400)
 }

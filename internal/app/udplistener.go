@@ -12,6 +12,7 @@ import (
 
 	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/i18n"
 	"github.com/snmp161/krot/internal/portcheck"
 )
 
@@ -28,7 +29,7 @@ func (a *App) udpListener(cmd *cli.Command) error {
 	listener := portcheck.NewListener(ports)
 	if cmd.Verbose {
 		listener.OnRequest = func(client *net.UDPAddr, port int, request string) {
-			fmt.Fprintf(a.Stderr, "UDP request from %s to port %d: %s\n", client, port, request)
+			fmt.Fprint(a.Stderr, i18n.Sprintf("UDP request from %s to port %d: %s\n", client, port, request))
 		}
 	}
 	ctx, cancel := context.WithCancel(context.Background())

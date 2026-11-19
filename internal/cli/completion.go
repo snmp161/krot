@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/snmp161/krot/internal/awg"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 var completionEnums = []struct {
@@ -24,7 +25,7 @@ func CompletionScript(shell string) (string, error) {
 	case "zsh":
 		return zshCompletion(), nil
 	default:
-		return "", fmt.Errorf("unsupported shell %q", shell)
+		return "", i18n.Errorf("unsupported shell %q", shell)
 	}
 }
 

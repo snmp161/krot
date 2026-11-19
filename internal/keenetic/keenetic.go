@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/netip"
 	"strings"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // DefaultMTU — MTU WireGuard по умолчанию на KeeneticOS (SPEC 6.13).
@@ -48,7 +50,7 @@ func (a *ASC) has20() bool {
 // (SPEC 6.13). Только IPv4: IPv6 в адресе или AllowedIPs — ошибка.
 func Commands(p Params) (string, error) {
 	if !p.Address.Is4() {
-		return "", fmt.Errorf("client address %s is not an IPv4 address", p.Address)
+		return "", i18n.Errorf("client address %s is not an IPv4 address", p.Address)
 	}
 	var b strings.Builder
 	if p.MTU != 0 && p.MTU != DefaultMTU {
@@ -89,7 +91,7 @@ func Commands(p Params) (string, error) {
 	fmt.Fprintf(&b, " keepalive-interval %d\n", p.Keepalive)
 	for _, cidr := range p.AllowedIPs {
 		if !cidr.Addr().Is4() {
-			return "", fmt.Errorf("allowed-ips %s is not an IPv4 prefix", cidr)
+			return "", i18n.Errorf("allowed-ips %s is not an IPv4 prefix", cidr)
 		}
 		fmt.Fprintf(&b, " allow-ips %s %s\n", cidr.Masked().Addr(), dottedMask(cidr.Bits()))
 	}

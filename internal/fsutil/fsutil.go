@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // testHook позволяет тестам внедрить ошибку на шаге записи; в рабочем коде nil.
@@ -101,7 +103,7 @@ func syncDir(dir string) error {
 }
 
 // ErrLockTimeout — не удалось получить блокировку за отведённое время (код 7).
-var ErrLockTimeout = errors.New("timed out waiting for the lock")
+var ErrLockTimeout = i18n.NewError("timed out waiting for the lock")
 
 // Lock — удерживаемая эксклюзивная flock-блокировка.
 type Lock struct {

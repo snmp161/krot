@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/snmp161/krot/internal/app"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // Заполняются при сборке через -ldflags "-X main.version=... -X main.commit=... -X main.date=...".
@@ -15,5 +16,6 @@ var (
 )
 
 func main() {
+	i18n.Configure(os.Getenv)
 	os.Exit(app.New(version, commit, date).Run(os.Args[1:]))
 }

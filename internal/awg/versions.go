@@ -1,11 +1,12 @@
 package awg
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // Version — версия компонента вида X.Y.Z (Z у AmneziaWG — дата YYYYMMDD).
@@ -20,13 +21,13 @@ var versionRe = regexp.MustCompile(`^v?(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$`
 func ParseVersion(s string) (Version, error) {
 	m := versionRe.FindStringSubmatch(s)
 	if m == nil {
-		return Version{}, fmt.Errorf("unrecognized version %q", s)
+		return Version{}, i18n.Errorf("unrecognized version %q", s)
 	}
 	var v Version
 	var err error
 	for i, p := range []*int{&v.Major, &v.Minor, &v.Patch} {
 		if *p, err = strconv.Atoi(m[i+1]); err != nil {
-			return Version{}, fmt.Errorf("unrecognized version %q", s)
+			return Version{}, i18n.Errorf("unrecognized version %q", s)
 		}
 	}
 	return v, nil
@@ -73,7 +74,7 @@ func firstLine(s string) string {
 func ParseToolsOutput(out string) (Version, error) {
 	f := strings.Fields(firstLine(out))
 	if len(f) < 2 || !strings.HasSuffix(f[0], "-tools") {
-		return Version{}, fmt.Errorf("unrecognized tools version output %q", firstLine(out))
+		return Version{}, i18n.Errorf("unrecognized tools version output %q", firstLine(out))
 	}
 	return ParseVersion(f[1])
 }
@@ -83,7 +84,7 @@ func ParseToolsOutput(out string) (Version, error) {
 func ParseGoOutput(out string) (Version, error) {
 	f := strings.Fields(firstLine(out))
 	if len(f) < 2 || (f[0] != "amneziawg-go" && f[0] != "wireguard-go") {
-		return Version{}, fmt.Errorf("unrecognized amneziawg-go version output %q", firstLine(out))
+		return Version{}, i18n.Errorf("unrecognized amneziawg-go version output %q", firstLine(out))
 	}
 	return ParseVersion(f[1])
 }
@@ -99,7 +100,7 @@ var genlVersionRe = regexp.MustCompile(`\bVersion:\s*0x([0-9a-fA-F]+)\b`)
 func ParseGenlOutput(out string) (int, error) {
 	m := genlVersionRe.FindStringSubmatch(out)
 	if m == nil {
-		return 0, errors.New("no family version in genl output")
+		return 0, i18n.NewError("no family version in genl output")
 	}
 	n, err := strconv.ParseInt(m[1], 16, 32)
 	if err != nil {
@@ -222,11 +223,12 @@ type Installed struct {
 // Ошибка — надёжно распознанная версия ниже требуемой либо нет ни модуля, ни amneziawg-go.
 // Нераспознанные версии и «заглушки» дают предупреждения.
 func CheckInstalled(req Requirement, in Installed) (warnings []string, err error) {
+	label := i18n.Text(req.Label)
 	warn := func(format string, a ...any) {
-		warnings = append(warnings, fmt.Sprintf(format, a...)+fmt.Sprintf("; assuming it supports %s", req.Label))
+		warnings = append(warnings, i18n.Sprintf(format, a...)+i18n.Sprintf("; assuming it supports %s", label))
 	}
 	tooOld := func(gen, detail string) error {
-		return fmt.Errorf("%s requires AmneziaWG >= %s, installed: %s (%s)", req.Label, req.Gen, gen, detail)
+		return i18n.Errorf("%s requires AmneziaWG >= %s, installed: %s (%s)", label, req.Gen, gen, detail)
 	}
 
 	// 1. amneziawg-tools.
@@ -268,7 +270,7 @@ func CheckInstalled(req Requirement, in Installed) (warnings []string, err error
 			return warnings, checkModuleString()
 		}
 		if n < req.Genl {
-			return warnings, tooOld(genlGeneration(n), fmt.Sprintf("amneziawg kernel module, netlink family version %d", n))
+			return warnings, tooOld(genlGeneration(n), i18n.Sprintf("amneziawg kernel module, netlink family version %d", n))
 		}
 		// Версия семейства 3 не различает 3.0 и 3.1 — тогда уточняем по строке версии.
 		if req.Genl >= 3 {
@@ -291,5 +293,5 @@ func CheckInstalled(req Requirement, in Installed) (warnings []string, err error
 		}
 		return warnings, nil
 	}
-	return warnings, errors.New("AmneziaWG kernel module (amneziawg) or userspace amneziawg-go is required")
+	return warnings, i18n.NewError("AmneziaWG kernel module (amneziawg) or userspace amneziawg-go is required")
 }

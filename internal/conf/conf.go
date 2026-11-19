@@ -3,15 +3,16 @@
 package conf
 
 import (
-	"errors"
 	"strconv"
 	"strings"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 var (
-	ErrPeerNotFound  = errors.New("peer not found")
-	ErrAlreadyLocked = errors.New("peer is already locked")
-	ErrNotLocked     = errors.New("peer is not locked")
+	ErrPeerNotFound  = i18n.NewError("peer not found")
+	ErrAlreadyLocked = i18n.NewError("peer is already locked")
+	ErrNotLocked     = i18n.NewError("peer is not locked")
 )
 
 const (

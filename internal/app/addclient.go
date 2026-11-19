@@ -14,6 +14,7 @@ import (
 	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/i18n"
 	"github.com/snmp161/krot/internal/ipalloc"
 	"github.com/snmp161/krot/internal/keenetic"
 	"github.com/snmp161/krot/internal/keys"
@@ -51,7 +52,7 @@ func (a *App) addClient(cmd *cli.Command) error {
 		}
 		serverPriv, err := keys.ParseKey(ifc.Get("PrivateKey"))
 		if err != nil {
-			return fmt.Errorf("interface %s: invalid PrivateKey in %s", t.name, t.path)
+			return i18n.Errorf("interface %s: invalid PrivateKey in %s", t.name, t.path)
 		}
 		serverPub, err := serverPriv.Public()
 		if err != nil {
@@ -243,9 +244,9 @@ func (a *App) applyPeer(t *tunnel, pub string, allowed []string, psk string) err
 func (a *App) rollback(t *tunnel, orig []byte, cause error) error {
 	t.conf = conf.Parse(orig)
 	if err := a.save(t); err != nil {
-		return fmt.Errorf("%v; rollback of %s also failed: %v", cause, t.path, err)
+		return i18n.Errorf("%v; rollback of %s also failed: %v", cause, t.path, err)
 	}
-	return fmt.Errorf("failed to apply the change to the running interface %s, config rolled back: %w", t.name, cause)
+	return i18n.Errorf("failed to apply the change to the running interface %s, config rolled back: %w", t.name, cause)
 }
 
 // clientEndpoint — host:port для клиентского конфига: --endpoint или # krot:endpoint (SPEC 6.5).

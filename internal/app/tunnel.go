@@ -15,6 +15,7 @@ import (
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/fsutil"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // tunnel — конфиг интерфейса на диске.
@@ -124,7 +125,7 @@ func (a *App) scanTunnels() ([]*tunnel, error) {
 func (a *App) liveInterfaces(tool string) ([]string, error) {
 	r, err := a.Exec.Run(tool, "show", "interfaces")
 	if err != nil {
-		return nil, fmt.Errorf("cannot list live interfaces: %w", err)
+		return nil, i18n.Errorf("cannot list live interfaces: %w", err)
 	}
 	return strings.Fields(string(r.Stdout)), nil
 }
@@ -141,7 +142,7 @@ func (a *App) isUp(t *tunnel) (bool, error) {
 // save атомарно записывает конфиг туннеля (SPEC 5.4).
 func (a *App) save(t *tunnel) error {
 	if err := fsutil.WriteFileAtomic(t.path, t.conf.Bytes()); err != nil {
-		return fmt.Errorf("write %s: %w", t.path, err)
+		return i18n.Errorf("write %s: %w", t.path, err)
 	}
 	return nil
 }
@@ -157,10 +158,11 @@ func (a *App) deleteTunnel(cmd *cli.Command) error {
 	}
 	// Подтверждение спрашивается до блокировки, чтобы не держать её, пока человек думает.
 	if n := len(t.conf.Peers()); n > 0 && !cmd.Yes {
+		clients := i18n.Plural(n, "client", "clients", "клиент", "клиента", "клиентов")
 		if !a.IsTTY() {
-			return errs.Usagef("interface %s has %d clients: stdin is not a terminal, use --yes to delete without confirmation", t.name, n)
+			return errs.Usagef("interface %s has %d %s: stdin is not a terminal, use --yes to delete without confirmation", t.name, n, clients)
 		}
-		fmt.Fprintf(a.Stderr, "Interface %s has %d clients. Delete? [y/N] ", t.name, n)
+		fmt.Fprint(a.Stderr, i18n.Sprintf("Interface %s has %d %s. Delete? [y/N] ", t.name, n, clients))
 		line, _ := bufio.NewReader(a.Stdin).ReadString('\n')
 		if ans := strings.ToLower(strings.TrimSpace(line)); ans != "y" && ans != "yes" {
 			return errs.Cancelledf("deletion of interface %s cancelled", t.name)
@@ -172,7 +174,7 @@ func (a *App) deleteTunnel(cmd *cli.Command) error {
 			return err
 		}
 		if _, err := a.Exec.Run("systemctl", "disable", "--now", t.unit()); err != nil {
-			return fmt.Errorf("failed to stop %s, config kept: %w", t.unit(), err)
+			return i18n.Errorf("failed to stop %s, config kept: %w", t.unit(), err)
 		}
 		if err := os.Remove(t.path); err != nil {
 			return err
@@ -205,7 +207,7 @@ func (a *App) upDown(cmd *cli.Command, up bool) error {
 			return nil
 		}
 		if _, err := a.Exec.Run("systemctl", verb, t.unit()); err != nil {
-			return fmt.Errorf("systemctl %s %s failed: %w", verb, t.unit(), err)
+			return i18n.Errorf("systemctl %s %s failed: %w", verb, t.unit(), err)
 		}
 		a.printf("Interface %s is %s\n", t.name, state)
 		return nil

@@ -2,10 +2,11 @@ package portcheck
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // Listener слушает UDP-порты и отвечает на ping/echo/time.
@@ -26,14 +27,14 @@ func NewListener(ports []int) *Listener {
 // Listen открывает сокет на каждый порт и слушает до отмены ctx.
 func (l *Listener) Listen(ctx context.Context) error {
 	if len(l.ports) == 0 {
-		return fmt.Errorf("no ports to listen on")
+		return i18n.Errorf("no ports to listen on")
 	}
 	for _, port := range l.ports {
 		addr := &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: port}
 		conn, err := net.ListenUDP("udp", addr)
 		if err != nil {
 			_ = l.Close() // #nosec G104 -- listen error is returned instead
-			return fmt.Errorf("listen udp :%d: %w", port, err)
+			return i18n.Errorf("listen udp :%d: %w", port, err)
 		}
 		l.conns = append(l.conns, conn)
 	}

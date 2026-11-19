@@ -2,7 +2,6 @@ package app
 
 import (
 	"bufio"
-	"fmt"
 	"net/netip"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/fsutil"
+	"github.com/snmp161/krot/internal/i18n"
 	"github.com/snmp161/krot/internal/keys"
 )
 
@@ -105,16 +105,16 @@ func (a *App) create(cmd *cli.Command) error {
 		if _, err := a.Exec.Run("systemctl", "enable", "--now", unit); err != nil {
 			var rb []string
 			if _, derr := a.Exec.Run("systemctl", "disable", "--now", unit); derr != nil {
-				rb = append(rb, fmt.Sprintf("failed to disable %s: %v", unit, derr))
+				rb = append(rb, i18n.Sprintf("failed to disable %s: %v", unit, derr))
 			}
 			if rerr := os.Remove(path); rerr != nil {
-				rb = append(rb, fmt.Sprintf("failed to remove %s: %v", path, rerr))
+				rb = append(rb, i18n.Sprintf("failed to remove %s: %v", path, rerr))
 			}
 			suffix := ""
 			if len(rb) > 0 {
-				suffix = "; rollback incomplete: " + strings.Join(rb, "; ")
+				suffix = i18n.Sprintf("; rollback incomplete: %s", strings.Join(rb, "; "))
 			}
-			return fmt.Errorf("failed to start %s, changes rolled back: %w%s", unit, err, suffix)
+			return i18n.Errorf("failed to start %s, changes rolled back: %w%s", unit, err, suffix)
 		}
 
 		// 7. Сводка.

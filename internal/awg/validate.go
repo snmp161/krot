@@ -2,9 +2,10 @@ package awg
 
 import (
 	"encoding/base64"
-	"fmt"
 	"regexp"
 	"strconv"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 const (
@@ -64,7 +65,7 @@ func num(p Params, key string) (int, bool) {
 }
 
 func rule(id, format string, a ...any) error {
-	return fmt.Errorf(id+": "+format, a...)
+	return i18n.Errorf("%s: %s", id, i18n.Sprintf(format, a...))
 }
 
 var hKeys = []string{"H1", "H2", "H3", "H4"}
@@ -74,7 +75,7 @@ var hKeys = []string{"H1", "H2", "H3", "H4"}
 func Validate(t Type, p Params, mtu int) error {
 	if t == TypeWG {
 		if len(p) > 0 {
-			return fmt.Errorf("type wg has no AmneziaWG parameters, got %s", p[0].Key)
+			return i18n.Errorf("type wg has no AmneziaWG parameters, got %s", p[0].Key)
 		}
 		return nil
 	}
@@ -89,7 +90,7 @@ func Validate(t Type, p Params, mtu int) error {
 	case TypeAWG3:
 		return validateAWG3(p, mtu)
 	}
-	return fmt.Errorf("unknown type %q", t)
+	return i18n.Errorf("unknown type %q", t)
 }
 
 // SPEC 7.1: V-01…V-06.

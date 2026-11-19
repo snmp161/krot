@@ -1,7 +1,12 @@
 package cli
 
+import "github.com/snmp161/krot/internal/i18n"
+
 // Usage возвращает текст справки (--help).
 func Usage() string {
+	if i18n.Current() == i18n.Russian {
+		return usageTextRussian
+	}
 	return usageText
 }
 

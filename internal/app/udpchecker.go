@@ -13,6 +13,7 @@ import (
 
 	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/i18n"
 	"github.com/snmp161/krot/internal/portcheck"
 )
 
@@ -51,13 +52,13 @@ func (a *App) runUDPChecker(ctx context.Context, cmd *cli.Command) error {
 		Rand:     a.Rand,
 	}
 	if cmd.Verbose {
-		fmt.Fprintf(a.Stderr, "Checking UDP ports %s on %s with %d workers\n", cmd.PortRange, cmd.Address, workers)
+		fmt.Fprint(a.Stderr, i18n.Sprintf("Checking UDP ports %s on %s with %d workers\n", cmd.PortRange, cmd.Address, workers))
 		checker.OnResult = func(r portcheck.Result) {
 			if r.Detail != "" {
-				fmt.Fprintf(a.Stderr, "UDP port %d: %s (%s)\n", r.Port, r.Status, r.Detail)
+				fmt.Fprint(a.Stderr, i18n.Sprintf("UDP port %d: %s (%s)\n", r.Port, r.Status, localizedUDPDetail(r.Detail)))
 				return
 			}
-			fmt.Fprintf(a.Stderr, "UDP port %d: %s\n", r.Port, r.Status)
+			fmt.Fprint(a.Stderr, i18n.Sprintf("UDP port %d: %s\n", r.Port, r.Status))
 		}
 	}
 	results, checkErr := checker.Check(ctx)
@@ -81,16 +82,23 @@ func (a *App) runUDPChecker(ctx context.Context, cmd *cli.Command) error {
 
 func (a *App) printUDPCheckerTable(results []portcheck.Result) error {
 	w := tabwriter.NewWriter(a.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "PORT\tSTATUS\tPING\tECHO\tTIME (min/avg/max)\tDETAIL")
+	fmt.Fprintln(w, i18n.Text("PORT\tSTATUS\tPING\tECHO\tTIME (min/avg/max)\tDETAIL"))
 	for _, r := range results {
 		timeCol := portcheck.FormatRTT(r)
 		if r.Status == "filtered" || r.Status == "error" {
 			timeCol = "-"
 		}
 		fmt.Fprintf(w, "%d\t%s\t%d/%d\t%d/%d\t%s\t%s\n",
-			r.Port, r.Status, r.PingOK, r.PingSent, r.EchoOK, r.EchoSent, timeCol, r.Detail)
+			r.Port, r.Status, r.PingOK, r.PingSent, r.EchoOK, r.EchoSent, timeCol, localizedUDPDetail(r.Detail))
 	}
 	return w.Flush()
+}
+
+func localizedUDPDetail(detail string) string {
+	if detail == "timeout" {
+		return i18n.Text(detail)
+	}
+	return detail
 }
 
 func (a *App) printUDPCheckerJSON(results []portcheck.Result) error {

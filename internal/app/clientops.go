@@ -4,6 +4,7 @@ import (
 	"github.com/snmp161/krot/internal/cli"
 	"github.com/snmp161/krot/internal/conf"
 	"github.com/snmp161/krot/internal/errs"
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // clientOp — общая часть --delete-client/--lock-client/--unlock-client: блокировка, поиск
@@ -52,7 +53,7 @@ func (a *App) deleteClient(cmd *cli.Command) error {
 			}
 			return a.removePeerLive(t, p.PublicKey())
 		}
-		return live, "Client " + p.ID + " deleted from " + t.name, nil
+		return live, i18n.Sprintf("Client %s deleted from %s", p.ID, t.name), nil
 	})
 }
 
@@ -60,12 +61,12 @@ func (a *App) deleteClient(cmd *cli.Command) error {
 func (a *App) lockClient(cmd *cli.Command) error {
 	return a.clientOp(cmd, func(t *tunnel, p conf.Peer) (func() error, string, error) {
 		if p.Locked {
-			return nil, "Client " + p.ID + " is already locked", nil
+			return nil, i18n.Sprintf("Client %s is already locked", p.ID), nil
 		}
 		if err := t.conf.LockPeer(p.ID, a.Now().UTC().Format("2006-01-02T15:04:05Z")); err != nil {
 			return nil, "", err
 		}
-		return func() error { return a.removePeerLive(t, p.PublicKey()) }, "Client " + p.ID + " locked", nil
+		return func() error { return a.removePeerLive(t, p.PublicKey()) }, i18n.Sprintf("Client %s locked", p.ID), nil
 	})
 }
 
@@ -73,13 +74,13 @@ func (a *App) lockClient(cmd *cli.Command) error {
 func (a *App) unlockClient(cmd *cli.Command) error {
 	return a.clientOp(cmd, func(t *tunnel, p conf.Peer) (func() error, string, error) {
 		if !p.Locked {
-			return nil, "Client " + p.ID + " is already unlocked", nil
+			return nil, i18n.Sprintf("Client %s is already unlocked", p.ID), nil
 		}
 		if err := t.conf.UnlockPeer(p.ID); err != nil {
 			return nil, "", err
 		}
 		live := func() error { return a.applyPeer(t, p.PublicKey(), p.AllowedIPs(), p.PresharedKey()) }
-		return live, "Client " + p.ID + " unlocked", nil
+		return live, i18n.Sprintf("Client %s unlocked", p.ID), nil
 	})
 }
 

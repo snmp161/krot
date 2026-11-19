@@ -2,16 +2,17 @@
 package ipalloc
 
 import (
-	"errors"
 	"net/netip"
 	"sort"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 var (
-	ErrExhausted     = errors.New("no free addresses in the subnet")
-	ErrOutsideSubnet = errors.New("address is outside of the interface subnets")
-	ErrReserved      = errors.New("address is the network, broadcast or server address")
-	ErrInUse         = errors.New("address is already used by another client")
+	ErrExhausted     = i18n.NewError("no free addresses in the subnet")
+	ErrOutsideSubnet = i18n.NewError("address is outside of the interface subnets")
+	ErrReserved      = i18n.NewError("address is the network, broadcast or server address")
+	ErrInUse         = i18n.NewError("address is already used by another client")
 )
 
 // Last возвращает последний адрес префикса.

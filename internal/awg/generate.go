@@ -3,9 +3,10 @@ package awg
 import (
 	"encoding/base64"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/snmp161/krot/internal/i18n"
 )
 
 // DefaultMTU — MTU по умолчанию для типа (SPEC 4.4).
@@ -31,14 +32,14 @@ func (g *gen) intn(lo, hi uint64) uint64 {
 		return lo
 	}
 	if lo > hi {
-		g.err = fmt.Errorf("invalid random range %d > %d", lo, hi)
+		g.err = i18n.Errorf("invalid random range %d > %d", lo, hi)
 		return lo
 	}
 	span := hi - lo + 1
 	var buf [8]byte
 	for {
 		if _, err := io.ReadFull(g.r, buf[:]); err != nil {
-			g.err = fmt.Errorf("read random: %w", err)
+			g.err = i18n.Errorf("read random: %w", err)
 			return lo
 		}
 		x := binary.LittleEndian.Uint64(buf[:])
@@ -104,7 +105,7 @@ func Generate(t Type, mtu int, i1 string, r io.Reader) (Params, error) {
 	case TypeAWG3:
 		var hp [32]byte
 		if _, err := io.ReadFull(r, hp[:]); err != nil && g.err == nil {
-			g.err = fmt.Errorf("read random: %w", err)
+			g.err = i18n.Errorf("read random: %w", err)
 		}
 		v["HeaderProtectionKey"] = base64.StdEncoding.EncodeToString(hp[:])
 		s := itoa(g.int(12, 64))
@@ -171,7 +172,7 @@ func genHRanges(g *gen) []Range {
 		}
 	}
 	if g.err == nil {
-		g.err = fmt.Errorf("could not generate non-overlapping H ranges after 1000 attempts")
+		g.err = i18n.Errorf("could not generate non-overlapping H ranges after 1000 attempts")
 	}
 	return make([]Range, 4)
 }
