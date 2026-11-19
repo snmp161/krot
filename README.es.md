@@ -1,6 +1,6 @@
 # krot
 
-[English](README.md) | [Русский](README.ru.md) | [中文](README.zh.md) | **Español** | [Português](README.pt.md)
+[English](README.md) | [Русский](README.ru.md) | [简体中文](README.zh.md) | [繁體中文](README.zh-Hant.md) | **Español** | [Português](README.pt.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [العربية](README.ar.md)
 
 `krot` es una utilidad de línea de comandos para administrar túneles
 **WireGuard** y **AmneziaWG** (1.x, 2.0, 3.1) en servidores Linux: crear y
