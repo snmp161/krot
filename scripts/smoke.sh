@@ -15,7 +15,7 @@ esac
 
 docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -e PKG="/pkg/$pkg" "$image" sh -euc '
     case "$PKG" in
-        *.deb) dpkg -i "$PKG" ;;
+        *.deb) dpkg --path-include=/usr/share/man/man1/krot.1 --path-include=/usr/share/man/ru/man1/krot.1 -i "$PKG" ;;
         *.rpm) rpm -i "$PKG" ;;
     esac
     test "$(command -v krot)" = /usr/bin/krot
