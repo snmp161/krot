@@ -1,5 +1,6 @@
 package i18n
 
+// #nosec G101 -- this catalog contains user interface messages, not credentials.
 var russianMessages = map[string]string{
 	"Try 'krot --help' for more information.": "Попробуйте 'krot --help' для получения дополнительной информации.",
 	"warning": "предупреждение",
