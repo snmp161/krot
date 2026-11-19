@@ -179,6 +179,9 @@ PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
 `echo_sent`, `echo_ok`, `time_sent`, `time_ok`, `rtt_min_ms`, `rtt_avg_ms`, `rtt_max_ms`,
 `detail`.
 
+При `Ctrl+C`/`SIGTERM` checker выводит результаты полностью проверенных портов в выбранном
+формате и завершается с кодом `10`; незавершённые порты в предварительный вывод не входят.
+
 `--udp-checker` работает без root. `--udp-listener` требует root только если в диапазоне
 есть порты `<1024` или `/proc/net/udp` и `/proc/net/udp6` недоступны текущему пользователю.
 Listener работает до `Ctrl+C`/`SIGTERM`.

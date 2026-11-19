@@ -189,6 +189,9 @@ With `--json`, output is an array of objects with fields `port`, `status`,
 `ping_sent`, `ping_ok`, `echo_sent`, `echo_ok`, `time_sent`, `time_ok`,
 `rtt_min_ms`, `rtt_avg_ms`, `rtt_max_ms`, `detail`.
 
+On `Ctrl+C`/`SIGTERM`, the checker prints results for fully checked ports in the
+selected format and exits with code `10`; unfinished ports are omitted.
+
 `--udp-checker` works without root. `--udp-listener` requires root only if
 the range includes ports `<1024` or `/proc/net/udp` and `/proc/net/udp6` are
 not readable by the current user. The listener runs until `Ctrl+C`/`SIGTERM`.

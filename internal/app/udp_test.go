@@ -222,6 +222,28 @@ func TestUDPCheckerCancellationPrintsResults(t *testing.T) {
 	}
 }
 
+// SPEC 6.15: при отмене до первого результата JSON остаётся валидным пустым массивом.
+func TestUDPCheckerCancellationJSON(t *testing.T) {
+	cmd, err := cli.Parse([]string{"--udp-checker", "--address", "127.0.0.1", "--port", "51820", "--json"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := newEnv(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err = e.app.runUDPChecker(ctx, cmd)
+	if got := errs.Code(err); got != errs.Cancelled {
+		t.Fatalf("exit code = %d, want %d; error: %v", got, errs.Cancelled, err)
+	}
+	var results []map[string]any
+	if err := json.Unmarshal(e.stdout.Bytes(), &results); err != nil {
+		t.Fatalf("stdout is not valid JSON: %v\n%s", err, e.stdout.Bytes())
+	}
+	if len(results) != 0 {
+		t.Fatalf("partial results = %+v, want empty", results)
+	}
+}
+
 func itoa(n int) string {
 	if n == 0 {
 		return "0"

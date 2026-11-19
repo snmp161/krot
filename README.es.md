@@ -196,6 +196,9 @@ Con `--json`, la salida es un array de objetos con los campos `port`,
 `status`, `ping_sent`, `ping_ok`, `echo_sent`, `echo_ok`, `time_sent`,
 `time_ok`, `rtt_min_ms`, `rtt_avg_ms`, `rtt_max_ms`, `detail`.
 
+Con `Ctrl+C`/`SIGTERM`, el checker muestra los resultados de los puertos completamente
+comprobados en el formato seleccionado y termina con código `10`; omite los puertos sin terminar.
+
 `--udp-checker` funciona sin root. `--udp-listener` requiere root solo si
 el rango incluye puertos `<1024` o `/proc/net/udp` y `/proc/net/udp6` no
 son legibles por el usuario actual. El listener se ejecuta hasta

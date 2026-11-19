@@ -180,6 +180,9 @@ PORT     STATUS   PING    ECHO    TIME (min/avg/max)   DETAIL
 `ping_sent`、`ping_ok`、`echo_sent`、`echo_ok`、`time_sent`、`time_ok`、
 `rtt_min_ms`、`rtt_avg_ms`、`rtt_max_ms`、`detail`。
 
+按下 `Ctrl+C` 或收到 `SIGTERM` 时，checker 会以选定格式输出已完整检查的端口结果，
+并以退出码 `10` 结束；未完成的端口不会包含在结果中。
+
 `--udp-checker` 无需 root。`--udp-listener` 仅在范围包含 `<1024` 端口
 或 `/proc/net/udp` 和 `/proc/net/udp6` 当前用户不可读时需要 root。
 Listener 运行直到 `Ctrl+C`/`SIGTERM`。

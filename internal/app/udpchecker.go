@@ -3,16 +3,27 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"text/tabwriter"
 	"time"
 
 	"github.com/snmp161/krot/internal/cli"
+	"github.com/snmp161/krot/internal/errs"
 	"github.com/snmp161/krot/internal/portcheck"
 )
 
 // SPEC 6.15: --udp-checker.
 func (a *App) udpChecker(cmd *cli.Command) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return a.runUDPChecker(ctx, cmd)
+}
+
+func (a *App) runUDPChecker(ctx context.Context, cmd *cli.Command) error {
 	timeout := cmd.Timeout
 	if timeout == 0 {
 		timeout = 2 * time.Second
@@ -49,14 +60,23 @@ func (a *App) udpChecker(cmd *cli.Command) error {
 			fmt.Fprintf(a.Stderr, "UDP port %d: %s\n", r.Port, r.Status)
 		}
 	}
-	results, err := checker.Check(context.Background())
-	if err != nil {
-		return err
+	results, checkErr := checker.Check(ctx)
+	if checkErr != nil && !errors.Is(checkErr, context.Canceled) {
+		return checkErr
 	}
 	if cmd.JSON {
-		return a.printUDPCheckerJSON(results)
+		if err := a.printUDPCheckerJSON(results); err != nil {
+			return err
+		}
+	} else {
+		if err := a.printUDPCheckerTable(results); err != nil {
+			return err
+		}
 	}
-	return a.printUDPCheckerTable(results)
+	if checkErr != nil {
+		return errs.Cancelledf("UDP check cancelled; partial results for %d of %d ports", len(results), len(cmd.PortRange.Ports()))
+	}
+	return nil
 }
 
 func (a *App) printUDPCheckerTable(results []portcheck.Result) error {

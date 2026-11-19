@@ -62,6 +62,7 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 	}
 
 	results := make([]Result, len(c.Ports))
+	completed := make([]bool, len(c.Ports))
 	if len(c.Ports) == 0 {
 		return results, nil
 	}
@@ -76,8 +77,12 @@ func (c *Checker) Check(ctx context.Context) ([]Result, error) {
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
-				result := c.checkPort(ctx, rng, c.Ports[i])
+				result, err := c.checkPort(ctx, rng, c.Ports[i])
+				if err != nil {
+					continue
+				}
 				results[i] = result
+				completed[i] = true
 				if c.OnResult != nil {
 					resultMu.Lock()
 					c.OnResult(result)
@@ -98,26 +103,43 @@ sendJobs:
 	close(jobs)
 	wg.Wait()
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		partial := make([]Result, 0, len(c.Ports))
+		for i, result := range results {
+			if completed[i] {
+				partial = append(partial, result)
+			}
+		}
+		return partial, err
 	}
 	return results, nil
 }
 
-func (c *Checker) checkPort(ctx context.Context, rng io.Reader, port int) Result {
+func (c *Checker) checkPort(ctx context.Context, rng io.Reader, port int) (Result, error) {
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", c.Address, port))
 	if err != nil {
-		return Result{Port: port, Status: "error", Detail: err.Error()}
+		if ctx.Err() != nil {
+			return Result{Port: port}, ctx.Err()
+		}
+		return Result{Port: port, Status: "error", Detail: err.Error()}, nil
 	}
 	conn, err := net.DialUDP("udp", nil, addr)
 	if err != nil {
-		return Result{Port: port, Status: "error", Detail: err.Error()}
+		if ctx.Err() != nil {
+			return Result{Port: port}, ctx.Err()
+		}
+		return Result{Port: port, Status: "error", Detail: err.Error()}, nil
 	}
 	defer conn.Close()
+	stopClose := context.AfterFunc(ctx, func() { _ = conn.Close() })
+	defer stopClose()
 
 	r := Result{Port: port}
 	var rtts []time.Duration
 
 	for seq := 1; seq <= c.Count; seq++ {
+		if err := ctx.Err(); err != nil {
+			return r, err
+		}
 		// ping
 		r.PingSent++
 		if c.exchange(ctx, conn, PingRequest(seq), func(data []byte) bool {
@@ -144,6 +166,9 @@ func (c *Checker) checkPort(ctx context.Context, rng io.Reader, port int) Result
 			rtts = append(rtts, d)
 		}
 	}
+	if err := ctx.Err(); err != nil {
+		return r, err
+	}
 
 	r.Status = "ok"
 	if r.PingOK != r.PingSent || r.EchoOK != r.EchoSent {
@@ -160,7 +185,7 @@ func (c *Checker) checkPort(ctx context.Context, rng io.Reader, port int) Result
 		}
 		r.RTTAvg = sum / time.Duration(len(rtts))
 	}
-	return r
+	return r, nil
 }
 
 func (c *Checker) exchange(ctx context.Context, conn *net.UDPConn, req []byte, check func([]byte) bool) bool {
