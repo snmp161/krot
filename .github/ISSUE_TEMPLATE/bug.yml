@@ -1,0 +1,79 @@
+name: Bug report
+description: Report a reproducible problem with krot
+title: "[Bug]: "
+labels:
+  - "bug"
+body:
+  - type: input
+    id: version
+    attributes:
+      label: krot version
+      description: Paste the output of `krot --version`.
+      placeholder: "krot v0.7.3 (commit ..., built ...)"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: Distribution and version, for example Ubuntu 24.04 or AlmaLinux 9.
+      placeholder: "Ubuntu 24.04"
+    validations:
+      required: true
+  - type: input
+    id: architecture
+    attributes:
+      label: Architecture
+      description: CPU architecture and relevant kernel version.
+      placeholder: "amd64, Linux 6.8"
+    validations:
+      required: true
+  - type: dropdown
+    id: tunnel-type
+    attributes:
+      label: Tunnel type
+      options:
+        - WireGuard (wg)
+        - AmneziaWG 1.x (awg)
+        - AmneziaWG 2.0 (awg2)
+        - AmneziaWG 3.1 (awg3)
+        - Not applicable / UDP diagnostics
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: WireGuard / AmneziaWG environment
+      description: Include the relevant package versions and whether AmneziaWG uses a kernel module or amneziawg-go.
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the exact commands and a minimal reproducible scenario.
+      placeholder: "1. ...\n2. ...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe the expected output, exit code, and system state.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Describe the actual output, exit code, and system state. Redact secrets.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Sensitive data check
+      description: Logs and configs must be sanitized before submission.
+      options:
+        - label: I removed all private keys, credentials, and other secrets from the report and attachments.
+          required: true
