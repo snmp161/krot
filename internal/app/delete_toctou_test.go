@@ -89,8 +89,8 @@ func TestDeleteRechecksClientsAfterLock(t *testing.T) {
 			if tt.wantThree && !strings.Contains(e.stderr.String(), "Interface awg0 has 3 clients") {
 				t.Errorf("second prompt does not use current count: %q", e.stderr.String())
 			}
-			if tt.wantNoTTYEnd && !strings.Contains(e.stderr.String(), "stdin is not a terminal") {
-				t.Errorf("missing non-TTY error: %q", e.stderr.String())
+			if tt.wantNoTTYEnd && (err == nil || !strings.Contains(err.Error(), "stdin is not a terminal")) {
+				t.Errorf("missing non-TTY error: %v", err)
 			}
 			if got := !e.exists(path); got != tt.wantDeleted {
 				t.Errorf("deleted = %v, want %v", got, tt.wantDeleted)

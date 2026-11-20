@@ -179,7 +179,7 @@ jobs:
       - name: system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod iptables
+          sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod iptables util-linux
       - name: cache AmneziaWG build
         id: awg-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6

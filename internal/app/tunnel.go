@@ -149,6 +149,10 @@ func (a *App) save(t *tunnel) error {
 
 // SPEC 6.3: --delete.
 func (a *App) deleteTunnel(cmd *cli.Command) error {
+	return a.deleteTunnelWithLock(cmd, a.withLock)
+}
+
+func (a *App) deleteTunnelWithLock(cmd *cli.Command, runLocked func(func() error) error) error {
 	if err := a.need("systemctl"); err != nil {
 		return err
 	}
@@ -156,22 +160,23 @@ func (a *App) deleteTunnel(cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	// Подтверждение спрашивается до блокировки, чтобы не держать её, пока человек думает.
-	if n := len(t.conf.Peers()); n > 0 && !cmd.Yes {
-		clients := i18n.Plural(n, "client")
-		if !a.IsTTY() {
-			return errs.Usagef("interface %s has %d %s: stdin is not a terminal, use --yes to delete without confirmation", t.name, n, clients)
-		}
-		fmt.Fprint(a.Stderr, i18n.Sprintf("Interface %s has %d %s. Delete? [y/N] ", t.name, n, clients))
-		line, _ := bufio.NewReader(a.Stdin).ReadString('\n')
-		if ans := strings.ToLower(strings.TrimSpace(line)); ans != "y" && ans != "yes" {
-			return errs.Cancelledf("deletion of interface %s canceled", t.name)
+	confirmed := t.conf.Peers()
+	reader := bufio.NewReader(a.Stdin)
+	// Первый вопрос задаётся до блокировки, изменённый набор перепроверяется под ней.
+	if !cmd.Yes {
+		if err := a.confirmDelete(t, reader); err != nil {
+			return err
 		}
 	}
-	return a.withLock(func() error {
+	return runLocked(func() error {
 		t, err := a.findTunnel(cmd.Interface)
 		if err != nil {
 			return err
+		}
+		if !cmd.Yes && !sameClientSet(confirmed, t.conf.Peers()) {
+			if err := a.confirmDelete(t, reader); err != nil {
+				return err
+			}
 		}
 		if _, err := a.Exec.Run("systemctl", "disable", "--now", t.unit()); err != nil {
 			return i18n.Errorf("failed to stop %s, config kept: %w", t.unit(), err)
@@ -182,6 +187,44 @@ func (a *App) deleteTunnel(cmd *cli.Command) error {
 		a.printf("Interface %s deleted\n", t.name)
 		return nil
 	})
+}
+
+func (a *App) confirmDelete(t *tunnel, reader *bufio.Reader) error {
+	n := len(t.conf.Peers())
+	if n == 0 {
+		return nil
+	}
+	clients := i18n.Plural(n, "client")
+	if !a.IsTTY() {
+		return errs.Usagef("interface %s has %d %s: stdin is not a terminal, use --yes to delete without confirmation", t.name, n, clients)
+	}
+	fmt.Fprint(a.Stderr, i18n.Sprintf("Interface %s has %d %s. Delete? [y/N] ", t.name, n, clients))
+	line, _ := reader.ReadString('\n')
+	if ans := strings.ToLower(strings.TrimSpace(line)); ans != "y" && ans != "yes" {
+		return errs.Cancelledf("deletion of interface %s canceled", t.name)
+	}
+	return nil
+}
+
+func sameClientSet(before, after []conf.Peer) bool {
+	if len(before) != len(after) {
+		return false
+	}
+	type identity struct {
+		id, publicKey string
+	}
+	counts := make(map[identity]int, len(before))
+	for _, p := range before {
+		counts[identity{p.ID, p.PublicKey()}]++
+	}
+	for _, p := range after {
+		id := identity{p.ID, p.PublicKey()}
+		if counts[id] == 0 {
+			return false
+		}
+		counts[id]--
+	}
+	return true
 }
 
 // SPEC 6.4: --up / --down.

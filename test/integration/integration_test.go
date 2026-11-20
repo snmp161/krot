@@ -437,3 +437,89 @@ func TestUDPPortDetect(t *testing.T) {
 	defer run("ip", "netns", "exec", nsSrv, "iptables", "-D", "INPUT", "-p", "udp", "--dport", "51821", "-j", "DROP")
 	check(map[int]string{51820: "ok", 51821: "filtered", 51822: "ok"})
 }
+
+// SPEC 6.3 T37: клиент, добавленный после первого вопроса, требует повторного
+// подтверждения; отказ на втором вопросе сохраняет туннель и обоих клиентов.
+func TestDeleteReconfirmation(t *testing.T) {
+	tu := newTunnel(t, "wg", 30)
+	tu.create(t, tu.serverIP()+"/24")
+	tu.addClient(t, "a")
+
+	command := fmt.Sprintf("ip netns exec %s %s --delete --interface %s", nsSrv, krotBin, tu.name)
+	cmd := exec.Command("script", "-qec", command, "/dev/null")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+	finished := false
+	t.Cleanup(func() {
+		if !finished {
+			_ = cmd.Process.Kill()
+			<-done
+		}
+	})
+	reader := bufio.NewReader(output)
+	waitForText(t, reader, "Delete?")
+
+	tu.addClient(t, "b")
+	if _, err := io.WriteString(stdin, "y\n"); err != nil {
+		t.Fatal(err)
+	}
+	waitForText(t, reader, "2 clients")
+	if _, err := io.WriteString(stdin, "n\n"); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-done:
+		finished = true
+		if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() != 10 {
+			t.Fatalf("delete exit error = %v, want code 10", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("delete did not exit after rejection")
+	}
+	if _, err := os.Stat(tu.conf); err != nil {
+		t.Fatalf("config removed after rejection: %v", err)
+	}
+	clients := tu.clients(t)
+	if len(clients) != 2 {
+		t.Fatalf("clients after rejection = %d, want 2", len(clients))
+	}
+}
+
+func waitForText(t *testing.T, reader *bufio.Reader, want string) {
+	t.Helper()
+	got := make(chan error, 1)
+	go func() {
+		var text strings.Builder
+		for {
+			b, err := reader.ReadByte()
+			if err != nil {
+				got <- err
+				return
+			}
+			text.WriteByte(b)
+			if strings.Contains(text.String(), want) {
+				got <- nil
+				return
+			}
+		}
+	}()
+	select {
+	case err := <-got:
+		if err != nil {
+			t.Fatalf("waiting for %q: %v", want, err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatalf("timeout waiting for %q", want)
+	}
+}

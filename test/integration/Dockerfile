@@ -19,7 +19,7 @@ FROM ubuntu:24.04
 ENV container=docker DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends systemd systemd-sysv dbus iproute2 \
-        wireguard-tools kmod iputils-ping procps ca-certificates iptables \
+        wireguard-tools kmod iputils-ping procps ca-certificates iptables util-linux \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=awg /out/ /
 STOPSIGNAL SIGRTMIN+3
