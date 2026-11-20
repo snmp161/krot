@@ -22,7 +22,7 @@ func TestReadmeInstallVersion(t *testing.T) {
 			t.Fatalf("read %s: %v", name, err)
 		}
 		text := string(data)
-		if got := strings.Count(text, "VERSION=0.7.2"); got != 1 {
+		if got := strings.Count(text, "VERSION=0.7.3"); got != 1 {
 			t.Errorf("%s: current installation version occurs %d times", name, got)
 		}
 		if strings.Contains(text, "VERSION=0.1.0") {
