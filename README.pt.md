@@ -465,10 +465,12 @@ Você precisa do Go do `go.mod` (atualmente 1.27.2) e do Docker para os
 testes de integração.
 
 ```sh
-make check        # gofmt, go vet (incluindo a tag integration), go test -race ./..., gosec, staticcheck
+make check        # todas as verificações locais: formato, testes, módulos, segurança e workflows
+make fuzz-smoke   # fuzzing limitado de todos os targets
 make build        # bin/krot estático (CGO_ENABLED=0), versão do git describe
 make build-arm64
 make integration  # testes de integração em um contêiner Docker privilegiado com systemd
+make package-preflight # DEB/RPM para ambas arquiteturas + smoke no Ubuntu 24.04/AlmaLinux 9
 ```
 
 Regras do repositório: [`AGENTS.md`](AGENTS.md) — a especificação primeiro,
@@ -494,9 +496,9 @@ os testes antes do código, um commit por tarefa.
   Localmente via `scripts/integration-docker.sh`, no CI sob `sudo`.
 - `scripts/collect-versions.sh` reconstrói saídas reais de versões do
   AmneziaWG para os testes golden.
-- **CI** (`.github/workflows/ci.yml`): gofmt, vet, testes unitários com
-  `-race` e cobertura, auditoria de segurança `govulncheck` + `gosec`,
-  `staticcheck`, testes de integração, builds `amd64`/`arm64`.
+- **CI** (`.github/workflows/ci.yml`): verificações locais de qualidade, testes
+  unitários com shuffle, `-race` e cobertura (mínimo 90%), fuzzing limitado,
+  testes de integração, package preflight e builds `amd64`/`arm64`.
   **Release** (`release.yml`, tag `v*`): binários, pacotes `.deb`/`.rpm`
   (nfpm, `packaging/nfpm.yaml`), testes de fumaça de pacotes em todos os
   SOs (`scripts/smoke.sh`), GitHub Release com `SHA256SUMS`.

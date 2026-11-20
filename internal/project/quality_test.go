@@ -14,12 +14,7 @@ func TestQualityWorkflowGates(t *testing.T) {
 		"go test -race -count=1 -shuffle=on -coverprofile=coverage.out ./...",
 		"shellcheck",
 		"actionlint",
-		"-fuzztime=10s",
-		"FuzzParse",
-		"FuzzValidateCPS",
-		"FuzzParseVersion",
-		"FuzzParseDump",
-		"FuzzConfigRoundTrip",
+		"make fuzz-smoke",
 		"nfpm",
 		"ubuntu:24.04",
 		"almalinux:9",
@@ -33,7 +28,10 @@ func TestQualityWorkflowGates(t *testing.T) {
 // SPEC 9.1 T36: основные quality gates доступны для локального запуска.
 func TestQualityMakeTargets(t *testing.T) {
 	makefile := readRepoFile(t, "Makefile")
-	for _, want := range []string{"mod-check:", "fuzz-smoke:", "shellcheck:", "actionlint:", "package-preflight:"} {
+	for _, want := range []string{
+		"mod-check:", "fuzz-smoke:", "shellcheck:", "actionlint:", "package-preflight:",
+		"-fuzztime=10s", "FuzzParse", "FuzzValidateCPS", "FuzzParseVersion", "FuzzParseDump", "FuzzConfigRoundTrip",
+	} {
 		if !strings.Contains(makefile, want) {
 			t.Errorf("Makefile misses %q", want)
 		}

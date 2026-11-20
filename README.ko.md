@@ -425,10 +425,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 `go.mod`에 지정된 Go(현재 1.27.2)와 통합 테스트용 Docker가 필요합니다.
 
 ```sh
-make check        # gofmt, go vet(integration 태그 포함), go test -race ./..., gosec, staticcheck
+make check        # 모든 로컬 검사: 형식, 테스트, 모듈, 보안 및 workflow 린터
+make fuzz-smoke   # 모든 targets의 시간 제한 fuzzing
 make build        # 정적 bin/krot(CGO_ENABLED=0), 버전은 git describe에서 가져옴
 make build-arm64
 make integration  # systemd를 실행하는 특권 Docker 컨테이너에서 통합 테스트 실행
+make package-preflight # 양쪽 아키텍처용 DEB/RPM + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 
 리포지터리 규칙: [`AGENTS.md`](AGENTS.md) — 명세 우선, 코드보다 테스트 먼저,
@@ -447,8 +449,9 @@ make integration  # systemd를 실행하는 특권 Docker 컨테이너에서 통
   외부 구성, 동시 실행을 검증합니다. 로컬에서는 `scripts/integration-docker.sh`를 사용하고,
   CI에서는 `sudo`로 실행합니다.
 - `scripts/collect-versions.sh`는 골든 테스트를 위해 실제 AmneziaWG 버전 출력을 다시 수집합니다.
-- **CI**(`.github/workflows/ci.yml`): gofmt, vet, `-race` 및 커버리지를 포함한 단위 테스트,
-  `govulncheck` + `gosec` 보안 감사, `staticcheck`, 통합 테스트, `amd64`/`arm64` 빌드.
+- **CI**(`.github/workflows/ci.yml`): 로컬 품질 검사, shuffle·`-race` 및 최소 90%
+  커버리지를 적용한 단위 테스트, 시간 제한 fuzzing, 통합 테스트, package preflight,
+  `amd64`/`arm64` 빌드.
   **릴리스**(`release.yml`, 태그 `v*`): 바이너리, `.deb`/`.rpm` 패키지(nfpm, `packaging/nfpm.yaml`),
   모든 OS에서 패키지 스모크 테스트(`scripts/smoke.sh`), `SHA256SUMS`가 포함된 GitHub Release.
 

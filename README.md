@@ -444,10 +444,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 You need Go from `go.mod` (currently 1.27.2) and Docker for integration tests.
 
 ```sh
-make check        # gofmt, go vet (including integration tag), go test -race ./..., gosec, staticcheck
+make check        # all local checks: formatting, tests, modules, security and workflow linters
+make fuzz-smoke   # bounded fuzzing of all targets
 make build        # static bin/krot (CGO_ENABLED=0), version from git describe
 make build-arm64
 make integration  # integration tests in a privileged Docker container with systemd
+make package-preflight # DEB/RPM for both architectures + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 
 Repository rules: [`AGENTS.md`](AGENTS.md) — spec first, tests before code,
@@ -470,9 +472,9 @@ one commit per task.
   `scripts/integration-docker.sh`, in CI under `sudo`.
 - `scripts/collect-versions.sh` rebuilds real AmneziaWG version outputs for
   golden tests.
-- **CI** (`.github/workflows/ci.yml`): gofmt, vet, unit tests with `-race` and
-  coverage, security audit `govulncheck` + `gosec`, `staticcheck`,
-  integration tests, `amd64`/`arm64` builds. **Release** (`release.yml`, tag
+- **CI** (`.github/workflows/ci.yml`): local quality gates, shuffled unit tests
+  with `-race` and coverage (minimum 90%), bounded fuzzing, integration tests,
+  package preflight, and `amd64`/`arm64` builds. **Release** (`release.yml`, tag
   `v*`): binaries, `.deb`/`.rpm` packages (nfpm, `packaging/nfpm.yaml`),
   package smoke tests on all OSes (`scripts/smoke.sh`), GitHub Release with
   `SHA256SUMS`.

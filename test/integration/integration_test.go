@@ -4,6 +4,7 @@ package integration
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -364,4 +365,75 @@ func TestKeenetic(t *testing.T) {
 	mustKrot(t, "--delete", "--interface", awg3.name, "--yes")
 	mustKrot(t, "--delete", "--interface", awg.name, "--yes")
 	mustKrot(t, "--delete", "--interface", tu.name, "--yes")
+}
+
+// SPEC 6.14, 6.15, 8.3 T36: listener и checker работают между netns;
+// DROP одного порта меняет только его статус на filtered.
+func TestUDPPortDetect(t *testing.T) {
+	const portRange = "51820:51822"
+	listener := exec.Command("ip", "netns", "exec", nsSrv, krotBin, "--udp-listener", "--port", portRange)
+	output, err := listener.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := listener.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = listener.Process.Signal(syscall.SIGTERM)
+		done := make(chan error, 1)
+		go func() { done <- listener.Wait() }()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			_ = listener.Process.Kill()
+			<-done
+		}
+	})
+
+	ready := make(chan error, 1)
+	go func() {
+		_, err := bufio.NewReader(output).ReadString('\n')
+		ready <- err
+	}()
+	select {
+	case err := <-ready:
+		if err != nil {
+			t.Fatalf("listener did not become ready: %v", err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("listener readiness timeout")
+	}
+
+	type result struct {
+		Port   int    `json:"port"`
+		Status string `json:"status"`
+	}
+	check := func(want map[int]string) {
+		t.Helper()
+		out := mustRun(t, "ip", "netns", "exec", nsCli, krotBin,
+			"--udp-checker", "--address", srvAddr, "--port", portRange,
+			"--json", "--count", "1", "--workers", "3", "--timeout", "500ms")
+		var got []result
+		if err := json.Unmarshal([]byte(out), &got); err != nil {
+			t.Fatalf("checker JSON: %v\n%s", err, out)
+		}
+		if len(got) != len(want) {
+			t.Fatalf("got %d results, want %d: %s", len(got), len(want), out)
+		}
+		for _, r := range got {
+			if r.Status != want[r.Port] {
+				t.Errorf("port %d: status %q, want %q", r.Port, r.Status, want[r.Port])
+			}
+			delete(want, r.Port)
+		}
+		for port := range want {
+			t.Errorf("port %d missing from results", port)
+		}
+	}
+
+	check(map[int]string{51820: "ok", 51821: "ok", 51822: "ok"})
+	mustRun(t, "ip", "netns", "exec", nsSrv, "iptables", "-I", "INPUT", "-p", "udp", "--dport", "51821", "-j", "DROP")
+	defer run("ip", "netns", "exec", nsSrv, "iptables", "-D", "INPUT", "-p", "udp", "--dport", "51821", "-j", "DROP")
+	check(map[int]string{51820: "ok", 51821: "filtered", 51822: "ok"})
 }

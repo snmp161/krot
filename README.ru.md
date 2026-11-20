@@ -408,10 +408,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 Нужен Go из `go.mod` (сейчас 1.27.2) и docker для интеграционных тестов.
 
 ```sh
-make check        # gofmt, go vet (с тегом integration тоже), go test -race ./..., gosec, staticcheck
+make check        # все локальные проверки: форматирование, тесты, модули, безопасность и workflow
+make fuzz-smoke   # ограниченный по времени fuzzing всех targets
 make build        # статический bin/krot (CGO_ENABLED=0), версия из git describe
 make build-arm64
 make integration  # интеграционные тесты в privileged docker-контейнере с systemd
+make package-preflight # DEB/RPM для обеих архитектур + smoke на Ubuntu 24.04/AlmaLinux 9
 ```
 
 Правила работы в репозитории — [`AGENTS.md`](AGENTS.md): ТЗ первично, сначала тесты, коммит на
@@ -430,8 +432,9 @@ make integration  # интеграционные тесты в privileged docker
   клиентских операций (непрерывный ping без потерь, неизменный ifindex и handshake), IPv6,
   конфиги, созданные вручную, и параллельные запуски. Локально — `scripts/integration-docker.sh`, в CI — под `sudo`.
 - `scripts/collect-versions.sh` пересобирает реальные выводы версий AmneziaWG для golden-тестов.
-- **CI** (`.github/workflows/ci.yml`): gofmt, vet, unit-тесты с `-race` и покрытием, аудит
-  безопасности `govulncheck` + `gosec`, интеграционные тесты, сборка `amd64`/`arm64`.
+- **CI** (`.github/workflows/ci.yml`): локальные проверки качества, unit-тесты с shuffle,
+  `-race` и покрытием (минимум 90%), bounded fuzzing, интеграционные тесты,
+  package preflight и сборки `amd64`/`arm64`.
   **Релиз** (`release.yml`, тег `v*`): бинари, пакеты `.deb`/`.rpm` (nfpm, `packaging/nfpm.yaml`),
   smoke-тесты пакетов на всех ОС (`scripts/smoke.sh`), GitHub Release с `SHA256SUMS`.
 

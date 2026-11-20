@@ -454,10 +454,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 Sie benötigen Go aus `go.mod` (derzeit 1.27.2) und Docker für Integrationstests.
 
 ```sh
-make check        # gofmt, go vet (einschließlich integration-Tag), go test -race ./..., gosec, staticcheck
+make check        # alle lokalen Checks: Format, Tests, Module, Sicherheit und Workflow-Linter
+make fuzz-smoke   # zeitlich begrenztes Fuzzing aller Targets
 make build        # statisches bin/krot (CGO_ENABLED=0), Version aus git describe
 make build-arm64
 make integration  # Integrationstests in einem privilegierten Docker-Container mit systemd
+make package-preflight # DEB/RPM für beide Architekturen + Ubuntu-24.04-/AlmaLinux-9-Smoke
 ```
 
 Regeln des Repositorys: [`AGENTS.md`](AGENTS.md) — Spezifikation zuerst, Tests vor
@@ -480,9 +482,9 @@ dem Code, ein Commit pro Aufgabe.
   ab. Lokal über `scripts/integration-docker.sh`, in CI unter `sudo`.
 - `scripts/collect-versions.sh` erstellt die realen Ausgaben der
   AmneziaWG-Versionen für Golden-Tests neu.
-- **CI** (`.github/workflows/ci.yml`): gofmt, vet, Unit-Tests mit `-race` und
-  Coverage, Sicherheitsaudit `govulncheck` + `gosec`, `staticcheck`,
-  Integrationstests, Builds für `amd64`/`arm64`. **Release** (`release.yml`, Tag
+- **CI** (`.github/workflows/ci.yml`): lokale Qualitätschecks, Unit-Tests mit
+  Shuffle, `-race` und Coverage (mindestens 90 %), begrenztes Fuzzing,
+  Integrationstests, Package-Preflight und Builds für `amd64`/`arm64`. **Release** (`release.yml`, Tag
   `v*`): Binärdateien, `.deb`/`.rpm`-Pakete (nfpm, `packaging/nfpm.yaml`),
   Paket-Smoke-Tests auf allen Betriebssystemen (`scripts/smoke.sh`), GitHub Release
   mit `SHA256SUMS`.

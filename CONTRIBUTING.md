@@ -63,13 +63,20 @@ Before submitting a change, run:
 gofmt -l .
 go vet ./...
 go vet -tags integration ./...
-go test -race ./...
+go mod tidy -diff
+go mod verify
+go test -race -count=1 -shuffle=on ./...
 ```
 
 `make check` runs the complete standard suite, including formatting, vet,
-race-enabled unit tests, gosec, and staticcheck. Audit tools are installed at
-versions pinned by the repository. Formatting must be checked with the Go
-toolchain selected from `go.mod`.
+module hygiene, shuffled race-enabled unit tests, gosec, staticcheck, ShellCheck,
+and actionlint. Audit tools and the ShellCheck image are pinned by the repository.
+Formatting must be checked with the Go toolchain selected from `go.mod`.
+
+The underlying unit command is `go test -race ./...`; CI and the Makefile target
+add `-count=1 -shuffle=on`. Run `make fuzz-smoke` for bounded fuzzing of every
+existing target and `make package-preflight` to build DEB/RPM packages for both
+architectures and run representative smoke tests on Ubuntu 24.04 and AlmaLinux 9.
 
 The unit suite must maintain the coverage threshold enforced by CI. Add golden
 files under the relevant package's `testdata/` directory. Update golden files

@@ -423,10 +423,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 需要 `go.mod` 中的 Go（当前为 1.27.2）和 Docker 用于集成测试。
 
 ```sh
-make check        # gofmt、go vet（包括 integration 标签）、go test -race ./...、gosec、staticcheck
+make check        # 所有本地检查：格式、测试、模块、安全和 workflow 检查器
+make fuzz-smoke   # 对所有 targets 进行限时 fuzzing
 make build        # 静态 bin/krot（CGO_ENABLED=0），版本来自 git describe
 make build-arm64
 make integration  # 在带 systemd 的特权 Docker 容器中进行集成测试
+make package-preflight # 为两种架构构建 DEB/RPM + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 
 仓库规则：[`AGENTS.md`](AGENTS.md)——规范优先，先测试后代码，
@@ -448,9 +450,9 @@ make integration  # 在带 systemd 的特权 Docker 容器中进行集成测试
   CI 中使用 `sudo`。
 - `scripts/collect-versions.sh` 重新构建真实的 AmneziaWG 版本输出
   用于 golden 测试。
-- **CI**（`.github/workflows/ci.yml`）：gofmt、vet、带 `-race` 和覆盖率
-  的单元测试、安全审计 `govulncheck` + `gosec`、`staticcheck`、
-  集成测试、`amd64`/`arm64` 构建。**发布**（`release.yml`，标签 `v*`）：
+- **CI**（`.github/workflows/ci.yml`）：本地质量检查、带 shuffle、`-race`
+  和覆盖率（最低 90%）的单元测试、限时 fuzzing、集成测试、package preflight
+  以及 `amd64`/`arm64` 构建。**发布**（`release.yml`，标签 `v*`）：
   二进制文件、`.deb`/`.rpm` 软件包（nfpm、`packaging/nfpm.yaml`）、
   所有操作系统的软件包冒烟测试（`scripts/smoke.sh`）、带 `SHA256SUMS`
   的 GitHub Release。

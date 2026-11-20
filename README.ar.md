@@ -429,10 +429,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 تحتاج إلى إصدار Go المحدد في `go.mod` (حاليًا 1.27.2) وإلى Docker لاختبارات التكامل.
 
 ```sh
-make check        # gofmt وgo vet (بما فيه وسم integration) وgo test -race ./... وgosec وstaticcheck
+make check        # جميع الفحوص المحلية: التنسيق والاختبارات والوحدات والأمان ومتحققات workflow
+make fuzz-smoke   # fuzzing محدود الوقت لجميع targets
 make build        # ملف bin/krot ثابت (CGO_ENABLED=0)، والإصدار من git describe
 make build-arm64
 make integration  # اختبارات التكامل داخل حاوية Docker ذات صلاحيات مميزة وتعمل بـ systemd
+make package-preflight # حزم DEB/RPM لكلتا البنيتين + smoke على Ubuntu 24.04/AlmaLinux 9
 ```
 
 قواعد المستودع: [`AGENTS.md`](AGENTS.md) — المواصفات أولًا، والاختبارات قبل الشيفرة،
@@ -454,9 +456,9 @@ make integration  # اختبارات التكامل داخل حاوية Docker �
   `scripts/integration-docker.sh`، وفي CI باستخدام `sudo`.
 - يعيد `scripts/collect-versions.sh` جمع مخرجات إصدارات AmneziaWG الحقيقية
   للاختبارات المرجعية.
-- **CI** (`.github/workflows/ci.yml`): gofmt وvet واختبارات الوحدة مع `-race` والتغطية،
-  وتدقيق الأمان `govulncheck` + `gosec`، و`staticcheck`، واختبارات التكامل، وبناء
-  `amd64`/`arm64`. **الإصدار** (`release.yml`، الوسم `v*`): الملفات التنفيذية وحزم
+- **CI** (`.github/workflows/ci.yml`): فحوص الجودة المحلية، واختبارات الوحدة مع
+  shuffle و`-race` وتغطية لا تقل عن 90%، وfuzzing محدود الوقت، واختبارات التكامل،
+  وpackage preflight، وبناء `amd64`/`arm64`. **الإصدار** (`release.yml`، الوسم `v*`): الملفات التنفيذية وحزم
   `.deb`/`.rpm` (nfpm و`packaging/nfpm.yaml`)، واختبارات smoke للحزم على جميع
   أنظمة التشغيل (`scripts/smoke.sh`)، وGitHub Release مع `SHA256SUMS`.
 

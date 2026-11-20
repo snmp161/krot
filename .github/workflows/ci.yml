@@ -39,7 +39,7 @@ jobs:
         with:
           go-version-file: go.mod
       - name: unit tests (race)
-        run: go test -race -coverprofile=coverage.out ./...
+        run: go test -race -count=1 -shuffle=on -coverprofile=coverage.out ./...
       - name: coverage
         run: go tool cover -func=coverage.out | tail -n 1
       - name: coverage threshold
@@ -96,6 +96,48 @@ jobs:
           go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
           "$(go env GOPATH)/bin/staticcheck" ./...
 
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: go.mod
+      - name: module hygiene
+        run: |
+          go mod tidy -diff
+          go mod verify
+      - name: shell scripts
+        run: make shellcheck
+      - name: workflows
+        run: make actionlint
+
+  fuzz:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: go.mod
+      - name: bounded fuzz smoke
+        run: make fuzz-smoke
+
+  package:
+    name: package preflight (ubuntu:24.04, almalinux:9)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: go.mod
+      - name: nfpm
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
+      - name: build packages and representative smoke
+        run: make package-preflight
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -137,7 +179,7 @@ jobs:
       - name: system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod
+          sudo apt-get install -y --no-install-recommends wireguard-tools iproute2 iputils-ping kmod iptables
       - name: cache AmneziaWG build
         id: awg-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6

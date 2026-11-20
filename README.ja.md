@@ -435,10 +435,12 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 `go.mod` で指定された Go（現在は 1.27.2）と、統合テスト用の Docker が必要です。
 
 ```sh
-make check        # gofmt、go vet（integration タグを含む）、go test -race ./...、gosec、staticcheck
+make check        # すべてのローカルチェック: 書式、テスト、モジュール、セキュリティ、workflow リンター
+make fuzz-smoke   # 全 targets の時間制限付き fuzzing
 make build        # 静的 bin/krot（CGO_ENABLED=0）。バージョンは git describe から取得
 make build-arm64
 make integration  # systemd を備えた特権 Docker コンテナで統合テストを実行
+make package-preflight # 両アーキテクチャの DEB/RPM + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 
 リポジトリのルール: [`AGENTS.md`](AGENTS.md) — 仕様優先、コードより先にテスト、
@@ -457,8 +459,9 @@ make integration  # systemd を備えた特権 Docker コンテナで統合テ�
   クライアント操作の透過性（パケットロスのない継続的な ping、変化しない ifindex とハンドシェイク）、IPv6、
   外部で作成された設定、同時実行をカバーします。ローカルでは `scripts/integration-docker.sh`、CI では `sudo` で実行します。
 - `scripts/collect-versions.sh` は ゴールデン テスト用に実際の AmneziaWG バージョン出力を再収集します。
-- **CI**（`.github/workflows/ci.yml`）: gofmt、vet、`-race` とカバレッジ付きの単体テスト、
-  `govulncheck` + `gosec` によるセキュリティ監査、`staticcheck`、統合テスト、`amd64`/`arm64` ビルド。
+- **CI**（`.github/workflows/ci.yml`）: ローカル品質チェック、shuffle・`-race`・
+  最低 90% のカバレッジ付き単体テスト、時間制限付き fuzzing、統合テスト、
+  package preflight、`amd64`/`arm64` ビルド。
   **リリース**（`release.yml`、タグ `v*`）: バイナリ、`.deb`/`.rpm` パッケージ
   （nfpm、`packaging/nfpm.yaml`）、すべての OS でのパッケージスモークテスト（`scripts/smoke.sh`）、
   `SHA256SUMS` 付き GitHub Release。
