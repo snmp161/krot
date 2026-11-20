@@ -56,11 +56,11 @@ func TestRussianFormattingAndFallback(t *testing.T) {
 	if got := Sprintf(untranslated, "value"); got != "message without a translation: value" {
 		t.Fatalf("English fallback = %q", got)
 	}
-	if got := Plural(1, "client", "clients", "клиент", "клиента", "клиентов"); got != "клиент" {
+	if got := Plural(1, "client"); got != "клиент" {
 		t.Errorf("Plural(1) = %q", got)
 	}
 	for _, n := range []int{2, 3, 4, 22, 134} {
-		if got := Plural(n, "client", "clients", "клиент", "клиента", "клиентов"); got != "клиента" {
+		if got := Plural(n, "client"); got != "клиента" {
 			t.Errorf("Plural(%d) = %q", n, got)
 		}
 	}
@@ -69,7 +69,7 @@ func TestRussianFormattingAndFallback(t *testing.T) {
 		if n == 21 || n == 101 {
 			want = "клиент"
 		}
-		if got := Plural(n, "client", "clients", "клиент", "клиента", "клиентов"); got != want {
+		if got := Plural(n, "client"); got != want {
 			t.Errorf("Plural(%d) = %q, want %q", n, got, want)
 		}
 	}

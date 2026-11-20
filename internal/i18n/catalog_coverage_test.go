@@ -12,11 +12,28 @@ import (
 	"testing"
 )
 
-// SPEC 4.7: все статические сообщения приложения имеют русский перевод.
-func TestRussianCatalogCoversSourceMessages(t *testing.T) {
+// SPEC 4.7 T27: все статические сообщения приложения переведены на каждый язык.
+func TestCatalogsCoverSourceMessages(t *testing.T) {
+	messages := sourceMessages(t)
+	for _, language := range supportedLanguages {
+		if language == English {
+			continue
+		}
+		catalog := messageCatalogs[language]
+		for message := range messages {
+			if _, ok := catalog[message]; !ok {
+				t.Errorf("%s: message is not translated: %q", language, message)
+			}
+		}
+	}
+}
+
+func sourceMessages(t *testing.T) map[string]struct{} {
+	t.Helper()
 	root := filepath.Join("..", "..", "internal")
 	word := regexp.MustCompile(`[A-Za-z]{2,}`)
 	format := regexp.MustCompile(`%[#0 +\-]*[0-9]*(?:\.[0-9]+)?[a-zA-Z]`)
+	messages := map[string]struct{}{}
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -49,9 +66,7 @@ func TestRussianCatalogCoversSourceMessages(t *testing.T) {
 			if !word.MatchString(plain) {
 				return true
 			}
-			if _, ok := russianMessages[message]; !ok {
-				t.Errorf("%s: message is not translated: %q", path, message)
-			}
+			messages[message] = struct{}{}
 			return true
 		})
 		return nil
@@ -59,6 +74,7 @@ func TestRussianCatalogCoversSourceMessages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return messages
 }
 
 func localizedArgument(call *ast.CallExpr) (int, bool) {
