@@ -191,12 +191,14 @@ Used when LC_ALL is empty or unset.
 .B LANG
 Used when both variables above are empty or unset.
 .PP
-The supported languages are English (en_US) and Russian (ru_RU). A locale whose
-name is ru or begins with ru followed by _, -, ., or @ selects Russian. All other
-values, including C and POSIX, select English. Command names, flags, JSON,
-configuration files, KeeneticOS commands, shell completion, and the UDP protocol
-are not localized. Errors from the operating system and external programs are
-preserved verbatim.
+The supported languages are English (US), Russian (Russia), Simplified and
+Traditional Chinese (China), Spanish (Mexico), Portuguese (Brazil), Korean,
+Japanese, Modern Standard Arabic, French (France), and German (Germany).
+Locale regions and scripts are recognized case-insensitively. Unknown values,
+including C and POSIX, select English. Command names, flags, JSON, configuration
+files, KeeneticOS commands, shell completion, and the UDP protocol are not
+localized. Errors from the operating system and external programs are preserved
+verbatim.
 .SH "EXIT STATUS"
 .TP
 .B 0
@@ -239,8 +241,8 @@ Global krot lock.
 .I /usr/share/man/man1/krot.1
 English manual page.
 .TP
-.I /usr/share/man/ru/man1/krot.1
-Russian manual page.
+.I /usr/share/man/<locale>/man1/krot.1
+Manual pages in the other supported languages.
 .SH EXAMPLES
 Create an AmneziaWG 2.0 tunnel:
 .PP

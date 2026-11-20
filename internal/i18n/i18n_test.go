@@ -27,7 +27,7 @@ func TestDetectPrecedence(t *testing.T) {
 	}
 }
 
-// SPEC 4.7: распознаются русские локали, остальные значения дают английский.
+// SPEC 4.7: распознаются русские локали, неподдерживаемые значения дают английский.
 func TestDetectLocales(t *testing.T) {
 	for _, locale := range []string{"ru", "ru_RU", "ru_RU.UTF-8", "ru-RU", "ru@latin"} {
 		env := map[string]string{"LANG": locale}
@@ -35,7 +35,7 @@ func TestDetectLocales(t *testing.T) {
 			t.Errorf("LANG=%q: Detect() = %q, want %q", locale, got, Russian)
 		}
 	}
-	for _, locale := range []string{"", "C", "POSIX", "en_US.UTF-8", "de_DE.UTF-8", "russian", "en_RU"} {
+	for _, locale := range []string{"", "C", "POSIX", "en_US.UTF-8", "it_IT.UTF-8", "russian", "en_RU"} {
 		env := map[string]string{"LANG": locale}
 		if got := Detect(func(key string) string { return env[key] }); got != English {
 			t.Errorf("LANG=%q: Detect() = %q, want %q", locale, got, English)

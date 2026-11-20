@@ -2,10 +2,23 @@ package cli
 
 import "github.com/snmp161/krot/internal/i18n"
 
+var localizedUsage = map[i18n.Language]string{
+	i18n.Russian:            usageTextRussian,
+	i18n.ChineseSimplified:  usageTextChineseSimplified,
+	i18n.ChineseTraditional: usageTextChineseTraditional,
+	i18n.Spanish:            usageTextSpanish,
+	i18n.Portuguese:         usageTextPortuguese,
+	i18n.Korean:             usageTextKorean,
+	i18n.Japanese:           usageTextJapanese,
+	i18n.Arabic:             usageTextArabic,
+	i18n.French:             usageTextFrench,
+	i18n.German:             usageTextGerman,
+}
+
 // Usage возвращает текст справки (--help).
 func Usage() string {
-	if i18n.Current() == i18n.Russian {
-		return usageTextRussian
+	if translated, ok := localizedUsage[i18n.Current()]; ok {
+		return translated
 	}
 	return usageText
 }

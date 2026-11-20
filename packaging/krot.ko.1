@@ -1,0 +1,272 @@
+.TH KROT 1 "" "krot" "사용자 명령"
+.SH 이름
+krot \- Linux 서버에서 WireGuard 및 AmneziaWG 터널 관리
+.SH 사용법
+.B krot
+.I 작업
+.RI [ 플래그 ]
+.PP
+실행할 때마다 정확히 하나의 작업이 필요합니다. 플래그는 다음과 같은 긴 형식을 사용합니다.
+.B \-\-flag value
+또는
+.BR \-\-flag = value .
+간결한 명령 요약을 볼 때는
+.B krot \-\-help
+를 실행하세요.
+.SH 설명
+.B krot
+은 WireGuard 및 AmneziaWG 1.x, 2.0, 3.1 터널을 생성, 삭제, 시작 및 중지합니다.
+인터페이스를 다시 시작하거나 다시 만들지 않고 클라이언트를 관리하며 클라이언트
+구성, QR 코드, AmneziaVPN 키 및 KeeneticOS 명령을 출력합니다.
+.PP
+인터페이스 구성이 유일한 신뢰할 수 있는 정보 원천입니다. 클라이언트 작업은 대상을 지정한
+.B wg
+또는
+.B awg set
+피어 호출만 사용하므로 다른 연결된 클라이언트에는 영향을 주지 않습니다.
+.SH 작업
+.TP
+.B \-\-list
+터널을 나열합니다. 필터와 테이블 또는 JSON 출력을 지원합니다.
+.TP
+.B \-\-create
+터널을 생성하고 구성을 원자적으로 쓰며 systemd 유닛을 활성화합니다.
+.TP
+.B \-\-delete
+클라이언트가 있는 터널은 확인 후 삭제합니다.
+.B \-\-yes
+를 사용하면 질문을 걸러냅니다.
+.TP
+.BR \-\-up , " " \-\-down
+systemd 유닛을 통해 기존 인터페이스를 시작하거나 중지합니다.
+.TP
+.B \-\-add\-client
+클라이언트를 생성하고 구성을 출력합니다. 선택적 출력에는 QR 코드,
+AmneziaVPN 키 및 KeeneticOS CLI 명령이 포함됩니다.
+.TP
+.B \-\-delete\-client
+구성 및 실행 중인 인터페이스에서 클라이언트를 삭제합니다.
+.TP
+.BR \-\-lock\-client , " " \-\-unlock\-client
+다른 피어를 변경하지 않고 클라이언트를 비활성화하거나 복원합니다.
+.TP
+.B \-\-list\-client
+클라이언트, 주소, 상태, 마지막 핸드셰이크 및 트래픽 카운터를 나열합니다.
+.TP
+.B \-\-doctor
+읽기 전용 환경 진단입니다. root가 필요하지 않으며 전역 잠금을 획득하지 않습니다.
+.TP
+.B \-\-udp\-listener
+하나의 포트 또는 포트 범위에서 UDP 진단 리스너를 실행합니다.
+.TP
+.B \-\-udp\-checker
+원격 krot UDP 리스너를 검사하고 패킷 손실과 왕복 시간을 보고합니다.
+.SH 옵션
+.TP
+.B \-\-help
+명령 도움말을 출력합니다. root가 필요하지 않습니다.
+.TP
+.B \-\-version
+버전, 커밋 및 빌드 날짜를 출력합니다. root가 필요하지 않습니다.
+.TP
+.BI \-\-type " wg|awg|awg2|awg3"
+프로토콜 유형입니다. 생성할 때는 필수이며 목록 필터로는 선택 사항입니다.
+.TP
+.BI \-\-interface " NAME"
+다음과 일치하는 최대 15자의 인터페이스 이름입니다.
+.BR [a-zA-Z0-9_.=+-] .
+대부분의 터널 및 클라이언트 작업에 필수이며 목록 필터로는 선택 사항입니다.
+.TP
+.BI \-\-ip " CIDR[,CIDR]"
+생성할 때의 서버 주소, 추가할 때의 클라이언트 주소 또는 나열할 때의 주소 필터입니다.
+IPv4 주소와 IPv6 주소를 각각 하나씩 허용합니다. 클라이언트 주소는 /32 및 /128 프리픽스를 사용합니다.
+.TP
+.BI \-\-port " N|N:M"
+UDP 포트 또는 1에서 65535까지의 양 끝을 포함한 범위입니다. UDP 진단은 최대
+1024개 포트를 허용합니다. 생성 및 UDP 모드에서는 필수이며 목록 필터로는 선택 사항입니다.
+.TP
+.BI \-\-endpoint " HOST"
+클라이언트 구성용 서버 공개 주소로, 포트는 포함하지 않습니다. 생성할 때는 필수이며
+추가할 때는 클라이언트별 재정의로 사용됩니다.
+.TP
+.BI \-\-address " HOST"
+UDP 체커의 원격 리스너 주소로, 포트는 포함하지 않습니다.
+.TP
+.BI \-\-mtu " N"
+576에서 9000까지의 MTU입니다. 기본값: wg 1420, awg/awg2 1376, awg3 1280.
+.TP
+.BI \-\-dns " IP[,IP]"
+생성된 클라이언트 구성의 DNS 서버입니다.
+.TP
+.BI \-\-i1 " CPS"
+최대 2048자의 AmneziaWG I1 시그니처 패킷입니다. awg 유형에만 유효하며
+.BR \-\-mimic
+과 호환되지 않습니다.
+.TP
+.BI \-\-mimic " PROFILE"
+I1-I5 미믹 체인을 생성합니다. 프로파일은
+.BR dns , " " stun , " " ntp , " " ssdp , " 및 " dtls
+입니다. awg 유형에만 유효합니다.
+.TP
+.BI \-\-id " ID"
+다음과 일치하는 1에서 64자의 클라이언트 식별자입니다.
+.BR [a-zA-Z0-9_.-] ,
+인터페이스 내에서 고유해야 합니다.
+.TP
+.BI \-\-allowed\-ips " CIDR[,CIDR]"
+클라이언트 구성에 기록되는 AllowedIPs 값입니다. 예:
+.BR 0.0.0.0/0,::/0 .
+.TP
+.B \-\-psk
+클라이언트의 PresharedKey를 생성합니다.
+.TP
+.B \-\-qr
+클라이언트 구성을 터미널 QR 코드로도 출력합니다.
+.TP
+.B \-\-amnezia\-key
+클라이언트 구성을 AmneziaVPN
+.B vpn://
+키로도 출력합니다.
+.TP
+.B \-\-keenetic
+KeeneticOS CLI 명령도 출력합니다. wg와 awg 1.0/1.5/2.0을 IPv4에서만 지원하며
+awg3는 지원하지 않습니다.
+.TP
+.B \-\-json
+list, list-client 및 UDP 모드에서 테이블 대신 JSON을 출력합니다. JSON 키,
+상태 값 및 detail 값은 현지화하지 않습니다.
+.TP
+.B \-\-yes
+터널을 삭제할 때 확인하지 않습니다.
+.TP
+.BI \-\-timeout " DURATION"
+UDP 패킷의 응답 시간 제한입니다. 예:
+.B 2s
+또는
+.BR 500ms .
+기본값은 2s입니다.
+.TP
+.BI \-\-count " N"
+UDP 포트당 각 유형의 패킷 수로 1에서 100까지입니다. 기본값은 3입니다.
+.TP
+.BI \-\-echo\-size " N"
+무작위 echo 페이로드 크기로 1에서 1400바이트까지입니다. 기본값은 64입니다.
+.TP
+.BI \-\-workers " N"
+동시 UDP 포트 검사 수로 1에서 100까지입니다. 기본값은 32입니다.
+한 포트 내의 요청은 순차적으로 실행됩니다.
+.TP
+.B \-\-verbose
+stdout을 변경하지 않고 UDP 진단 진행 상황을 stderr에 기록합니다.
+.SH UDP 진단
+리스너는
+.B ping SEQ:N
+을 받아들이고
+.BR "pong SEQ:N"
+을 반환합니다.
+.B ECHO text
+의 페이로드를 반환하고
+.B TIME
+에는 Unix 시간(밀리초)으로 응답합니다. 이 프로토콜은 암호화되지 않습니다.
+.PP
+모든 ping 및 echo 응답이 유효하면 체커는
+.B ok
+를 보고하고, 응답이 시간 초과되면
+.B filtered
+를, 잘못된 응답이나 로컬 네트워크 오류가 있으면
+.B error
+를 보고합니다. SIGINT 또는 SIGTERM은 완료된 포트의 결과만 출력하고 상태 10으로 종료합니다.
+.SH 환경
+.TP
+.B LC_ALL
+우선순위가 가장 높은 locale 선택 변수입니다.
+.TP
+.B LC_MESSAGES
+LC_ALL이 비어 있거나 설정되지 않았을 때 사용됩니다.
+.TP
+.B LANG
+위의 두 변수가 모두 비어 있거나 설정되지 않았을 때 사용됩니다.
+.PP
+영어(미국), 러시아어(러시아), 간체 및 번체 중국어(중국), 스페인어(멕시코),
+포르투갈어(브라질), 한국어, 일본어, 현대 표준 아랍어, 프랑스어(프랑스),
+독일어(독일)를 지원합니다. locale의 지역과 문자 체계는 대소문자를 구분하지 않고
+인식합니다. C와 POSIX를 포함한 알 수 없는 값은 영어를 선택합니다. 명령, 플래그,
+JSON, 구성 파일, KeeneticOS 명령, 셸 자동 완성 및 UDP 프로토콜은 현지화하지 않습니다.
+운영 체제와 외부 프로그램의 오류는 원문 그대로 유지됩니다.
+.SH "종료 상태"
+.TP
+.B 0
+성공.
+.TP
+.B 1
+내부 또는 예기치 않은 오류.
+.TP
+.B 2
+명령행 사용법 오류.
+.TP
+.B 3
+잘못된 값.
+.TP
+.B 4
+인터페이스나 클라이언트를 찾을 수 없음.
+.TP
+.B 5
+충돌: 개체가 이미 존재하거나 주소나 포트가 사용 중입니다.
+.TP
+.B 6
+환경 오류: 권한, 도구 또는 필요한 AmneziaWG 버전이 없습니다.
+.TP
+.B 7
+전역 잠금을 획득할 수 없습니다.
+.TP
+.B 10
+사용자가 취소했습니다.
+.SH 파일
+.TP
+.I /etc/wireguard/*.conf
+WireGuard 인터페이스 구성.
+.TP
+.I /etc/amnezia/amneziawg/*.conf
+AmneziaWG 인터페이스 구성.
+.TP
+.I /run/lock/krot.lock
+krot 전역 잠금.
+.TP
+.I /usr/share/man/man1/krot.1
+영어 매뉴얼 페이지.
+.TP
+.I /usr/share/man/<locale>/man1/krot.1
+지원되는 다른 언어의 매뉴얼 페이지.
+.SH 예
+AmneziaWG 2.0 터널 생성:
+.PP
+.nf
+sudo krot \-\-create \-\-type awg2 \-\-ip 10.8.0.1/24 \e
+    \-\-port 51820 \-\-endpoint vpn.example.com
+.fi
+.PP
+클라이언트 추가 및 QR 코드 표시:
+.PP
+.nf
+sudo krot \-\-add\-client \-\-interface awg0 \-\-id phone \e
+    \-\-allowed\-ips 0.0.0.0/0,::/0 \-\-qr
+.fi
+.PP
+64개 worker와 진행 메시지를 사용하여 UDP 포트 범위 검사:
+.PP
+.nf
+krot \-\-udp\-checker \-\-address 203.0.113.1 \e
+    \-\-port 51820:51830 \-\-workers 64 \-\-verbose
+.fi
+.SH 참고
+help, version, doctor 또는 UDP 검사에는 root가 필요하지 않습니다. UDP 리스너는
+1024 미만 포트이거나 /proc/net/udp와 /proc/net/udp6를 읽을 수 없을 때만 root가
+필요합니다. 다른 작업에는 root가 필요합니다.
+.PP
+krot는 WireGuard나 AmneziaWG를 설치하지 않으며 NAT, 포워딩, 방화벽 규칙 또는
+sysctl 설정을 구성하지 않습니다.
+.SH "함께 보기"
+.BR wg (8),
+.BR wg\-quick (8),
+.BR systemctl (1),
+.BR ip (8)

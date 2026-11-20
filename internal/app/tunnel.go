@@ -158,7 +158,7 @@ func (a *App) deleteTunnel(cmd *cli.Command) error {
 	}
 	// Подтверждение спрашивается до блокировки, чтобы не держать её, пока человек думает.
 	if n := len(t.conf.Peers()); n > 0 && !cmd.Yes {
-		clients := i18n.Plural(n, "client", "clients", "клиент", "клиента", "клиентов")
+		clients := i18n.Plural(n, "client")
 		if !a.IsTTY() {
 			return errs.Usagef("interface %s has %d %s: stdin is not a terminal, use --yes to delete without confirmation", t.name, n, clients)
 		}

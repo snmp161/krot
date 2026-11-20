@@ -1,0 +1,274 @@
+.TH KROT 1 "" "krot" "Comandos de usuário"
+.SH NOME
+krot \- gerencia túneis WireGuard e AmneziaWG em servidores Linux
+.SH SINOPSE
+.B krot
+.I ação
+.RI [ flags ]
+.PP
+Exatamente uma ação é necessária por execução. As flags usam as formas longas
+.B \-\-flag value
+ou
+.BR \-\-flag = value .
+Execute
+.B krot \-\-help
+para ver um resumo compacto dos comandos.
+.SH DESCRIÇÃO
+.B krot
+cria, exclui, inicia e para túneis WireGuard e AmneziaWG 1.x, 2.0 e 3.1.
+Gerencia clientes sem reiniciar nem recriar a interface e imprime configurações
+de cliente, códigos QR, chaves AmneziaVPN e comandos KeeneticOS.
+.PP
+A configuração da interface é a única fonte da verdade. As operações com clientes
+usam somente chamadas pontuais
+.B wg
+ou
+.B awg set
+peer, de modo que os demais clientes conectados não sejam afetados.
+.SH AÇÕES
+.TP
+.B \-\-list
+Lista túneis. Aceita filtros e saída em tabela ou JSON.
+.TP
+.B \-\-create
+Cria um túnel, grava sua configuração atomicamente e habilita sua unidade systemd.
+.TP
+.B \-\-delete
+Exclui um túnel após confirmação quando há clientes. Use
+.B \-\-yes
+para omitir a pergunta.
+.TP
+.BR \-\-up , " " \-\-down
+Inicia ou para uma interface existente por meio de sua unidade systemd.
+.TP
+.B \-\-add\-client
+Cria um cliente e imprime sua configuração. A saída opcional inclui código QR,
+chave AmneziaVPN e comandos CLI do KeeneticOS.
+.TP
+.B \-\-delete\-client
+Exclui um cliente da configuração e de uma interface ativa.
+.TP
+.BR \-\-lock\-client , " " \-\-unlock\-client
+Desabilita ou restaura um cliente sem alterar outros peers.
+.TP
+.B \-\-list\-client
+Lista clientes, endereços, status, último handshake e contadores de tráfego.
+.TP
+.B \-\-doctor
+Diagnóstico do ambiente somente de leitura. Não requer root nem obtém o bloqueio global.
+.TP
+.B \-\-udp\-listener
+Executa um listener UDP de diagnóstico em uma porta ou faixa de portas.
+.TP
+.B \-\-udp\-checker
+Verifica um listener UDP remoto do krot e relata perda de pacotes e tempo de ida e volta.
+.SH OPÇÕES
+.TP
+.B \-\-help
+Imprime a ajuda de comandos. Não requer root.
+.TP
+.B \-\-version
+Imprime versão, commit e data de compilação. Não requer root.
+.TP
+.BI \-\-type " wg|awg|awg2|awg3"
+Tipo de protocolo. Obrigatório ao criar; opcional como filtro de listagem.
+.TP
+.BI \-\-interface " NAME"
+Nome da interface, até 15 caracteres correspondentes a
+.BR [a-zA-Z0-9_.=+-] .
+Obrigatório para a maioria das ações de túnel e cliente; opcional como filtro de listagem.
+.TP
+.BI \-\-ip " CIDR[,CIDR]"
+Endereços do servidor ao criar, do cliente ao adicionar ou filtro de endereço
+na listagem. São permitidos um endereço IPv4 e um IPv6. Os de cliente usam /32 e /128.
+.TP
+.BI \-\-port " N|N:M"
+Porta UDP ou faixa inclusiva de 1 a 65535. O diagnóstico UDP aceita no máximo
+1024 portas. Obrigatório ao criar e nos modos UDP; opcional como filtro de listagem.
+.TP
+.BI \-\-endpoint " HOST"
+Endereço público do servidor para configurações de cliente, sem porta.
+Obrigatório ao criar e substituição por cliente ao adicionar.
+.TP
+.BI \-\-address " HOST"
+Endereço do listener remoto para o checker UDP, sem porta.
+.TP
+.BI \-\-mtu " N"
+MTU de 576 a 9000. Padrões: wg 1420, awg/awg2 1376, awg3 1280.
+.TP
+.BI \-\-dns " IP[,IP]"
+Servidores DNS para as configurações de cliente geradas.
+.TP
+.BI \-\-i1 " CPS"
+Pacote de assinatura I1 do AmneziaWG, até 2048 caracteres. Válido somente para
+tipos awg e incompatível com
+.BR \-\-mimic .
+.TP
+.BI \-\-mimic " PROFILE"
+Gera uma cadeia de mimetismo I1-I5. Os perfis são
+.BR dns , " " stun , " " ntp , " " ssdp , " e " dtls .
+Válido somente para tipos awg.
+.TP
+.BI \-\-id " ID"
+Identificador do cliente, de 1 a 64 caracteres correspondentes a
+.BR [a-zA-Z0-9_.-] ,
+único dentro de uma interface.
+.TP
+.BI \-\-allowed\-ips " CIDR[,CIDR]"
+Valor AllowedIPs gravado na configuração do cliente, por exemplo
+.BR 0.0.0.0/0,::/0 .
+.TP
+.B \-\-psk
+Gera uma PresharedKey para o cliente.
+.TP
+.B \-\-qr
+Também imprime a configuração do cliente como código QR no terminal.
+.TP
+.B \-\-amnezia\-key
+Também imprime a configuração do cliente como chave AmneziaVPN
+.B vpn://
+.TP
+.B \-\-keenetic
+Também imprime comandos CLI do KeeneticOS. Suporta wg e awg 1.0/1.5/2.0 somente
+com IPv4; awg3 não é suportado.
+.TP
+.B \-\-json
+Imprime JSON em vez de tabela para list, list-client e modos UDP. Chaves JSON e
+valores de status e detail não são localizados.
+.TP
+.B \-\-yes
+Não pede confirmação ao excluir um túnel.
+.TP
+.BI \-\-timeout " DURATION"
+Tempo limite de resposta para um pacote UDP, por exemplo
+.B 2s
+ou
+.BR 500ms .
+O padrão é 2s.
+.TP
+.BI \-\-count " N"
+Pacotes de cada tipo por porta UDP, de 1 a 100. O padrão é 3.
+.TP
+.BI \-\-echo\-size " N"
+Tamanho do payload echo aleatório, de 1 a 1400 bytes. O padrão é 64.
+.TP
+.BI \-\-workers " N"
+Verificações simultâneas de portas UDP, de 1 a 100. O padrão é 32.
+As requisições dentro de uma porta permanecem sequenciais.
+.TP
+.B \-\-verbose
+Grava o progresso do diagnóstico UDP em stderr sem alterar stdout.
+.SH "DIAGNÓSTICO UDP"
+O listener aceita
+.B ping SEQ:N
+e retorna
+.BR "pong SEQ:N" ;
+retorna o payload de
+.B ECHO text
+e responde a
+.B TIME
+com a hora Unix em milissegundos. O protocolo não é criptografado.
+.PP
+O checker relata
+.B ok
+quando todas as respostas ping e echo são válidas,
+.B filtered
+quando uma resposta excede o tempo limite e
+.B error
+para resposta inválida ou erro de rede local. SIGINT ou SIGTERM imprime resultados
+somente de portas concluídas e sai com status 10.
+.SH AMBIENTE
+.TP
+.B LC_ALL
+Variável de seleção de locale com a prioridade mais alta.
+.TP
+.B LC_MESSAGES
+Usada quando LC_ALL está vazia ou não definida.
+.TP
+.B LANG
+Usada quando as duas variáveis anteriores estão vazias ou não definidas.
+.PP
+Os idiomas suportados são inglês (EUA), russo (Rússia), chinês simplificado e
+tradicional (China), espanhol (México), português (Brasil), coreano, japonês,
+árabe padrão moderno, francês (França) e alemão (Alemanha). Regiões e escritas
+de locales são reconhecidas sem distinção entre maiúsculas e minúsculas. Valores
+desconhecidos, incluindo C e POSIX, selecionam inglês. Comandos, flags, JSON,
+arquivos de configuração, comandos KeeneticOS, shell completion e protocolo UDP
+não são localizados. Erros do SO e de programas externos são preservados literalmente.
+.SH "CÓDIGO DE SAÍDA"
+.TP
+.B 0
+Sucesso.
+.TP
+.B 1
+Erro interno ou inesperado.
+.TP
+.B 2
+Erro de uso da linha de comando.
+.TP
+.B 3
+Valor inválido.
+.TP
+.B 4
+Interface ou cliente não encontrado.
+.TP
+.B 5
+Conflito: o objeto já existe, ou o endereço ou a porta está em uso.
+.TP
+.B 6
+Erro de ambiente: faltam privilégios, ferramentas ou uma versão necessária do AmneziaWG.
+.TP
+.B 7
+Não foi possível obter o bloqueio global.
+.TP
+.B 10
+Cancelado pelo usuário.
+.SH ARQUIVOS
+.TP
+.I /etc/wireguard/*.conf
+Configurações de interfaces WireGuard.
+.TP
+.I /etc/amnezia/amneziawg/*.conf
+Configurações de interfaces AmneziaWG.
+.TP
+.I /run/lock/krot.lock
+Bloqueio global do krot.
+.TP
+.I /usr/share/man/man1/krot.1
+Página de manual em inglês.
+.TP
+.I /usr/share/man/<locale>/man1/krot.1
+Páginas de manual nos demais idiomas suportados.
+.SH EXEMPLOS
+Criar um túnel AmneziaWG 2.0:
+.PP
+.nf
+sudo krot \-\-create \-\-type awg2 \-\-ip 10.8.0.1/24 \e
+    \-\-port 51820 \-\-endpoint vpn.example.com
+.fi
+.PP
+Adicionar um cliente e mostrar um código QR:
+.PP
+.nf
+sudo krot \-\-add\-client \-\-interface awg0 \-\-id phone \e
+    \-\-allowed\-ips 0.0.0.0/0,::/0 \-\-qr
+.fi
+.PP
+Verificar uma faixa de portas UDP com 64 workers e mensagens de progresso:
+.PP
+.nf
+krot \-\-udp\-checker \-\-address 203.0.113.1 \e
+    \-\-port 51820:51830 \-\-workers 64 \-\-verbose
+.fi
+.SH NOTAS
+Root não é necessário para help, version, doctor ou UDP checking. O listener UDP
+requer root somente para portas abaixo de 1024 ou quando /proc/net/udp e
+/proc/net/udp6 não podem ser lidos. As outras ações requerem root.
+.PP
+O krot não instala WireGuard ou AmneziaWG e não configura NAT, forwarding, regras
+de firewall ou parâmetros sysctl.
+.SH "VEJA TAMBÉM"
+.BR wg (8),
+.BR wg\-quick (8),
+.BR systemctl (1),
+.BR ip (8)

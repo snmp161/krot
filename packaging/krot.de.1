@@ -1,0 +1,277 @@
+.TH KROT 1 "" "krot" "Benutzerbefehle"
+.SH NAME
+krot \- verwaltet WireGuard- und AmneziaWG-Tunnel auf Linux-Servern
+.SH AUFRUF
+.B krot
+.I Aktion
+.RI [ Flags ]
+.PP
+Pro Aufruf ist genau eine Aktion erforderlich. Flags verwenden die Langformen
+.B \-\-flag value
+oder
+.BR \-\-flag = value .
+Führen Sie
+.B krot \-\-help
+für eine kompakte Befehlsübersicht aus.
+.SH BESCHREIBUNG
+.B krot
+erstellt, löscht, startet und stoppt WireGuard- und AmneziaWG-1.x-, 2.0- und 3.1-Tunnel.
+Es verwaltet Clients ohne Neustart oder Neuerstellung der Schnittstelle und gibt
+Client-Konfigurationen, QR-Codes, AmneziaVPN-Schlüssel und KeeneticOS-Befehle aus.
+.PP
+Die Schnittstellenkonfiguration ist die einzige Quelle der Wahrheit. Client-Operationen
+verwenden ausschließlich gezielte
+.B wg
+oder
+.B awg set
+Peer-Aufrufe, sodass andere verbundene Clients nicht beeinträchtigt werden.
+.SH AKTIONEN
+.TP
+.B \-\-list
+Listet Tunnel auf. Unterstützt Filter sowie Tabellen- oder JSON-Ausgabe.
+.TP
+.B \-\-create
+Erstellt einen Tunnel, schreibt seine Konfiguration atomar und aktiviert seine systemd-Unit.
+.TP
+.B \-\-delete
+Löscht einen Tunnel nach Bestätigung, wenn er Clients hat. Verwenden Sie
+.B \-\-yes
+um die Frage zu überspringen.
+.TP
+.BR \-\-up , " " \-\-down
+Startet oder stoppt eine vorhandene Schnittstelle über ihre systemd-Unit.
+.TP
+.B \-\-add\-client
+Erstellt einen Client und gibt seine Konfiguration aus. Optional sind QR-Code,
+AmneziaVPN-Schlüssel und KeeneticOS-CLI-Befehle verfügbar.
+.TP
+.B \-\-delete\-client
+Löscht einen Client aus der Konfiguration und einer aktiven Schnittstelle.
+.TP
+.BR \-\-lock\-client , " " \-\-unlock\-client
+Deaktiviert oder stellt einen Client wieder her, ohne andere Peers zu ändern.
+.TP
+.B \-\-list\-client
+Listet Clients, Adressen, Status, letzten Handshake und Verkehrszähler auf.
+.TP
+.B \-\-doctor
+Nur lesende Umgebungsdiagnose. Erfordert weder root noch die globale Sperre.
+.TP
+.B \-\-udp\-listener
+Führt einen UDP-Diagnose-Listener auf einem Port oder Portbereich aus.
+.TP
+.B \-\-udp\-checker
+Prüft einen entfernten krot-UDP-Listener und meldet Paketverluste und Round-Trip-Zeit.
+.SH OPTIONEN
+.TP
+.B \-\-help
+Gibt die Befehlshilfe aus. Erfordert kein root.
+.TP
+.B \-\-version
+Gibt Version, Commit und Build-Datum aus. Erfordert kein root.
+.TP
+.BI \-\-type " wg|awg|awg2|awg3"
+Protokolltyp. Beim Erstellen erforderlich; optional als Listenfilter.
+.TP
+.BI \-\-interface " NAME"
+Schnittstellenname, bis zu 15 Zeichen entsprechend
+.BR [a-zA-Z0-9_.=+-] .
+Für die meisten Tunnel- und Client-Aktionen erforderlich; optional als Listenfilter.
+.TP
+.BI \-\-ip " CIDR[,CIDR]"
+Server-Adressen beim Erstellen, Client-Adressen beim Hinzufügen oder Adressfilter
+beim Auflisten. Eine IPv4- und eine IPv6-Adresse sind zulässig. Client-Adressen
+verwenden /32 und /128.
+.TP
+.BI \-\-port " N|N:M"
+UDP-Port oder inklusiver Bereich von 1 bis 65535. Die UDP-Diagnose akzeptiert höchstens
+1024 Ports. Beim Erstellen und in UDP-Modi erforderlich; optional als Listenfilter.
+.TP
+.BI \-\-endpoint " HOST"
+Öffentliche Server-Adresse für Client-Konfigurationen, ohne Port. Beim Erstellen
+erforderlich und beim Hinzufügen eine clientbezogene Überschreibung.
+.TP
+.BI \-\-address " HOST"
+Adresse des Remote-Listeners für den UDP-Checker, ohne Port.
+.TP
+.BI \-\-mtu " N"
+MTU von 576 bis 9000. Standardwerte: wg 1420, awg/awg2 1376, awg3 1280.
+.TP
+.BI \-\-dns " IP[,IP]"
+DNS-Server für erzeugte Client-Konfigurationen.
+.TP
+.BI \-\-i1 " CPS"
+AmneziaWG-I1-Signaturpaket, höchstens 2048 Zeichen. Nur für awg-Typen gültig
+und nicht kompatibel mit
+.BR \-\-mimic .
+.TP
+.BI \-\-mimic " PROFILE"
+Erzeugt eine I1-I5-Mimikry-Kette. Die Profile sind
+.BR dns , " " stun , " " ntp , " " ssdp , " und " dtls .
+Nur für awg-Typen gültig.
+.TP
+.BI \-\-id " ID"
+Client-Kennung, 1 bis 64 Zeichen entsprechend
+.BR [a-zA-Z0-9_.-] ,
+eindeutig innerhalb einer Schnittstelle.
+.TP
+.BI \-\-allowed\-ips " CIDR[,CIDR]"
+AllowedIPs-Wert in der Client-Konfiguration, zum Beispiel
+.BR 0.0.0.0/0,::/0 .
+.TP
+.B \-\-psk
+Erzeugt einen PresharedKey für den Client.
+.TP
+.B \-\-qr
+Gibt die Client-Konfiguration zusätzlich als QR-Code im Terminal aus.
+.TP
+.B \-\-amnezia\-key
+Gibt die Client-Konfiguration zusätzlich als AmneziaVPN-Schlüssel
+.B vpn://
+aus.
+.TP
+.B \-\-keenetic
+Gibt zusätzlich KeeneticOS-CLI-Befehle aus. Unterstützt wg und awg 1.0/1.5/2.0
+nur mit IPv4; awg3 wird nicht unterstützt.
+.TP
+.B \-\-json
+Gibt JSON statt einer Tabelle für list, list-client und UDP-Modi aus. JSON-Schlüssel
+sowie Status- und Detailwerte werden nicht lokalisiert.
+.TP
+.B \-\-yes
+Fragt beim Löschen eines Tunnels nicht nach Bestätigung.
+.TP
+.BI \-\-timeout " DURATION"
+Antwort-Timeout für ein UDP-Paket, zum Beispiel
+.B 2s
+oder
+.BR 500ms .
+Der Standardwert ist 2s.
+.TP
+.BI \-\-count " N"
+Pakete jedes Typs pro UDP-Port, von 1 bis 100. Der Standardwert ist 3.
+.TP
+.BI \-\-echo\-size " N"
+Größe der zufälligen Echo-Nutzdaten, von 1 bis 1400 Byte. Der Standardwert ist 64.
+.TP
+.BI \-\-workers " N"
+Gleichzeitige UDP-Portprüfungen, von 1 bis 100. Der Standardwert ist 32.
+Anfragen innerhalb eines Ports bleiben sequenziell.
+.TP
+.B \-\-verbose
+Schreibt den UDP-Diagnosefortschritt nach stderr, ohne stdout zu ändern.
+.SH UDP-DIAGNOSE
+Der Listener akzeptiert
+.B ping SEQ:N
+und antwortet mit
+.BR "pong SEQ:N" ;
+er gibt die Nutzdaten von
+.B ECHO text
+zurück und antwortet auf
+.B TIME
+mit der Unix-Zeit in Millisekunden. Das Protokoll ist unverschlüsselt.
+.PP
+Der Checker meldet
+.BR ok ,
+wenn alle Ping- und Echo-Antworten gültig sind,
+.BR filtered ,
+wenn eine Antwort das Timeout überschreitet, und
+.B error
+bei einer ungültigen Antwort oder einem lokalen Netzwerkfehler. SIGINT oder SIGTERM
+gibt nur Ergebnisse abgeschlossener Ports aus und endet mit Status 10.
+.SH UMGEBUNG
+.TP
+.B LC_ALL
+Variable zur Locale-Auswahl mit höchster Priorität.
+.TP
+.B LC_MESSAGES
+Wird verwendet, wenn LC_ALL leer oder nicht gesetzt ist.
+.TP
+.B LANG
+Wird verwendet, wenn beide obigen Variablen leer oder nicht gesetzt sind.
+.PP
+Unterstützt werden Englisch (USA), Russisch (Russland), vereinfachtes und
+traditionelles Chinesisch (China), Spanisch (Mexiko), Portugiesisch (Brasilien),
+Koreanisch, Japanisch, modernes Standardarabisch, Französisch (Frankreich) und
+Deutsch (Deutschland). Regionen und Schriften von Locales werden ohne Beachtung
+der Groß-/Kleinschreibung erkannt. Unbekannte Werte einschließlich C und POSIX
+wählen Englisch. Befehle, Flags, JSON, Konfigurationsdateien, KeeneticOS-Befehle,
+Shell-Completion und das UDP-Protokoll werden nicht lokalisiert. Fehler des
+Betriebssystems und externer Programme bleiben unverändert.
+.SH "EXIT-STATUS"
+.TP
+.B 0
+Erfolg.
+.TP
+.B 1
+Interner oder unerwarteter Fehler.
+.TP
+.B 2
+Fehler bei der Verwendung der Befehlszeile.
+.TP
+.B 3
+Ungültiger Wert.
+.TP
+.B 4
+Schnittstelle oder Client nicht gefunden.
+.TP
+.B 5
+Konflikt: Objekt existiert bereits, oder Adresse oder Port ist belegt.
+.TP
+.B 6
+Umgebungsfehler: fehlende Rechte, Tools oder erforderliche AmneziaWG-Version.
+.TP
+.B 7
+Die globale Sperre konnte nicht erlangt werden.
+.TP
+.B 10
+Vom Benutzer abgebrochen.
+.SH DATEIEN
+.TP
+.I /etc/wireguard/*.conf
+WireGuard-Schnittstellenkonfigurationen.
+.TP
+.I /etc/amnezia/amneziawg/*.conf
+AmneziaWG-Schnittstellenkonfigurationen.
+.TP
+.I /run/lock/krot.lock
+Globale krot-Sperre.
+.TP
+.I /usr/share/man/man1/krot.1
+Englische Handbuchseite.
+.TP
+.I /usr/share/man/<locale>/man1/krot.1
+Handbuchseiten in den übrigen unterstützten Sprachen.
+.SH BEISPIELE
+Einen AmneziaWG-2.0-Tunnel erstellen:
+.PP
+.nf
+sudo krot \-\-create \-\-type awg2 \-\-ip 10.8.0.1/24 \e
+    \-\-port 51820 \-\-endpoint vpn.example.com
+.fi
+.PP
+Einen Client hinzufügen und einen QR-Code anzeigen:
+.PP
+.nf
+sudo krot \-\-add\-client \-\-interface awg0 \-\-id phone \e
+    \-\-allowed\-ips 0.0.0.0/0,::/0 \-\-qr
+.fi
+.PP
+Einen UDP-Portbereich mit 64 Workern und Fortschrittsmeldungen prüfen:
+.PP
+.nf
+krot \-\-udp\-checker \-\-address 203.0.113.1 \e
+    \-\-port 51820:51830 \-\-workers 64 \-\-verbose
+.fi
+.SH HINWEISE
+Root ist für help, version, doctor oder UDP-Prüfung nicht erforderlich. Der UDP-Listener
+erfordert root nur für Ports unter 1024 oder wenn /proc/net/udp und /proc/net/udp6
+nicht lesbar sind. Andere Aktionen erfordern root.
+.PP
+krot installiert weder WireGuard noch AmneziaWG und konfiguriert keine NAT-,
+Forwarding- oder Firewall-Regeln oder sysctl-Einstellungen.
+.SH "SIEHE AUCH"
+.BR wg (8),
+.BR wg\-quick (8),
+.BR systemctl (1),
+.BR ip (8)

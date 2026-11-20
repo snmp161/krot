@@ -38,6 +38,42 @@ contents:
     dst: /usr/share/man/ru/man1/krot.1
     file_info:
       mode: 0644
+  - src: ./packaging/krot.zh.1
+    dst: /usr/share/man/zh_CN/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.zh-Hant.1
+    dst: /usr/share/man/zh_TW/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.es.1
+    dst: /usr/share/man/es/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.pt.1
+    dst: /usr/share/man/pt_BR/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.ko.1
+    dst: /usr/share/man/ko/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.ja.1
+    dst: /usr/share/man/ja/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.ar.1
+    dst: /usr/share/man/ar/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.fr.1
+    dst: /usr/share/man/fr/man1/krot.1
+    file_info:
+      mode: 0644
+  - src: ./packaging/krot.de.1
+    dst: /usr/share/man/de/man1/krot.1
+    file_info:
+      mode: 0644
   - src: ./LICENSE
     dst: /usr/share/doc/krot/LICENSE
     file_info:

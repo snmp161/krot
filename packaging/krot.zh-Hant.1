@@ -1,0 +1,268 @@
+.TH KROT 1 "" "krot" "用戶命令"
+.SH 名稱
+krot \- 在 Linux 服務器上管理 WireGuard 和 AmneziaWG 隧道
+.SH 語法
+.B krot
+.I 操作
+.RI [ 選項 ]
+.PP
+每次調用必須且只能指定一個操作。選項使用長格式
+.B \-\-flag value
+或
+.BR \-\-flag = value 。
+運行
+.B krot \-\-help
+查看簡明的命令摘要。
+.SH 描述
+.B krot
+創建、刪除、啟動和停止 WireGuard 及 AmneziaWG 1.x、2.0、3.1 隧道。
+它無需重啟或重新創建接口即可管理客戶端，並輸出客戶端配置、QR 碼、
+AmneziaVPN 密鑰和 KeeneticOS 命令。
+.PP
+接口配置是唯一可信數據源。客戶端操作僅使用針對性的
+.B wg
+或
+.B awg set
+對端調用，因此不會影響其他已連接的客戶端。
+.SH 操作
+.TP
+.B \-\-list
+列出隧道。支持過濾器以及表格或 JSON 輸出。
+.TP
+.B \-\-create
+創建隧道，以原子方式寫入配置並啟用其 systemd 單元。
+.TP
+.B \-\-delete
+刪除有客戶端的隧道前要求確認。使用
+.B \-\-yes
+跳過提問。
+.TP
+.BR \-\-up , " " \-\-down
+通過 systemd 單元啟動或停止現有接口。
+.TP
+.B \-\-add\-client
+創建客戶端並輸出其配置。可選輸出包括 QR 碼、AmneziaVPN 密鑰和
+KeeneticOS CLI 命令。
+.TP
+.B \-\-delete\-client
+從配置和活動接口中刪除客戶端。
+.TP
+.BR \-\-lock\-client , " " \-\-unlock\-client
+禁用或恢復客戶端，而不更改其他對端。
+.TP
+.B \-\-list\-client
+列出客戶端、地址、狀態、上次握手和流量計數器。
+.TP
+.B \-\-doctor
+只讀環境診斷。不需要 root，也不會獲取全局鎖。
+.TP
+.B \-\-udp\-listener
+在一個端口或端口範圍上運行 UDP 診斷監聽器。
+.TP
+.B \-\-udp\-checker
+檢查遠程 krot UDP 監聽器，並報告數據包丟失和往返時間。
+.SH 選項
+.TP
+.B \-\-help
+輸出命令幫助。不需要 root。
+.TP
+.B \-\-version
+輸出版本、提交和構建日期。不需要 root。
+.TP
+.BI \-\-type " wg|awg|awg2|awg3"
+協議類型。創建時必需；作為列表過濾器時可選。
+.TP
+.BI \-\-interface " NAME"
+接口名稱，最多 15 個字符，匹配
+.BR [a-zA-Z0-9_.=+-] 。
+大多數隧道和客戶端操作都需要；作為列表過濾器時可選。
+.TP
+.BI \-\-ip " CIDR[,CIDR]"
+創建時的服務器地址、添加時的客戶端地址或列出時的地址過濾器。
+允許一個 IPv4 和一個 IPv6 地址。客戶端地址使用 /32 和 /128 前綴。
+.TP
+.BI \-\-port " N|N:M"
+UDP 端口或 1 至 65535 的包含端點範圍。UDP 診斷最多接受 1024 個端口。
+創建時和 UDP 模式下必需；作為列表過濾器時可選。
+.TP
+.BI \-\-endpoint " HOST"
+客戶端配置使用的服務器公共地址，不含端口。創建時必需；
+添加時可覆蓋單個客戶端的設置。
+.TP
+.BI \-\-address " HOST"
+UDP 檢查器的遠程監聽器地址，不含端口。
+.TP
+.BI \-\-mtu " N"
+MTU 為 576 至 9000。默認值：wg 1420、awg/awg2 1376、awg3 1280。
+.TP
+.BI \-\-dns " IP[,IP]"
+生成的客戶端配置所使用的 DNS 服務器。
+.TP
+.BI \-\-i1 " CPS"
+AmneziaWG I1 簽名數據包，最多 2048 個字符。僅對 awg 類型有效，且不能與
+.BR \-\-mimic
+同時使用。
+.TP
+.BI \-\-mimic " PROFILE"
+生成 I1-I5 偽裝鏈。配置文件包括
+.BR dns 、 " " stun 、 " " ntp 、 " " ssdp 、 " 和 " dtls 。
+僅對 awg 類型有效。
+.TP
+.BI \-\-id " ID"
+客戶端標識符，1 至 64 個字符，匹配
+.BR [a-zA-Z0-9_.-] ，
+在接口內唯一。
+.TP
+.BI \-\-allowed\-ips " CIDR[,CIDR]"
+寫入客戶端配置的 AllowedIPs 值，例如
+.BR 0.0.0.0/0,::/0 。
+.TP
+.B \-\-psk
+為客戶端生成 PresharedKey。
+.TP
+.B \-\-qr
+同時將客戶端配置輸出為終端 QR 碼。
+.TP
+.B \-\-amnezia\-key
+同時將客戶端配置輸出為 AmneziaVPN
+.B vpn://
+密鑰。
+.TP
+.B \-\-keenetic
+同時輸出 KeeneticOS CLI 命令。僅支持使用 IPv4 的 wg 和 awg 1.0/1.5/2.0；
+不支持 awg3。
+.TP
+.B \-\-json
+在 list、list-client 和 UDP 模式下輸出 JSON 而非表格。JSON 鍵以及狀態和
+detail 值不本地化。
+.TP
+.B \-\-yes
+刪除隧道時不要求確認。
+.TP
+.BI \-\-timeout " DURATION"
+一個 UDP 數據包的響應超時時間，例如
+.B 2s
+或
+.BR 500ms 。
+默認值為 2s。
+.TP
+.BI \-\-count " N"
+每個 UDP 端口發送的每種類型的數據包數，1 至 100。默認值為 3。
+.TP
+.BI \-\-echo\-size " N"
+隨機 echo 負載的大小，1 至 1400 字節。默認值為 64。
+.TP
+.BI \-\-workers " N"
+同時檢查 UDP 端口的數量，1 至 100。默認值為 32。同一端口內的請求仍按順序執行。
+.TP
+.B \-\-verbose
+將 UDP 診斷進度寫入 stderr，而不改變 stdout。
+.SH UDP 診斷
+監聽器接受
+.B ping SEQ:N
+並返回
+.BR "pong SEQ:N" ；
+返回
+.B ECHO text
+的負載，並以 Unix 時間（毫秒）響應
+.B TIME 。
+該協議不加密。
+.PP
+當所有 ping 和 echo 響應均有效時，檢查器報告
+.B ok ；
+響應超時時報告
+.B filtered ；
+響應無效或發生本地網絡錯誤時報告
+.B error 。
+收到 SIGINT 或 SIGTERM 時，僅輸出已完成端口的結果，並以狀態 10 退出。
+.SH 環境
+.TP
+.B LC_ALL
+優先級最高的 locale 選擇變量。
+.TP
+.B LC_MESSAGES
+當 LC_ALL 為空或未設置時使用。
+.TP
+.B LANG
+當上述兩個變量均為空或未設置時使用。
+.PP
+支持英語（美國）、俄語（俄羅斯）、簡體中文和繁體中文（中國）、西班牙語
+（墨西哥）、葡萄牙語（巴西）、韓語、日語、現代標準阿拉伯語、法語（法國）
+和德語（德國）。識別 locale 的區域和文字時不區分大小寫。包括 C 和 POSIX
+在內的未知值選擇英語。命令、選項、JSON、配置文件、KeeneticOS 命令、shell
+補全和 UDP 協議不本地化。操作系統和外部程序的錯誤原樣保留。
+.SH "退出狀態"
+.TP
+.B 0
+成功。
+.TP
+.B 1
+內部或意外錯誤。
+.TP
+.B 2
+命令行用法錯誤。
+.TP
+.B 3
+無效值。
+.TP
+.B 4
+未找到接口或客戶端。
+.TP
+.B 5
+衝突：對象已存在，或者地址或端口已被佔用。
+.TP
+.B 6
+環境錯誤：缺少權限、工具或所需的 AmneziaWG 版本。
+.TP
+.B 7
+無法獲取全局鎖。
+.TP
+.B 10
+用戶取消。
+.SH 文件
+.TP
+.I /etc/wireguard/*.conf
+WireGuard 接口配置。
+.TP
+.I /etc/amnezia/amneziawg/*.conf
+AmneziaWG 接口配置。
+.TP
+.I /run/lock/krot.lock
+krot 全局鎖。
+.TP
+.I /usr/share/man/man1/krot.1
+英文手冊頁。
+.TP
+.I /usr/share/man/<locale>/man1/krot.1
+其他受支持語言的手冊頁。
+.SH 示例
+創建 AmneziaWG 2.0 隧道：
+.PP
+.nf
+sudo krot \-\-create \-\-type awg2 \-\-ip 10.8.0.1/24 \e
+    \-\-port 51820 \-\-endpoint vpn.example.com
+.fi
+.PP
+添加客戶端並顯示 QR 碼：
+.PP
+.nf
+sudo krot \-\-add\-client \-\-interface awg0 \-\-id phone \e
+    \-\-allowed\-ips 0.0.0.0/0,::/0 \-\-qr
+.fi
+.PP
+使用 64 個 worker 檢查 UDP 端口範圍並顯示進度消息：
+.PP
+.nf
+krot \-\-udp\-checker \-\-address 203.0.113.1 \e
+    \-\-port 51820:51830 \-\-workers 64 \-\-verbose
+.fi
+.SH 注意
+help、version、doctor 或 UDP 檢查不需要 root。UDP 監聽器僅在端口低於 1024
+或 /proc/net/udp 和 /proc/net/udp6 不可讀時需要 root。其他操作需要 root。
+.PP
+krot 不安裝 WireGuard 或 AmneziaWG，也不配置 NAT、轉發、防火牆規則或 sysctl 設置。
+.SH "另請參閱"
+.BR wg (8),
+.BR wg\-quick (8),
+.BR systemctl (1),
+.BR ip (8)

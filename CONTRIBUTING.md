@@ -115,8 +115,8 @@ consistent with the implementation. Do not translate command names, flags, JSON
 fields or values, configuration keys, KeeneticOS commands, shell completion, or
 the UDP protocol.
 
-Application and man-page localization is intended to cover the same languages as
-the project README files. Each translation requires native-level AI editorial
+Application and man-page localization covers the same languages as the project
+README files. Each translation requires native-level AI editorial
 review using software development and systems operations terminology; review by
 a human native speaker is also welcome. Preserve commands, paths, placeholders,
 links, formatting, and technical meaning, and run structural checks for every

@@ -1,4 +1,4 @@
-// Package i18n provides the built-in en_US and ru_RU message catalogs (SPEC 4.7).
+// Package i18n provides built-in message catalogs for all README languages (SPEC 4.7).
 package i18n
 
 import (
@@ -10,9 +10,31 @@ import (
 type Language string
 
 const (
-	English Language = "en_US"
-	Russian Language = "ru_RU"
+	English            Language = "en_US"
+	Russian            Language = "ru_RU"
+	ChineseSimplified  Language = "zh_Hans"
+	ChineseTraditional Language = "zh_Hant"
+	Spanish            Language = "es_MX"
+	Portuguese         Language = "pt_BR"
+	Korean             Language = "ko_KR"
+	Japanese           Language = "ja_JP"
+	Arabic             Language = "ar"
+	French             Language = "fr_FR"
+	German             Language = "de_DE"
 )
+
+var messageCatalogs = map[Language]map[string]string{
+	Russian:            russianMessages,
+	ChineseSimplified:  chineseSimplifiedMessages,
+	ChineseTraditional: chineseTraditionalMessages,
+	Spanish:            spanishMessages,
+	Portuguese:         portugueseMessages,
+	Korean:             koreanMessages,
+	Japanese:           japaneseMessages,
+	Arabic:             arabicMessages,
+	French:             frenchMessages,
+	German:             germanMessages,
+}
 
 var current atomic.Value
 
@@ -34,12 +56,50 @@ func Detect(getenv func(string) string) Language {
 		if locale == "" {
 			continue
 		}
-		if locale == "ru" || (strings.HasPrefix(locale, "ru") && len(locale) > 2 && strings.ContainsRune("_-.@", rune(locale[2]))) {
-			return Russian
-		}
-		return English
+		return fromLocale(locale)
 	}
 	return English
+}
+
+func fromLocale(locale string) Language {
+	normalized := strings.ToLower(strings.TrimSpace(locale))
+	normalized = strings.ReplaceAll(normalized, "-", "_")
+	if i := strings.IndexAny(normalized, ".@"); i >= 0 {
+		normalized = normalized[:i]
+	}
+	parts := strings.Split(normalized, "_")
+	if len(parts) == 0 {
+		return English
+	}
+	if parts[0] == "zh" {
+		for _, part := range parts[1:] {
+			switch part {
+			case "hant", "tw", "hk", "mo":
+				return ChineseTraditional
+			}
+		}
+		return ChineseSimplified
+	}
+	switch parts[0] {
+	case "ru":
+		return Russian
+	case "es":
+		return Spanish
+	case "pt":
+		return Portuguese
+	case "ko":
+		return Korean
+	case "ja":
+		return Japanese
+	case "ar":
+		return Arabic
+	case "fr":
+		return French
+	case "de":
+		return German
+	default:
+		return English
+	}
 }
 
 func Configure(getenv func(string) string) Language {
@@ -49,9 +109,9 @@ func Configure(getenv func(string) string) Language {
 }
 
 func Text(english string) string {
-	if Current() == Russian {
-		if russian, ok := russianMessages[english]; ok {
-			return russian
+	if catalog := messageCatalogs[Current()]; catalog != nil {
+		if translated, ok := catalog[english]; ok {
+			return translated
 		}
 	}
 	return english
@@ -75,26 +135,4 @@ func (e messageError) Error() string {
 
 func NewError(english string) error {
 	return messageError{english: english}
-}
-
-func Plural(n int, englishOne, englishMany, russianOne, russianFew, russianMany string) string {
-	if Current() != Russian {
-		if n == 1 {
-			return englishOne
-		}
-		return englishMany
-	}
-	if n < 0 {
-		n = -n
-	}
-	switch {
-	case n%100 >= 11 && n%100 <= 14:
-		return russianMany
-	case n%10 == 1:
-		return russianOne
-	case n%10 >= 2 && n%10 <= 4:
-		return russianFew
-	default:
-		return russianMany
-	}
 }
