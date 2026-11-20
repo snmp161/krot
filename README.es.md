@@ -64,7 +64,7 @@ Instala desde paquetes o binarios en la página de releases
 comprobación.
 
 ```sh
-VERSION=0.7.2
+VERSION=0.7.3
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # descargar el paquete y la lista de sumas de comprobación
