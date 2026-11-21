@@ -59,7 +59,7 @@ func TestAllManPagesStructure(t *testing.T) {
 	}
 }
 
-// SPEC 4.7, 9.2 T27: nfpm устанавливает каждую локализованную страницу.
+// SPEC 4.7, 9.2, 9.4 T42: nfpm устанавливает каждую сжатую локализованную страницу.
 func TestAllManPagesPackaging(t *testing.T) {
 	data, err := os.ReadFile("../../packaging/nfpm.yaml")
 	if err != nil {
@@ -68,8 +68,8 @@ func TestAllManPagesPackaging(t *testing.T) {
 	text := string(data)
 	for _, page := range allManPages {
 		for _, want := range []string{
-			"src: ./packaging/" + page.file,
-			"dst: /usr/share/man/" + page.dir + "/krot.1",
+			"src: ./dist/man/" + page.dir + "/krot.1.gz",
+			"dst: /usr/share/man/" + page.dir + "/krot.1.gz",
 		} {
 			if !strings.Contains(text, want) {
 				t.Errorf("nfpm.yaml misses %q", want)
