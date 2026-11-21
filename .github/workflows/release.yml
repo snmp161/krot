@@ -26,6 +26,14 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
+      - name: package metadata
+        run: |
+          DESCRIPTION="$(cat packaging/description.txt)"
+          {
+            echo "DESCRIPTION<<EOF"
+            printf '%s\n' "$DESCRIPTION"
+            echo EOF
+          } >> "$GITHUB_ENV"
       - name: binaries
         run: |
           date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -40,6 +48,7 @@ jobs:
           go run ./cmd/krot --completion bash > dist/krot.bash
           go run ./cmd/krot --completion zsh > dist/_krot
           bash -n dist/krot.bash
+          scripts/compress-man.sh
       - name: packages
         run: |
           go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
@@ -51,6 +60,7 @@ jobs:
             done
           done
           rm dist/krot dist/krot.bash dist/_krot
+          rm -rf dist/man
           ls -l dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:

@@ -43,7 +43,7 @@ func TestManPages(t *testing.T) {
 	}
 }
 
-// SPEC 4.7, 9.2: nfpm устанавливает обе man-страницы в системные каталоги.
+// SPEC 4.7, 9.2, 9.4: nfpm устанавливает обе сжатые man-страницы в системные каталоги.
 func TestManPagesPackaging(t *testing.T) {
 	data, err := os.ReadFile("../../packaging/nfpm.yaml")
 	if err != nil {
@@ -51,10 +51,10 @@ func TestManPagesPackaging(t *testing.T) {
 	}
 	text := string(data)
 	for _, want := range []string{
-		"src: ./packaging/krot.1",
-		"dst: /usr/share/man/man1/krot.1",
-		"src: ./packaging/krot.ru.1",
-		"dst: /usr/share/man/ru/man1/krot.1",
+		"src: ./dist/man/man1/krot.1.gz",
+		"dst: /usr/share/man/man1/krot.1.gz",
+		"src: ./dist/man/ru/man1/krot.1.gz",
+		"dst: /usr/share/man/ru/man1/krot.1.gz",
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("nfpm.yaml misses %q", want)

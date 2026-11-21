@@ -1,0 +1,13 @@
+Manage WireGuard and AmneziaWG tunnels and clients on Linux servers.
+krot creates, deletes, starts, and stops WireGuard and AmneziaWG 1.x, 2.0,
+and 3.1 tunnels. It manages clients without restarting or recreating the
+interface, preserving other clients' sessions and traffic.
+
+The interface configuration is the single source of truth. krot preserves
+existing configuration files and writes changes atomically. It generates
+client configurations, terminal QR codes, AmneziaVPN keys, and KeeneticOS
+commands, and provides JSON output and UDP diagnostic tools.
+
+WireGuard/AmneziaWG tools, kernel support, iproute2, and systemd are external
+requirements. krot does not configure NAT, forwarding, firewall rules, or
+sysctl settings.

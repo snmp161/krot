@@ -6,12 +6,15 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
 version="${VERSION:-0.0.0}"
+DESCRIPTION="$(cat packaging/description.txt)"
+export DESCRIPTION
 nfpm_bin="$(go env GOPATH)/bin/nfpm"
 mkdir -p dist
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o dist/krot-linux-amd64 ./cmd/krot
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o dist/krot-linux-arm64 ./cmd/krot
 dist/krot-linux-amd64 --completion bash > dist/krot.bash
 dist/krot-linux-amd64 --completion zsh > dist/_krot
+scripts/compress-man.sh
 
 for arch in amd64 arm64; do
     cp "dist/krot-linux-$arch" dist/krot
@@ -20,6 +23,7 @@ for arch in amd64 arm64; do
     done
 done
 rm dist/krot dist/krot.bash dist/_krot
+rm -rf dist/man
 
 scripts/smoke.sh ubuntu:24.04 dist amd64
 scripts/smoke.sh almalinux:9 dist amd64

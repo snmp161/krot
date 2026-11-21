@@ -1,0 +1,8 @@
+- semver: 0.7.3
+  date: 2026-11-20T21:48:59Z
+  packager: Sergey Ovchinnikov <sovchinnikov@gmail.com>
+  changes:
+    - note: Added application and manual page localization for all README languages.
+    - note: Expanded test coverage and CI quality gates, including UDP integration tests.
+    - note: Fixed tunnel deletion confirmation when the client set changes before confirmation.
+    - note: Documented GitHub repository protections and contributor workflows.
