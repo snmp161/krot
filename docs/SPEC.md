@@ -942,8 +942,15 @@ krot всегда создаёт `awg3` с включёнными Header Protect
    пакетные changelog. Сырые commit titles и автоматически сгенерированный список
    коммитов не заменяют release notes. Отсутствие или пустая запись текущей версии,
    несовпадение версии или даты останавливают публикацию.
+8. Каждый standalone-бинарь, DEB/RPM и `SHA256SUMS` получает криптографически
+   подписанное GitHub OIDC/Sigstore build provenance, связывающее digest с commit и
+   workflow. `SHA256SUMS` формируется до аттестации и не заменяет её. До создания
+   draft и публикации `gh attestation verify` проверяет каждый бинарь, пакет и manifest
+   с привязкой к репозиторию; любая ошибка останавливает release. Immutable release
+   attestation дополняет, но не заменяет build provenance.
 
-Установка — только из пакетов или бинаря релиза с проверкой контрольной суммы.
+Установка — только из пакетов или бинаря релиза с проверкой контрольной суммы и
+artifact attestation.
 Инструкции вида `curl … | bash` в документации не допускаются.
 
 ### 9.3. Настройки GitHub-репозитория
@@ -1032,6 +1039,7 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 | T42 | Policy-clean DEB/RPM: полностью идентичные расширенные описания, сжатые man-страницы и пакетные changelog (4.7, 8.4, 9.4) |
 | T43 | Curated release notes как единый источник `CHANGELOG.md`, GitHub notes и DEB/RPM changelog; обязательная проверка записи текущей версии (9.2, 9.4) |
 | T44 | Enforced tag rules, проверка annotated SemVer из `main`, immutable releases и draft-before-publish (9.2, 9.3) |
+| T45 | Криптографическое build provenance для всех артефактов и обязательная `gh attestation verify` до публикации (9.2) |
 
 ### 10.1. Отложенные задачи
 
