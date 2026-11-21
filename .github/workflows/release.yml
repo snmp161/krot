@@ -26,6 +26,10 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
+      - name: release notes
+        run: |
+          go install github.com/goreleaser/chglog/cmd/chglog@v0.7.6
+          scripts/release-notes.sh "$GITHUB_REF_NAME"
       - name: package metadata
         run: |
           DESCRIPTION="$(cat packaging/description.txt)"
@@ -96,9 +100,13 @@ jobs:
         with:
           name: dist
           path: dist/
+      - name: prepare release notes
+        run: |
+          cp dist/release-notes.md "$RUNNER_TEMP/release-notes.md"
+          rm dist/release-notes.md
       - name: checksums
         run: cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS
       - name: GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md"

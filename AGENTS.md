@@ -47,6 +47,13 @@
 - Store golden files in `testdata/`. Update them only deliberately, with an explanation in the commit message.
 - The requirement that operations remain invisible to clients (SPEC 6.10) must be covered by both unit tests (using a fake executor) and an integration test. These tests must not be disabled, skipped, or weakened.
 
+## Releases
+
+- Before creating an annotated release tag, write curated release notes describing user-visible behavior, compatibility, upgrade considerations, and security fixes when applicable. Do not substitute raw commit titles or automatically generated commit lists.
+- Add or update the version entry in `packaging/changelog.yaml`, run `make changelog`, and commit both that source and the generated `CHANGELOG.md` before tagging. The entry version and UTC date must match the intended tag.
+- DEB/RPM changelogs and GitHub release notes must be generated from the same curated entry. A missing, empty, stale, or mismatched entry must stop the release.
+- Verify artifact attestations before publication as required by SPEC 9.2. Never move or delete a published release tag.
+
 ## Prohibited Actions
 
 - Modifying `SPEC.md` on your own initiative.

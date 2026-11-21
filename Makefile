@@ -9,7 +9,7 @@ GOFMT := $(shell GOTOOLCHAIN=$(GOTOOLCHAIN) go env GOROOT)/bin/gofmt
 # koalaman/shellcheck v0.11.0.
 SHELLCHECK_IMAGE := koalaman/shellcheck@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
 
-.PHONY: all build build-arm64 fmt-check vet mod-check test fuzz-smoke gosec staticcheck shellcheck actionlint check integration package-preflight
+.PHONY: all build build-arm64 fmt-check vet mod-check test fuzz-smoke gosec staticcheck shellcheck actionlint changelog changelog-check check integration package-preflight
 
 all: check build
 
@@ -56,7 +56,15 @@ actionlint:
 	go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
 	"$$(go env GOPATH)/bin/actionlint" .github/workflows/*.yml
 
-check: fmt-check vet mod-check test gosec staticcheck shellcheck actionlint
+changelog:
+	go install github.com/goreleaser/chglog/cmd/chglog@v0.7.6
+	./scripts/release-notes.sh
+
+changelog-check:
+	go install github.com/goreleaser/chglog/cmd/chglog@v0.7.6
+	./scripts/release-notes.sh --check
+
+check: fmt-check vet mod-check test gosec staticcheck shellcheck actionlint changelog-check
 
 integration:
 	./scripts/integration-docker.sh

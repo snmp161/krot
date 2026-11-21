@@ -112,6 +112,8 @@ jobs:
         run: make shellcheck
       - name: workflows
         run: make actionlint
+      - name: curated changelog
+        run: make changelog-check
 
   fuzz:
     runs-on: ubuntu-24.04

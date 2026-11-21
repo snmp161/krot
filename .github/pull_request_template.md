@@ -22,6 +22,7 @@ Spec: <!-- sections of docs/SPEC.md -->
 - [ ] The diff contains no private keys, credentials, sensitive configurations, or unsafe host changes.
 - [ ] Affected README files, CLI help, man pages, and translations are consistent with the implementation.
 - [ ] All golden files, dependencies, packaging, and CI changes are explained in the commit messages and reviewed deliberately.
+- [ ] Release changes include curated notes in `packaging/changelog.yaml` and a regenerated `CHANGELOG.md`.
 
 ## Notes for reviewers
 

@@ -153,8 +153,15 @@ unclear.
 Releases are created by maintainers from an annotated `v*` tag. The tag must point
 to the intended commit on `main`, and the complete release workflow must pass
 before artifacts are published. Never move or delete a tag after its release has
-been published. Release notes should describe behavior, compatibility, and
-upgrade considerations, not merely repeat commit titles.
+been published.
+
+Before tagging, write curated release notes in `packaging/changelog.yaml` and run
+`make changelog` to regenerate `CHANGELOG.md`. Describe behavior, compatibility,
+upgrade considerations, and security fixes when applicable; do not merely repeat
+commit titles. Commit both files before tagging. The same entry feeds the GitHub
+release notes and the DEB/RPM package changelogs. A missing, empty, stale, or
+mismatched entry stops the release. Verify all required artifact attestations
+before publication.
 
 ## License
 
