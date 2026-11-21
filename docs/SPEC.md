@@ -894,7 +894,9 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 В контейнерах всех ОС из 2.1: установка `.deb`/`.rpm` → `krot --version` →
 `krot --help` на каждом поддерживаемом языке → проверка Bash/Zsh completion (4.6),
 наличия и сжатия всех man-страниц (4.7), лицензий, идентичности полных описаний
-и changelog (9.4) → удаление пакета с удалением всех его файлов.
+и changelog (9.4) → удаление пакета с удалением всех его файлов. Дополнительно на
+представительных Ubuntu/AlmaLinux через штатные apt/dnf проверяются install →
+upgrade → reinstall → remove/purge, версия и сохранность файлов на каждом шаге.
 
 ## 9. CI/CD (GitHub Actions)
 
@@ -1056,6 +1058,7 @@ artifact attestation.
 | T44 | Enforced tag rules, проверка annotated SemVer из `main`, immutable releases и draft-before-publish (9.2, 9.3) |
 | T45 | Криптографическое build provenance для всех артефактов и обязательная `gh attestation verify` до публикации (9.2) |
 | T46 | Побайтово воспроизводимые local/CI/release сборки через общий build path, `SOURCE_DATE_EPOCH` и двойную независимую сборку (9.2, 9.5) |
+| T47 | Обязательные lintian/rpmlint и lifecycle gates для пакетов; исправление Keenetic-документации (4.4, 6.13, 8.4, 9.4) |
 
 ### 10.1. Отложенные задачи
 
