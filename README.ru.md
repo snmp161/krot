@@ -60,6 +60,7 @@ BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 # скачать пакет и список контрольных сумм
 wget "$BASE/krot_${VERSION}_amd64.deb" "$BASE/SHA256SUMS"
 # проверить: должно быть "krot_..._amd64.deb: OK"
+gh attestation verify SHA256SUMS --repo snmp161/krot
 sha256sum --check --ignore-missing SHA256SUMS
 # установить
 sudo dpkg -i "krot_${VERSION}_amd64.deb"
@@ -69,6 +70,7 @@ RPM-системы (AlmaLinux, Rocky, RHEL):
 
 ```sh
 wget "$BASE/krot-${VERSION}-1.x86_64.rpm" "$BASE/SHA256SUMS"
+gh attestation verify SHA256SUMS --repo snmp161/krot
 sha256sum --check --ignore-missing SHA256SUMS
 sudo rpm -i "krot-${VERSION}-1.x86_64.rpm"
 ```

@@ -62,6 +62,7 @@ BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 # 패키지와 체크섬 목록 다운로드
 wget "$BASE/krot_${VERSION}_amd64.deb" "$BASE/SHA256SUMS"
 # 검증: "krot_..._amd64.deb: OK"가 출력되어야 함
+gh attestation verify SHA256SUMS --repo snmp161/krot
 sha256sum --check --ignore-missing SHA256SUMS
 # 설치
 sudo dpkg -i "krot_${VERSION}_amd64.deb"
@@ -71,6 +72,7 @@ RPM 기반 시스템(AlmaLinux, Rocky, RHEL):
 
 ```sh
 wget "$BASE/krot-${VERSION}-1.x86_64.rpm" "$BASE/SHA256SUMS"
+gh attestation verify SHA256SUMS --repo snmp161/krot
 sha256sum --check --ignore-missing SHA256SUMS
 sudo rpm -i "krot-${VERSION}-1.x86_64.rpm"
 ```

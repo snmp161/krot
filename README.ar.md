@@ -61,6 +61,7 @@ BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 # تنزيل الحزمة وقائمة المجاميع الاختبارية
 wget "$BASE/krot_${VERSION}_amd64.deb" "$BASE/SHA256SUMS"
 # التحقق: يجب أن تظهر "krot_..._amd64.deb: OK"
+gh attestation verify SHA256SUMS --repo snmp161/krot
 sha256sum --check --ignore-missing SHA256SUMS
 # التثبيت
 sudo dpkg -i "krot_${VERSION}_amd64.deb"
@@ -70,6 +71,7 @@ sudo dpkg -i "krot_${VERSION}_amd64.deb"
 
 ```sh
 wget "$BASE/krot-${VERSION}-1.x86_64.rpm" "$BASE/SHA256SUMS"
+gh attestation verify SHA256SUMS --repo snmp161/krot
 sha256sum --check --ignore-missing SHA256SUMS
 sudo rpm -i "krot-${VERSION}-1.x86_64.rpm"
 ```
