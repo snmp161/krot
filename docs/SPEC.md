@@ -934,6 +934,12 @@ krot всегда создаёт `awg3` с включёнными Header Protect
    DEB содержит `/usr/share/doc/krot/copyright` и необходимые notices; RPM помечает
    лицензионные материалы как `%license`; standalone-бинари сопровождаются в GitHub
    Release файлами `LICENSE` и `THIRD_PARTY_NOTICES`.
+7. Release notes пишет maintainer до создания тега: поведение, совместимость,
+   обновление и security, если применимо. Единый источник — curated
+   `packaging/changelog.yaml`; из него формируются `CHANGELOG.md`, GitHub notes и
+   пакетные changelog. Сырые commit titles и автоматически сгенерированный список
+   коммитов не заменяют release notes. Отсутствие или пустая запись текущей версии,
+   несовпадение версии или даты останавливают публикацию.
 
 Установка — только из пакетов или бинаря релиза с проверкой контрольной суммы.
 Инструкции вида `curl … | bash` в документации не допускаются.
@@ -1015,6 +1021,7 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 | T40 | Обновление всех закреплённых ссылок на Go до актуального stable 1.27.4: `go.mod`, документация и Docker-образы (2.3, 9) |
 | T41 | Third-party лицензии и notices: правило проверки компонентов, DEB copyright, RPM `%license`, сопровождение standalone-бинарей (9.2) |
 | T42 | Policy-clean DEB/RPM: полностью идентичные расширенные описания, сжатые man-страницы и пакетные changelog (4.7, 8.4, 9.4) |
+| T43 | Curated release notes как единый источник `CHANGELOG.md`, GitHub notes и DEB/RPM changelog; обязательная проверка записи текущей версии (9.2, 9.4) |
 
 ### 10.1. Отложенные задачи
 
