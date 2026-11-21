@@ -34,6 +34,7 @@ jobs:
               -ldflags "-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA::7} -X main.date=${date}" \
               -o "dist/krot-linux-$arch" ./cmd/krot
           done
+          cp LICENSE THIRD_PARTY_NOTICES dist/
       - name: shell completion
         run: |
           go run ./cmd/krot --completion bash > dist/krot.bash

@@ -58,7 +58,7 @@ func TestThirdPartyLicenseCompliance(t *testing.T) {
 	}
 
 	agents := readRepoFile(t, "AGENTS.md")
-	for _, want := range []string{"стороннего компонента", "требования лицензии", "THIRD_PARTY_NOTICES"} {
+	for _, want := range []string{"third-party component", "license obligations", "THIRD_PARTY_NOTICES"} {
 		if !strings.Contains(agents, want) {
 			t.Errorf("AGENTS.md misses license rule %q", want)
 		}

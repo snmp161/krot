@@ -78,6 +78,10 @@ sudo rpm -i "krot-${VERSION}-1.x86_64.rpm"
 و`SHA256SUMS`، وتحقق بالطريقة نفسها، ثم نفّذ
 `sudo install -m 0755 krot-linux-amd64 /usr/bin/krot`.
 
+```sh
+wget "$BASE/LICENSE" "$BASE/THIRD_PARTY_NOTICES"
+```
+
 على معمارية `arm64`، استخدم الملفات `*_arm64.deb` و`*.aarch64.rpm` و`krot-linux-arm64`.
 
 ## الاستخدام

@@ -87,6 +87,10 @@ Binario sin paquete: descarga `krot-linux-amd64` (o `krot-linux-arm64`) y
 `SHA256SUMS`, verifica de la misma forma y luego instala con
 `sudo install -m 0755 krot-linux-amd64 /usr/bin/krot`.
 
+```sh
+wget "$BASE/LICENSE" "$BASE/THIRD_PARTY_NOTICES"
+```
+
 Para `arm64`, usa los archivos `*_arm64.deb`, `*.aarch64.rpm` y
 `krot-linux-arm64`.
 

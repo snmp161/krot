@@ -34,6 +34,12 @@
 - Use only `crypto/rand` for randomness in production code; in tests, use a deterministic source with a seed.
 - Provide operators with clear error messages and return the correct exit codes (SPEC 4.5).
 
+## Third-party licenses
+
+- Before adding any third-party component, identify its license, check compatibility with the project, and determine its license obligations for source and binary distribution. After approval, meet every applicable obligation, including preservation of copyright, license, patent, notice, or source materials where required.
+- Keep `THIRD_PARTY_NOTICES` and `packaging/copyright` current. Include required notices in DEB/RPM packages and alongside standalone release binaries; do not assume that a permissive license removes attribution obligations.
+- Review the actual packaged and published artifacts, not only dependency metadata, when adding, removing, or upgrading a third-party component.
+
 ## Tests
 
 - Unit tests must not require root privileges or modify the system.

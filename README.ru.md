@@ -76,6 +76,10 @@ sudo rpm -i "krot-${VERSION}-1.x86_64.rpm"
 Бинарь без пакета: скачайте `krot-linux-amd64` (или `krot-linux-arm64`) и `SHA256SUMS`,
 проверьте так же и установите `sudo install -m 0755 krot-linux-amd64 /usr/bin/krot`.
 
+```sh
+wget "$BASE/LICENSE" "$BASE/THIRD_PARTY_NOTICES"
+```
+
 Для `arm64` используйте файлы `*_arm64.deb`, `*.aarch64.rpm`, `krot-linux-arm64`.
 
 ## Использование
