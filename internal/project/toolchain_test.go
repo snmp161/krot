@@ -1,13 +1,14 @@
 package project
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
 // SPEC 9 T30: локальные и CI-проверки используют Go из go.mod и один staticcheck.
 func TestToolchainFromGoMod(t *testing.T) {
-	if goMod := readRepoFile(t, "go.mod"); !strings.Contains(goMod, "go 1.27.2") {
+	if goMod := readRepoFile(t, "go.mod"); !strings.Contains(goMod, "go 1.27.4") {
 		t.Fatal("go.mod does not contain the expected pinned Go version")
 	}
 	makefile := readRepoFile(t, "Makefile")
@@ -23,6 +24,27 @@ func TestToolchainFromGoMod(t *testing.T) {
 		}
 		if !strings.Contains(text, "honnef.co/go/tools/cmd/staticcheck@v0.8.2") {
 			t.Errorf("%s does not pin staticcheck v0.8.2", name)
+		}
+	}
+}
+
+// SPEC 10 T40: актуальный Go закреплён во всех toolchain references без исключений.
+func TestCurrentGoVersionPinnedEverywhere(t *testing.T) {
+	files := []string{"go.mod", "scripts/collect-versions.sh", "test/integration/Dockerfile"}
+	readmes, err := filepath.Glob("../../README*.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range readmes {
+		files = append(files, filepath.Base(name))
+	}
+	for _, name := range files {
+		text := readRepoFile(t, name)
+		if !strings.Contains(text, "1.27.4") {
+			t.Errorf("%s does not reference Go 1.27.4", name)
+		}
+		if strings.Contains(text, "1.27.2") {
+			t.Errorf("%s still references obsolete Go 1.27.2", name)
 		}
 	}
 }
