@@ -451,7 +451,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 
 ## Entwicklung
 
-Sie benötigen Go aus `go.mod` (derzeit 1.27.2) und Docker für Integrationstests.
+Sie benötigen Go aus `go.mod` (derzeit 1.27.4) und Docker für Integrationstests.
 
 ```sh
 make check        # alle lokalen Checks: Format, Tests, Module, Sicherheit und Workflow-Linter

@@ -463,7 +463,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 
 ## Desarrollo
 
-Necesitas Go de `go.mod` (actualmente 1.27.2) y Docker para las pruebas de
+Necesitas Go de `go.mod` (actualmente 1.27.4) y Docker para las pruebas de
 integración.
 
 ```sh

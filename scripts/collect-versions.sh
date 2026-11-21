@@ -8,7 +8,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/internal/awg/testdata/versions"
 mkdir -p "$out"
 
-docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "$out:/out" golang:1.27.2-bookworm bash -euo pipefail -c '
+docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "$out:/out" golang:1.27.4-bookworm bash -euo pipefail -c '
 cd /tmp
 repo=https://github.com/amnezia-vpn
 

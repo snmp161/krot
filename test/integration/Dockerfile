@@ -2,7 +2,7 @@
 # wireguard-tools и AmneziaWG (tools + userspace amneziawg-go), собранные из закреплённых тегов.
 # Запуск — scripts/integration-docker.sh (контейнер со своим сетевым namespace).
 
-FROM golang:1.27.2-bookworm AS awg
+FROM golang:1.27.4-bookworm AS awg
 ARG AWG_TOOLS_TAG=v3.1.20260812
 ARG AWG_GO_TAG=v3.1.20260828
 RUN git clone -q -c advice.detachedHead=false --depth 1 --branch "$AWG_TOOLS_TAG" \

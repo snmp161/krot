@@ -420,7 +420,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 
 ## 开发
 
-需要 `go.mod` 中的 Go（当前为 1.27.2）和 Docker 用于集成测试。
+需要 `go.mod` 中的 Go（当前为 1.27.4）和 Docker 用于集成测试。
 
 ```sh
 make check        # 所有本地检查：格式、测试、模块、安全和 workflow 检查器

@@ -419,7 +419,7 @@ AllowedIPs = 10.8.0.2/32, fd00:8::2/128
 
 ## 開發
 
-需要 `go.mod` 指定的 Go（目前為 1.27.2），整合測試另需 Docker。
+需要 `go.mod` 指定的 Go（目前為 1.27.4），整合測試另需 Docker。
 
 ```sh
 make check        # 所有本地檢查：格式、測試、模組、安全和 workflow 檢查器
