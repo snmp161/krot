@@ -60,3 +60,22 @@ func TestAmneziaSourceRevisions(t *testing.T) {
 		t.Errorf("ci.yml verifies only %d AmneziaWG revisions", got)
 	}
 }
+
+// SPEC 9.2, 9.3 T44: релиз допускается только от проверенного annotated тега из main.
+func TestReleaseTagPolicy(t *testing.T) {
+	release := readRepoFile(t, ".github/workflows/release.yml")
+	for _, want := range []string{
+		"validate:",
+		"needs: validate",
+		"git cat-file -t",
+		"merge-base --is-ancestor",
+		"tagged_commit",
+		"semver=",
+		"--draft",
+		"--draft=false",
+	} {
+		if !strings.Contains(release, want) {
+			t.Errorf("release.yml misses tag/release enforcement %q", want)
+		}
+	}
+}
