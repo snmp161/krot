@@ -94,7 +94,6 @@ func TestArtifactProvenance(t *testing.T) {
 		"dist/*.rpm",
 		"dist/SHA256SUMS",
 		"gh attestation verify",
-		"sha256sum -- LICENSE THIRD_PARTY_NOTICES krot-linux-*",
 	} {
 		if !strings.Contains(release, want) {
 			t.Errorf("release.yml misses provenance requirement %q", want)
@@ -107,6 +106,9 @@ func TestArtifactProvenance(t *testing.T) {
 	}
 	if strings.Contains(release, "sha256sum -- * > SHA256SUMS") {
 		t.Error("checksum manifest is still generated after packaging instead of before attestation")
+	}
+	if !strings.Contains(readRepoFile(t, "scripts/build-release.sh"), "sha256sum -- LICENSE THIRD_PARTY_NOTICES krot-linux-*") {
+		t.Error("shared build does not generate the checksum manifest before attestation")
 	}
 
 	readmes, err := filepath.Glob("../../README*.md")
