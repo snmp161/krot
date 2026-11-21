@@ -924,7 +924,9 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 
 ### 9.2. `release.yml` — на тег `v*`
 
-1. Всё из `ci.yml`.
+1. До CI проверяются строгий SemVer `vX.Y.Z`, annotated tag object, совпадение
+   checkout/tag SHA и принадлежность tagged commit к `main`. Затем выполняется всё
+   из `ci.yml`.
 2. Сборка статических бинарей; версия, коммит и дата — через `-ldflags`.
 3. Пакеты `.deb` и `.rpm` (nfpm), бинарь в `/usr/bin/krot`, скрипты Bash/Zsh completion (4.6),
    man-страницы всех поддерживаемых языков (4.7).
@@ -949,6 +951,13 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 - Активный ruleset `Protect main` для default branch запрещает non-fast-forward
   обновления и удаление ветки. Обязательные PR не требуются: сохраняется процесс
   прямых коммитов maintainer'а в `main`.
+- Для `refs/tags/v*` активны раздельные правила: создание разрешено только
+  maintainer/admin через creation-only ruleset с bypass; отдельный ruleset без
+  bypass запрещает update и deletion. Workflow дополнительно проверяет формат,
+  annotated object и происхождение из `main`.
+- Immutable releases включены на уровне репозитория. Release создаётся как draft,
+  получает все assets и notes, проходит обязательные проверки и только затем
+  публикуется. Изменять или удалять assets и перемещать тег после публикации нельзя.
 - Разрешены только GitHub-owned Actions; каждый Action должен быть закреплён
   полным SHA, включая будущие workflows. Репозиторий требует SHA-pinning на уровне
   настроек. Workflow permissions по умолчанию — read.
@@ -1022,6 +1031,7 @@ krot всегда создаёт `awg3` с включёнными Header Protect
 | T41 | Third-party лицензии и notices: правило проверки компонентов, DEB copyright, RPM `%license`, сопровождение standalone-бинарей (9.2) |
 | T42 | Policy-clean DEB/RPM: полностью идентичные расширенные описания, сжатые man-страницы и пакетные changelog (4.7, 8.4, 9.4) |
 | T43 | Curated release notes как единый источник `CHANGELOG.md`, GitHub notes и DEB/RPM changelog; обязательная проверка записи текущей версии (9.2, 9.4) |
+| T44 | Enforced tag rules, проверка annotated SemVer из `main`, immutable releases и draft-before-publish (9.2, 9.3) |
 
 ### 10.1. Отложенные задачи
 
