@@ -1,6 +1,7 @@
 package project
 
 import (
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -76,6 +77,45 @@ func TestReleaseTagPolicy(t *testing.T) {
 	} {
 		if !strings.Contains(release, want) {
 			t.Errorf("release.yml misses tag/release enforcement %q", want)
+		}
+	}
+}
+
+// SPEC 9.2 T45: подписанное provenance и его проверка являются обязательным gate.
+func TestArtifactProvenance(t *testing.T) {
+	release := readRepoFile(t, ".github/workflows/release.yml")
+	for _, want := range []string{
+		"actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8",
+		"id-token: write",
+		"attestations: write",
+		"attestations: read",
+		"dist/krot-linux-*",
+		"dist/*.deb",
+		"dist/*.rpm",
+		"dist/SHA256SUMS",
+		"gh attestation verify",
+		"sha256sum -- LICENSE THIRD_PARTY_NOTICES krot-linux-*",
+	} {
+		if !strings.Contains(release, want) {
+			t.Errorf("release.yml misses provenance requirement %q", want)
+		}
+	}
+	verify := strings.Index(release, "gh attestation verify")
+	publish := strings.Index(release, "gh release create")
+	if verify < 0 || publish < 0 || verify > publish {
+		t.Error("artifact attestations must be verified before release creation")
+	}
+	if strings.Contains(release, "sha256sum -- * > SHA256SUMS") {
+		t.Error("checksum manifest is still generated after packaging instead of before attestation")
+	}
+
+	readmes, err := filepath.Glob("../../README*.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range readmes {
+		if !strings.Contains(readRepoFile(t, filepath.Base(name)), "gh attestation verify SHA256SUMS --repo snmp161/krot") {
+			t.Errorf("%s does not document cryptographic attestation verification", name)
 		}
 	}
 }
