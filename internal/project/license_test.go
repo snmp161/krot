@@ -52,7 +52,7 @@ func TestThirdPartyLicenseCompliance(t *testing.T) {
 		}
 	}
 
-	release := readRepoFile(t, ".github/workflows/release.yml")
+	release := readRepoFile(t, "scripts/build-release.sh")
 	if !strings.Contains(release, "cp LICENSE THIRD_PARTY_NOTICES dist/") {
 		t.Error("standalone binaries are not accompanied by license assets")
 	}

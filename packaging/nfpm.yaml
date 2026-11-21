@@ -100,6 +100,10 @@ contents:
     file_info:
       mode: 0644
 
+# Стабильное имя build host нужно для воспроизводимого RPM (SPEC 9.5).
+rpm:
+  buildhost: reproducible.invalid
+
 # krot не устанавливает WireGuard/AmneziaWG (SPEC 2.2, 11) — только рекомендует.
 overrides:
   deb:

@@ -156,11 +156,24 @@ jobs:
           CGO_ENABLED: "0"
           GOOS: linux
           GOARCH: ${{ matrix.goarch }}
-        run: go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_SHA::7} -X main.commit=${GITHUB_SHA::7}" -o dist/krot-linux-${{ matrix.goarch }} ./cmd/krot
+        run: |
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          go build -buildvcs=false -trimpath -ldflags "-s -w -X main.version=${GITHUB_SHA::7} -X main.commit=${GITHUB_SHA::7}" -o dist/krot-linux-${{ matrix.goarch }} ./cmd/krot
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: krot-linux-${{ matrix.goarch }}
           path: dist/krot-linux-${{ matrix.goarch }}
+
+  reproducible:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: go.mod
+      - name: independent double build
+        run: make repro-check
 
   # SPEC 8.3, 9.1: интеграционные тесты под sudo в отдельных network namespace.
   # AmneziaWG работает на userspace amneziawg-go; теги сверяются с полными SHA,

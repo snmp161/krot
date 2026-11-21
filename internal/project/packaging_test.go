@@ -41,7 +41,7 @@ func TestDistributionPackageMetadata(t *testing.T) {
 
 	for _, name := range []string{"scripts/package-preflight.sh", ".github/workflows/release.yml"} {
 		text := readRepoFile(t, name)
-		for _, want := range []string{"scripts/compress-man.sh", `DESCRIPTION="$(cat packaging/description.txt)"`} {
+		for _, want := range []string{"scripts/build-release.sh", `DESCRIPTION="$(cat packaging/description.txt)"`} {
 			if !strings.Contains(text, want) {
 				t.Errorf("%s misses %q", name, want)
 			}
