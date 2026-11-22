@@ -4,6 +4,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d)"
+host_arch="$(go env GOHOSTARCH)"
 trap 'rm -rf "$work"' EXIT
 cp -a "$root" "$work/source"
 mkdir -p "$work/old" "$work/new"
@@ -18,7 +19,7 @@ for version in 0.0.1 0.0.2; do
     cp "$work/source/dist/krot_${version}_amd64.deb" "$work/source/dist/krot-${version}-1.x86_64.rpm" "$target/"
 done
 
-docker run --rm -v "$work/old:/old:ro" -v "$work/new:/new:ro" ubuntu:24.04 sh -euc '
+docker run --rm --platform "linux/$host_arch" -v "$work/old:/old:ro" -v "$work/new:/new:ro" ubuntu:24.04 sh -euc '
     check_files() {
         case "$(krot --version)" in *"$1"*) ;; *) return 1 ;; esac
         for path in /usr/bin/krot /usr/share/doc/krot/README.md \
@@ -49,7 +50,7 @@ docker run --rm -v "$work/old:/old:ro" -v "$work/new:/new:ro" ubuntu:24.04 sh -e
     done
 '
 
-docker run --rm -v "$work/old:/old:ro" -v "$work/new:/new:ro" almalinux:10 sh -euc '
+docker run --rm --platform "linux/$host_arch" -v "$work/old:/old:ro" -v "$work/new:/new:ro" almalinux:10 sh -euc '
     check_files() {
         case "$(krot --version)" in *"$1"*) ;; *) return 1 ;; esac
         for path in /usr/bin/krot /usr/share/doc/krot/README.md \
