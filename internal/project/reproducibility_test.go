@@ -45,3 +45,12 @@ func TestReproducibleBuildPipeline(t *testing.T) {
 		}
 	}
 }
+
+// SPEC 9.5 T46: вычисление timestamp не маскирует ошибку git через export (SC2155).
+func TestSourceDateEpochExportDoesNotMaskErrors(t *testing.T) {
+	for _, name := range []string{".github/workflows/ci.yml", ".github/workflows/release.yml"} {
+		if strings.Contains(readRepoFile(t, name), `export SOURCE_DATE_EPOCH="$(`) {
+			t.Errorf("%s combines export and command substitution", name)
+		}
+	}
+}
