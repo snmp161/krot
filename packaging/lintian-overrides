@@ -1,0 +1,7 @@
+# The static non-PIE Go binary is intentional (SPEC 2.3): it carries its runtime,
+# works without a system Go installation, and has no dynamically linked objects.
+krot: statically-linked-binary [usr/bin/krot]
+
+# This is a directly distributed third-party package, not an initial upload
+# seeking inclusion in Debian, so there is no Debian ITP bug to close.
+krot: initial-upload-closes-no-bugs

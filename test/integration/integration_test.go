@@ -323,8 +323,8 @@ func between(s, a, b string) string {
 	return s[:j]
 }
 
-// SPEC 6.13, 8.3: --keenetic на wg-туннеле выводит блок команд CLI KeeneticOS;
-// для AmneziaWG-клиентов не применим (код 3) — KeeneticOS не знает обфускацию.
+// SPEC 6.13, 8.3: --keenetic выводит блок команд CLI KeeneticOS для wg и awg;
+// AWG 1.0 использует wireguard asc, а неподдерживаемый awg3 отклоняется с кодом 3.
 func TestKeenetic(t *testing.T) {
 	tu := newTunnel(t, "wg", 5)
 	tu.create(t, tu.serverIP()+"/24")

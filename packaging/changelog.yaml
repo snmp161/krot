@@ -1,6 +1,9 @@
 - semver: 0.7.3
   date: 2026-11-20T21:48:59Z
   packager: Sergey Ovchinnikov <sovchinnikov@gmail.com>
+  deb:
+    distributions: [stable]
+    urgency: low
   changes:
     - commit: fb2fe73
       note: Added application and manual page localization for all README languages.

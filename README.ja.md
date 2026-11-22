@@ -446,6 +446,8 @@ make fuzz-smoke   # 全 targets の時間制限付き fuzzing
 make build        # 静的 bin/krot（CGO_ENABLED=0）。バージョンは git describe から取得
 make build-arm64
 make integration  # systemd を備えた特権 Docker コンテナで統合テストを実行
+make changelog      # リリースノートから changelog を再生成
+make repro-check    # バイト単位で再現可能なビルドを検証
 make package-preflight # 両アーキテクチャの DEB/RPM + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 

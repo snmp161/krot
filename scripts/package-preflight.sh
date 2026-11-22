@@ -8,6 +8,8 @@ cd "$root"
 DESCRIPTION="$(cat packaging/description.txt)"
 export DESCRIPTION
 ./scripts/build-release.sh
+scripts/package-lint.sh dist
+scripts/package-lifecycle.sh
 
 scripts/smoke.sh ubuntu:24.04 dist amd64
 scripts/smoke.sh almalinux:9 dist amd64

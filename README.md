@@ -227,7 +227,7 @@ sudo krot --add-client --interface awg0 --id laptop --allowed-ips 0.0.0.0/0 --ps
 # additionally print an AmneziaVPN key: a vpn://… line after the config
 sudo krot --add-client --interface awg0 --id tablet --allowed-ips 0.0.0.0/0,::/0 --amnezia-key
 
-# KeeneticOS CLI commands: connect a Keenetic router as a client (wg only, IPv4 only)
+# KeeneticOS CLI commands: connect a Keenetic router as a client (wg and awg 1.0/1.5/2.0, IPv4 only)
 sudo krot --add-client --interface wg0 --id keenetic --allowed-ips 0.0.0.0/0 --keenetic
 
 # specific client address
@@ -455,6 +455,8 @@ make fuzz-smoke   # bounded fuzzing of all targets
 make build        # static bin/krot (CGO_ENABLED=0), version from git describe
 make build-arm64
 make integration  # integration tests in a privileged Docker container with systemd
+make changelog      # regenerate release notes and package changelogs
+make repro-check    # verify byte-for-byte reproducible builds
 make package-preflight # DEB/RPM for both architectures + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 

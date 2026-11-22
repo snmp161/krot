@@ -76,7 +76,8 @@ Formatting must be checked with the Go toolchain selected from `go.mod`.
 The underlying unit command is `go test -race ./...`; CI and the Makefile target
 add `-count=1 -shuffle=on`. Run `make fuzz-smoke` for bounded fuzzing of every
 existing target and `make package-preflight` to build DEB/RPM packages for both
-architectures and run representative smoke tests on Ubuntu 24.04 and AlmaLinux 9.
+architectures, run Lintian/rpmlint and apt/dnf lifecycle checks, and execute
+representative smoke tests on Ubuntu 24.04 and AlmaLinux 9.
 
 The unit suite must maintain the coverage threshold enforced by CI. Add golden
 files under the relevant package's `testdata/` directory. Update golden files

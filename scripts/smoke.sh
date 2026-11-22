@@ -31,13 +31,13 @@ docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -v "$root/packaging:/
     case "$PKG" in
         *.deb)
             actual_description="$(dpkg-query -W -f="\${Description}" krot | sed -e "s/^ //" -e "s/^\.$//")"
-            changelog="$(gzip -dc /usr/share/doc/krot/changelog.Debian.gz)"
+            changelog="$(gzip -dc /usr/share/doc/krot/changelog.Debian.gz | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//" | tr "\n" " ")"
             test -s /usr/share/doc/krot/copyright
-            doc_paths="/usr/share/doc/krot/copyright /usr/share/doc/krot/changelog.Debian.gz"
+            doc_paths="/usr/share/doc/krot/copyright /usr/share/doc/krot/changelog.Debian.gz /usr/share/lintian/overrides/krot"
             ;;
         *.rpm)
             actual_description="$(rpm -q --queryformat "%{DESCRIPTION}" krot)"
-            changelog="$(rpm -q --changelog krot)"
+            changelog="$(rpm -q --changelog krot | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//" | tr "\n" " ")"
             doc_paths=""
             ;;
     esac
@@ -51,7 +51,7 @@ docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -v "$root/packaging:/
     do
         case "$changelog" in *"$text"*) ;; *) printf "changelog misses %s\n" "$text" >&2; exit 1 ;; esac
     done
-    for path in /usr/share/doc/krot/LICENSE /usr/share/doc/krot/THIRD_PARTY_NOTICES; do
+    for path in /usr/share/doc/krot/README.md /usr/share/doc/krot/LICENSE /usr/share/doc/krot/THIRD_PARTY_NOTICES; do
         test -s "$path"
     done
 

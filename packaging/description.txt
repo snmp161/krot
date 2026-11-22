@@ -1,4 +1,4 @@
-Manage WireGuard and AmneziaWG tunnels and clients on Linux servers.
+Manage WireGuard and AmneziaWG tunnels and clients on Linux servers
 krot creates, deletes, starts, and stops WireGuard and AmneziaWG 1.x, 2.0,
 and 3.1 tunnels. It manages clients without restarting or recreating the
 interface, preserving other clients' sessions and traffic.

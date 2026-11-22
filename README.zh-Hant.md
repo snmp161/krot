@@ -218,7 +218,7 @@ sudo krot --add-client --interface awg0 --id laptop --allowed-ips 0.0.0.0/0 --ps
 # 額外輸出 AmneziaVPN 金鑰：設定檔後的 vpn://… 行
 sudo krot --add-client --interface awg0 --id tablet --allowed-ips 0.0.0.0/0,::/0 --amnezia-key
 
-# KeeneticOS CLI 命令：將 Keenetic 路由器連接為客戶端（僅限 wg，僅限 IPv4）
+# KeeneticOS CLI 命令：將 Keenetic 路由器連接為客戶端（wg 和 awg 1.0/1.5/2.0，僅限 IPv4）
 sudo krot --add-client --interface wg0 --id keenetic --allowed-ips 0.0.0.0/0 --keenetic
 
 # 指定客戶端位址
@@ -433,6 +433,8 @@ make fuzz-smoke   # 對所有 targets 進行限時 fuzzing
 make build        # 靜態 bin/krot（CGO_ENABLED=0），版本來自 git describe
 make build-arm64
 make integration  # 在具 systemd 的特權 Docker 容器中執行整合測試
+make changelog      # 從發布說明重新產生 changelog
+make repro-check    # 驗證構建逐位元組可重現
 make package-preflight # 為兩種架構構建 DEB/RPM + Ubuntu 24.04/AlmaLinux 9 smoke
 ```
 

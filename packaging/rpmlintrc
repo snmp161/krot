@@ -1,0 +1,21 @@
+# krot intentionally ships a static non-PIE Go binary (SPEC 2.3), so these
+# hardening checks do not apply to its single statically linked executable.
+addFilter("statically-linked-binary")
+addFilter("position-independent-executable-suggested")
+
+# systemd and sysctl are correct technical names in the package description,
+# not the spelling mistakes suggested by the generic dictionary.
+addFilter("spelling-error.*systemd")
+addFilter("spelling-error.*sysctl")
+
+# nFPM records the upstream version in changelog while the RPM release remains
+# the constant package revision 1. The curated upstream versions are verified
+# separately by the release and smoke gates.
+addFilter("incoherent-version-in-changelog")
+
+# nFPM marks licenses as %license and installs compressed manuals as regular
+# files. They cannot also carry %doc through the same nFPM entry; README.md is
+# already a real %doc file, and smoke verifies every license and manual.
+addFilter("not-listed-as-documentation.*usr/share/man/")
+addFilter("not-listed-as-documentation.*usr/share/doc/krot/LICENSE")
+addFilter("not-listed-as-documentation.*usr/share/doc/krot/THIRD_PARTY_NOTICES")
