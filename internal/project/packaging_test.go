@@ -120,3 +120,15 @@ func TestKeeneticDocumentation(t *testing.T) {
 		t.Error("Keenetic integration comment still contradicts AWG support")
 	}
 }
+
+// SPEC 8.4, 9.4 T47: package tools выбирают нативную платформу независимо от image cache.
+func TestPackageToolsUseHostPlatform(t *testing.T) {
+	for _, name := range []string{"scripts/package-lint.sh", "scripts/package-lifecycle.sh"} {
+		text := readRepoFile(t, name)
+		for _, want := range []string{"go env GOHOSTARCH", `--platform "linux/$host_arch"`} {
+			if !strings.Contains(text, want) {
+				t.Errorf("%s misses native platform selection %q", name, want)
+			}
+		}
+	}
+}
