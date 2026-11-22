@@ -1,4 +1,4 @@
-// Package qr выводит текст QR-кодом в терминал символами Unicode half-block (SPEC 6.5).
+// Package qr выводит текст QR-кодом в терминал символами Unicode quadrant (SPEC 6.5).
 package qr
 
 import (
@@ -15,36 +15,43 @@ var ErrTooLarge = i18n.NewError("config too large for QR")
 // margin — ширина «тихой зоны» в модулях.
 const margin = 2
 
-// Render кодирует текст (уровень коррекции L, версия подбирается до 40) и рисует его
-// полублоками: одна строка текста — две строки модулей. Светлые модули рисуются символами,
-// тёмные — пробелами (под тёмный фон терминала, как qrencode -t UTF8).
+var quadrantRunes = [16]rune{' ', '▘', '▝', '▀', '▖', '▌', '▞', '▛', '▗', '▚', '▐', '▜', '▄', '▙', '▟', '█'}
+
+// quadrantRune отображает биты UL, UR, LL, LR на соответствующий Unicode quadrant.
+func quadrantRune(mask byte) rune {
+	return quadrantRunes[mask&0x0f]
+}
+
+// Render кодирует текст (уровень коррекции L, версия подбирается до 40) и упаковывает
+// 2×2 модуля в одну ячейку. Светлые модули изображаются сегментами на тёмном фоне;
+// quiet zone и дополнение правого/нижнего края до полной ячейки остаются светлыми.
 func Render(text string) (string, error) {
 	code, err := qr.Encode(text, qr.L)
 	if err != nil {
 		return "", ErrTooLarge
 	}
 	n := code.Size + 2*margin
-	dark := func(x, y int) bool {
+	light := func(x, y int) bool {
 		x, y = x-margin, y-margin
-		if y >= code.Size+margin {
-			return true // за нижним краем ничего не рисуем
-		}
-		return x >= 0 && y >= 0 && x < code.Size && y < code.Size && code.Black(x, y)
+		return x < 0 || y < 0 || x >= code.Size || y >= code.Size || !code.Black(x, y)
 	}
 	var b strings.Builder
 	for y := 0; y < n; y += 2 {
-		for x := 0; x < n; x++ {
-			top, bottom := !dark(x, y), y+1 < n && !dark(x, y+1)
-			switch {
-			case top && bottom:
-				b.WriteRune('█')
-			case top:
-				b.WriteRune('▀')
-			case bottom:
-				b.WriteRune('▄')
-			default:
-				b.WriteRune(' ')
+		for x := 0; x < n; x += 2 {
+			var mask byte
+			if light(x, y) {
+				mask |= 1
 			}
+			if light(x+1, y) {
+				mask |= 2
+			}
+			if light(x, y+1) {
+				mask |= 4
+			}
+			if light(x+1, y+1) {
+				mask |= 8
+			}
+			b.WriteRune(quadrantRune(mask))
 		}
 		b.WriteByte('\n')
 	}

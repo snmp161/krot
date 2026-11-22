@@ -259,8 +259,8 @@ usable, so a "server + one client" tunnel can be created with
 `--create … --ip 10.8.0.0/31,fd00:8::/127`.
 
 Save the generated config immediately: it cannot be retrieved again; you can
-only delete the client and add it again. QR codes are printed with Unicode
-half-blocks and assume a dark terminal background.
+only delete the client and add it again. QR codes use compact Unicode quadrant
+characters (2×2 modules per character) and assume a dark terminal background.
 
 `--amnezia-key` prints an AmneziaVPN key after the config — a single `vpn://…`
 line to paste into the AmneziaVPN app ("Insert key"), for example, by sending
