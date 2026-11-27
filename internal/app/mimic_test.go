@@ -150,3 +150,40 @@ func TestAddClientMimicForeignConfig(t *testing.T) {
 		t.Fatal("ssdp chain is 1 packet; I2 must be absent")
 	}
 }
+
+// SPEC 6.12: эффективный профиль мимикрии на туннеле wg (флаг или krot:mimic) —
+// ошибка 3 до каких-либо изменений: WireGuard не поддерживает I1–I5.
+func TestAddClientMimicOnWG(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		meta bool
+		args []string
+	}{
+		{"flag", false, []string{"--mimic", "dns"}},
+		{"metadata", true, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			e := newEnv(t)
+			e.mustRun(0, createArgs("wg")...)
+			path := e.wgConf("wg0")
+			if tc.meta {
+				e.write(path, "# krot:mimic=dns\n"+e.read(path))
+			}
+			before := e.read(path)
+			args := append([]string{"--add-client", "--interface", "wg0", "--id", "a", "--allowed-ips", "0.0.0.0/0"}, tc.args...)
+			e.mustRun(3, args...)
+			if got := e.read(path); got != before {
+				t.Fatalf("config changed:\n%s", got)
+			}
+			if strings.Contains(e.stdout.String(), "PrivateKey") || strings.Contains(e.stdout.String(), "I1") {
+				t.Fatalf("client config must not be printed:\n%s", e.stdout)
+			}
+			if !strings.Contains(e.stderr.String(), "wg0") {
+				t.Fatalf("error must name the interface: %s", e.stderr)
+			}
+			if e.calledPrefix("wg set") {
+				t.Fatalf("no live changes expected: %q", e.fake.CommandLines())
+			}
+		})
+	}
+}
