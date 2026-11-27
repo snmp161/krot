@@ -88,6 +88,10 @@ func (a *App) addClient(cmd *cli.Command) error {
 			profile = ifc.Meta["mimic"]
 		}
 		var chain []string
+		if profile != "" && !t.amnezia {
+			// WireGuard не знает I1–I5: клиентский конфиг не загрузился бы (SPEC 6.12).
+			return errs.Invalidf("mimic profile %s cannot be used on interface %s: WireGuard (wg) does not support I1-I5", profile, t.name)
+		}
 		if profile != "" {
 			chain, err = awg.GenerateMimicChain(profile, a.Rand, a.Now())
 			if err != nil {
