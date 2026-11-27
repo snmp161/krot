@@ -28,23 +28,18 @@
 
 ## Тесты и CI
 
-1. **`scripts/debian-changelog.sh` не снимает кавычки YAML.** Скрипт разбирает
-   `packaging/changelog.yaml` построчно, поэтому заметка в кавычках (а они нужны,
-   если в тексте есть `: `) попадёт в `changelog.Debian` вместе с кавычками и
-   разойдётся с RPM-changelog (SPEC 9.4). Пока заметки пишутся простыми скалярами
-   без `: `, как в записи 0.7.4.
-2. **Двойной CI на тегах.** `ci.yml` запускается `on: push` без фильтра веток,
+1. **Двойной CI на тегах.** `ci.yml` запускается `on: push` без фильтра веток,
    поэтому на тег `v*` CI идёт дважды: сам и через `workflow_call` из
    `release.yml`.
-3. **Job `build` в `ci.yml`** собирает бинарь своей командой, а не через
+2. **Job `build` в `ci.yml`** собирает бинарь своей командой, а не через
    `scripts/build-release.sh`/Makefile, и не передаёт `main.date` — бинарь
    сообщает «built unknown».
-4. **`make check` проверяет меньше, чем CI:** нет `govulncheck` и порога покрытия
+3. **`make check` проверяет меньше, чем CI:** нет `govulncheck` и порога покрытия
    90%; список `fuzz-smoke` задан вручную и не подхватит новые fuzz-targets
    (SPEC 9.1 требует все).
-5. **`scripts/smoke.sh`** ищет в changelog пакета строки именно от 0.7.3 и не
+4. **`scripts/smoke.sh`** ищет в changelog пакета строки именно от 0.7.3 и не
    проверяет запись текущей версии.
-6. **`scripts/build-release.sh`** запускает `dist/krot-linux-amd64` для генерации
+5. **`scripts/build-release.sh`** запускает `dist/krot-linux-amd64` для генерации
    completion — на arm64-хосте сборка упадёт.
 
 ## Мелкие замечания по коду и документации
