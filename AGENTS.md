@@ -11,7 +11,7 @@
    3. Run the tests and confirm that the new tests **fail**;
    4. Commit the tests: `test(<scope>): <what is being tested>`;
    5. Implement the code;
-   6. Make all checks pass: `gofmt -l .` produces no output, `go vet ./...` is clean, and `go test -race ./...` passes;
+   6. Make all checks pass: `make fmt-check` succeeds, `go vet ./...` is clean, and `go test -race ./...` passes;
    7. Commit the code: `feat|fix|refactor(<scope>): <summary of changes>`.
 4. **Create a git commit after every task.** A task is not complete until it has been committed. Do not combine changes from multiple tasks in a single commit.
 5. Take tasks in order from `SPEC.md`, section 10 (T0, T1, …).

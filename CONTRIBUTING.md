@@ -62,7 +62,7 @@ Do not rewrite published history or force-push.
 Before submitting a change, run:
 
 ```sh
-gofmt -l .
+make fmt-check
 go vet ./...
 go vet -tags integration ./...
 go mod tidy -diff
