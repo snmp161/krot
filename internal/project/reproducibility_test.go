@@ -46,6 +46,22 @@ func TestReproducibleBuildPipeline(t *testing.T) {
 	}
 }
 
+// SPEC 9.2, 9.5: completion генерируется host-toolchain, а не release-бинарем чужой архитектуры.
+func TestCompletionUsesHostToolchain(t *testing.T) {
+	build := readRepoFile(t, "scripts/build-release.sh")
+	if strings.Contains(build, "dist/krot-linux-amd64 --completion") {
+		t.Error("build-release.sh executes the amd64 release binary for completion")
+	}
+	for _, want := range []string{
+		"go run ./cmd/krot --completion bash",
+		"go run ./cmd/krot --completion zsh",
+	} {
+		if !strings.Contains(build, want) {
+			t.Errorf("build-release.sh misses host completion command %q", want)
+		}
+	}
+}
+
 // SPEC 9.5 T46: вычисление timestamp не маскирует ошибку git через export (SC2155).
 func TestSourceDateEpochExportDoesNotMaskErrors(t *testing.T) {
 	for _, name := range []string{".github/workflows/ci.yml", ".github/workflows/release.yml"} {
