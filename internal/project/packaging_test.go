@@ -60,6 +60,24 @@ func TestDistributionPackageMetadata(t *testing.T) {
 	}
 }
 
+// SPEC 8.4, 9.4: smoke проверяет текущую curated запись, а не заметки старого релиза.
+func TestSmokeChecksCurrentRelease(t *testing.T) {
+	smoke := readRepoFile(t, "scripts/smoke.sh")
+	for _, want := range []string{"CHANGELOG.md", "EXPECTED_VERSION", "EXPECTED_NOTES", "expected_version", "expected_notes"} {
+		if !strings.Contains(smoke, want) {
+			t.Errorf("smoke.sh misses current-release check %q", want)
+		}
+	}
+	for _, obsolete := range []string{
+		"Added application and manual page localization for all README languages.",
+		"Fixed tunnel deletion confirmation when the client set changes before confirmation.",
+	} {
+		if strings.Contains(smoke, obsolete) {
+			t.Errorf("smoke.sh still hardcodes an old release note %q", obsolete)
+		}
+	}
+}
+
 // SPEC 8.4, 9.4 T47: policy gates проверяют реальные пакеты и полный lifecycle.
 func TestPackageComplianceGates(t *testing.T) {
 	for _, name := range []string{"scripts/package-preflight.sh", ".github/workflows/release.yml"} {
