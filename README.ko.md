@@ -153,6 +153,9 @@ Listener는 세 가지 데이터그램에 응답합니다:
 - `ECHO <text>` → `<text>`;
 - `TIME` → 현재 Unix 시간(밀리초).
 
+Listener는 모든 인터페이스에서 열려 있는 UDP 리플렉터입니다. 진단 중에만 실행하고
+진단이 끝나면 `Ctrl+C`/`SIGTERM`으로 중지하십시오.
+
 클라이언트에서 checker를 실행하십시오:
 
 ```sh

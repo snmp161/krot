@@ -150,6 +150,9 @@ Listener 回應三種資料報：
 - `ECHO <text>` → `<text>`；
 - `TIME` → 目前 Unix 時間（毫秒）。
 
+Listener 是在所有接口上開放的 UDP 反射器。僅在診斷期間執行，並在診斷結束後
+通過 `Ctrl+C`/`SIGTERM` 停止。
+
 在客戶端執行 checker：
 
 ```sh

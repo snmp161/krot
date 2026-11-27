@@ -160,6 +160,9 @@ Le listener répond à trois types de datagrammes :
 - `ECHO <text>` → `<text>` ;
 - `TIME` → heure Unix actuelle en millisecondes.
 
+Le listener est un réflecteur UDP ouvert sur toutes les interfaces. Exécutez-le
+uniquement pendant le diagnostic et arrêtez-le ensuite avec `Ctrl+C`/`SIGTERM`.
+
 Exécutez le checker sur le client :
 
 ```sh

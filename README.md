@@ -158,6 +158,9 @@ The listener responds to three datagram types:
 - `ECHO <text>` → `<text>`;
 - `TIME` → current Unix time in milliseconds.
 
+The listener is an open UDP reflector on all interfaces. Run it only while
+diagnosing connectivity and stop it afterward with `Ctrl+C`/`SIGTERM`.
+
 Run the checker on the client:
 
 ```sh
