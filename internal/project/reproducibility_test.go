@@ -46,6 +46,25 @@ func TestReproducibleBuildPipeline(t *testing.T) {
 	}
 }
 
+// SPEC 9.1, 9.5: CI собирает обе архитектуры через общий deterministic release path.
+func TestCIBuildUsesSharedReleasePipeline(t *testing.T) {
+	build := jobBlock(t, readRepoFile(t, ".github/workflows/ci.yml"), "build")
+	for _, want := range []string{
+		"nfpm@v2.48.0",
+		`ARCHES="${{ matrix.goarch }}"`,
+		`DISPLAY_VERSION="${GITHUB_SHA::7}"`,
+		`COMMIT="${GITHUB_SHA::7}"`,
+		"scripts/build-release.sh",
+	} {
+		if !strings.Contains(build, want) {
+			t.Errorf("CI build job misses %q", want)
+		}
+	}
+	if strings.Contains(build, "go build -buildvcs=false") {
+		t.Error("CI build job still has a separate go build path")
+	}
+}
+
 // SPEC 9.2, 9.5: completion генерируется host-toolchain, а не release-бинарем чужой архитектуры.
 func TestCompletionUsesHostToolchain(t *testing.T) {
 	build := readRepoFile(t, "scripts/build-release.sh")
