@@ -28,6 +28,26 @@ func TestToolchainFromGoMod(t *testing.T) {
 	}
 }
 
+// SPEC 9.1: форматирование в CI и инструкциях выполняется через toolchain из go.mod.
+func TestPinnedGofmtEntryPoint(t *testing.T) {
+	ci := readRepoFile(t, ".github/workflows/ci.yml")
+	if !strings.Contains(ci, "make fmt-check") {
+		t.Error("ci.yml must use make fmt-check")
+	}
+	if strings.Contains(ci, "gofmt -l .") {
+		t.Error("ci.yml still calls gofmt from PATH")
+	}
+	for _, name := range []string{"AGENTS.md", "CONTRIBUTING.md"} {
+		text := readRepoFile(t, name)
+		if !strings.Contains(text, "make fmt-check") {
+			t.Errorf("%s does not recommend make fmt-check", name)
+		}
+		if strings.Contains(text, "gofmt -l .") {
+			t.Errorf("%s still recommends gofmt from PATH", name)
+		}
+	}
+}
+
 // SPEC 10 T40: актуальный Go закреплён во всех toolchain references без исключений.
 func TestCurrentGoVersionPinnedEverywhere(t *testing.T) {
 	files := []string{"go.mod", "scripts/collect-versions.sh", "test/integration/Dockerfile"}
