@@ -54,7 +54,7 @@ krot 不會自行安裝上述任何元件。若缺少必要程式，將以結束
 二進位檔進行安裝，並務必驗證校驗和。
 
 ```sh
-VERSION=0.7.3
+VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
 
 # 下載套件與校驗和清單

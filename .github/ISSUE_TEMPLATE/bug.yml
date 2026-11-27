@@ -9,7 +9,7 @@ body:
     attributes:
       label: krot version
       description: Paste the output of `krot --version`.
-      placeholder: "krot v0.7.3 (commit ..., built ...)"
+      placeholder: "krot v0.7.4 (commit ..., built ...)"
     validations:
       required: true
   - type: input
