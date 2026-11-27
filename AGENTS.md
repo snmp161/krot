@@ -40,6 +40,29 @@
 - Keep `THIRD_PARTY_NOTICES` and `packaging/copyright` current. Include required notices in DEB/RPM packages and alongside standalone release binaries; do not assume that a permissive license removes attribution obligations.
 - Review the actual packaged and published artifacts, not only dependency metadata, when adding, removing, or upgrading a third-party component.
 
+## Documentation and Translations
+
+- Every change to documentation or user-facing text requires native-level proofreading of each changed language before it is committed. This covers README files, `docs/`, `CONTRIBUTING.md`, `AGENTS.md`, man pages, CLI help, message catalogs in `internal/i18n`, and release notes.
+- Proofread as a native speaker who specializes in software development and systems operations: use established industry terminology; keep the terms, tone, and punctuation of the existing text in that language; and preserve commands, flags, paths, placeholders, format verbs, and technical meaning.
+- Use these language variants:
+
+  | Language | Variant |
+  |---|---|
+  | English | United States (`en_US`) |
+  | Russian | Russia (`ru_RU`) |
+  | Spanish | Mexico (`es_MX`) |
+  | Portuguese | Brazil (`pt_BR`) |
+  | Korean | South Korea (`ko_KR`) |
+  | Japanese | Japan (`ja_JP`) |
+  | Chinese, Simplified | Mainland China (`zh_CN`) |
+  | Chinese, Traditional | Mainland China terminology in Traditional script |
+  | Arabic | Modern Standard Arabic |
+  | French | France (`fr_FR`) |
+  | German | Germany (`de_DE`) |
+
+- When a text exists in several languages, proofread every translation you add or change; do not leave a translation unreviewed because the source language was reviewed.
+- Add `Review: AI native-level technical proofreading` to the body of each commit that adds or changes proofread text.
+
 ## Tests
 
 - Unit tests must not require root privileges or modify the system.
