@@ -53,6 +53,8 @@ equivalent pipe to a shell.
 Use [Conventional Commits](https://www.conventionalcommits.org/) with an allowed
 type: `test`, `feat`, `fix`, `refactor`, `docs`, `ci`, `build`, or `chore`.
 Include the task number and relevant specification sections in the commit body.
+Except for the test commit in step 4, never commit with failing tests. A task is
+complete only when it is committed; do not combine several tasks in one commit.
 Do not rewrite published history or force-push.
 
 ## Required checks
@@ -96,9 +98,11 @@ make integration
 ```
 
 Never run integration tests directly on the host. They require the `integration`
-build tag and isolated network namespaces. Tests that cover client operations
-must prove that existing clients keep their interface, handshake state, and
-traffic. These tests must not be disabled or weakened.
+build tag and isolated network namespaces. The requirement that client operations
+remain invisible to connected clients (SPEC 6.10) must be covered both by unit
+tests with the fake executor and by an integration test that proves existing
+clients keep their interface, handshake state, and traffic. These tests must not
+be disabled, skipped, or weakened.
 
 ## Code and dependencies
 
@@ -116,6 +120,19 @@ traffic. These tests must not be disabled or weakened.
   are permitted. Adding another dependency requires explicit maintainer approval.
 - Keep clear operator-facing errors and the exit codes defined in SPEC 4.5.
 
+## Third-party licenses
+
+- Before adding a third-party component, identify its license, confirm that it
+  is compatible with the project, and determine its obligations for source and
+  binary distribution. After approval, meet every applicable obligation,
+  including preservation of copyright, license, patent, notice, or source
+  materials where required.
+- Keep `THIRD_PARTY_NOTICES` and `packaging/copyright` current. Include the
+  required notices in DEB/RPM packages and alongside standalone release binaries;
+  a permissive license does not remove attribution obligations.
+- When adding, removing, or upgrading a third-party component, review the actual
+  packaged and published artifacts, not only dependency metadata.
+
 ## Documentation and localization
 
 Keep README files, CLI help, man pages, examples, and the specification
@@ -124,11 +141,37 @@ fields or values, configuration keys, KeeneticOS commands, shell completion, or
 the UDP protocol.
 
 Application and man-page localization covers the same languages as the project
-README files. Each translation requires native-level AI editorial
-review using software development and systems operations terminology; review by
-a human native speaker is also welcome. Preserve commands, paths, placeholders,
-links, formatting, and technical meaning, and run structural checks for every
-localized variant.
+README files. Every change to documentation or user-facing text requires
+native-level proofreading of each changed language before it is committed. This
+covers README files, `docs/`, `CONTRIBUTING.md`, `AGENTS.md`, man pages, CLI
+help, message catalogs in `internal/i18n`, and release notes. Native-level AI
+editorial review is required; review by a human native speaker is also welcome.
+
+Proofread as a native speaker who specializes in
+software development and systems operations: use established industry
+terminology; keep the terms, tone, and punctuation of the existing text in that
+language; and preserve commands, flags, paths, placeholders, format verbs, links,
+formatting, and technical meaning. Use these language variants:
+
+| Language | Variant |
+|---|---|
+| English | United States (`en_US`) |
+| Russian | Russia (`ru_RU`) |
+| Spanish | Mexico (`es_MX`) |
+| Portuguese | Brazil (`pt_BR`) |
+| Korean | South Korea (`ko_KR`) |
+| Japanese | Japan (`ja_JP`) |
+| Chinese, Simplified | Mainland China (`zh_CN`) |
+| Chinese, Traditional | Mainland China terminology in Traditional script |
+| Arabic | Modern Standard Arabic |
+| French | France (`fr_FR`) |
+| German | Germany (`de_DE`) |
+
+When a text exists in several languages, proofread every translation you add or
+change; a reviewed source text does not cover its translations. Run structural
+checks for every localized variant, and add
+`Review: AI native-level technical proofreading` to the body of each commit that
+adds or changes proofread text.
 
 Update installation examples to the current release version. Do not add
 instructions that bypass checksum verification.
@@ -158,11 +201,12 @@ been published.
 
 Before tagging, write curated release notes in `packaging/changelog.yaml` and run
 `make changelog` to regenerate `CHANGELOG.md`. Describe behavior, compatibility,
-upgrade considerations, and security fixes when applicable; do not merely repeat
-commit titles. Commit both files before tagging. The same entry feeds the GitHub
-release notes and the DEB/RPM package changelogs. A missing, empty, stale, or
-mismatched entry stops the release. Verify all required artifact attestations
-before publication.
+upgrade considerations, and security fixes when applicable; do not substitute raw
+commit titles or an automatically generated commit list. Commit both files before
+tagging; the entry version and its UTC date must match the intended tag. The same
+entry feeds the GitHub release notes and the DEB/RPM package changelogs. A
+missing, empty, stale, or mismatched entry stops the release. Verify all required
+artifact attestations before publication.
 
 ## License
 
