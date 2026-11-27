@@ -119,7 +119,8 @@ func TestReleaseFetchesAnnotatedTagObject(t *testing.T) {
 // и указывает на текущую версию в шаблоне bug report.
 func TestReleaseNotes074(t *testing.T) {
 	changelog := readRepoFile(t, "CHANGELOG.md")
-	if !strings.HasPrefix(changelog, "0.7.4\n") {
+	// chglog начинает файл с пустой строки; первой записью должна быть 0.7.4.
+	if !strings.HasPrefix(strings.TrimLeft(changelog, "\n"), "0.7.4\n") {
 		t.Fatalf("CHANGELOG.md must start with the 0.7.4 entry:\n%.200s", changelog)
 	}
 	for _, want := range []string{"quadrant", "symlink", "--keenetic", "--udp-listener", "port_start", "attestation"} {
