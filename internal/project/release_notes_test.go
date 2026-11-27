@@ -55,3 +55,62 @@ func TestCuratedReleaseNotes(t *testing.T) {
 		}
 	}
 }
+
+// jobBlock возвращает текст job'а workflow от "  <name>:" до следующего job'а верхнего уровня.
+func jobBlock(t *testing.T, workflow, name string) string {
+	t.Helper()
+	start := strings.Index(workflow, "\n  "+name+":\n")
+	if start < 0 {
+		t.Fatalf("workflow has no job %q", name)
+	}
+	rest := workflow[start+1:]
+	lines := strings.SplitAfter(rest, "\n")
+	end := len(rest)
+	offset := len(lines[0])
+	for _, l := range lines[1:] {
+		if strings.HasPrefix(l, "  ") && !strings.HasPrefix(l, "   ") && strings.HasSuffix(strings.TrimSpace(l), ":") {
+			end = offset
+			break
+		}
+		offset += len(l)
+	}
+	return rest[:end]
+}
+
+// SPEC 9.2 T43, T46: release notes, сформированные из curated записи, доходят до
+// публикации — общая сборка очищает dist/, поэтому notes формируются после неё.
+func TestReleaseNotesSurviveSharedBuild(t *testing.T) {
+	build := jobBlock(t, readRepoFile(t, ".github/workflows/release.yml"), "build")
+	shared := strings.Index(build, "scripts/build-release.sh")
+	notes := strings.Index(build, `scripts/release-notes.sh "$GITHUB_REF_NAME"`)
+	upload := strings.Index(build, "actions/upload-artifact")
+	if shared < 0 || notes < 0 || upload < 0 {
+		t.Fatalf("release build job misses shared build (%d), release notes (%d) or upload (%d)", shared, notes, upload)
+	}
+	if notes < shared {
+		t.Error("release notes are generated before scripts/build-release.sh, which recreates dist/ and deletes dist/release-notes.md")
+	}
+	if notes > upload {
+		t.Error("release notes are generated after dist/ is uploaded")
+	}
+	if !strings.Contains(readRepoFile(t, "scripts/build-release.sh"), "rm -rf dist\n") {
+		t.Fatal("test assumption changed: scripts/build-release.sh no longer recreates dist/")
+	}
+}
+
+// SPEC 9.2 T44, T43: проверки annotated tag и даты curated записи не зависят от того,
+// сохранил ли shallow checkout объект тега: тег явно загружается из origin.
+func TestReleaseFetchesAnnotatedTagObject(t *testing.T) {
+	release := readRepoFile(t, ".github/workflows/release.yml")
+	for job, check := range map[string]string{
+		"validate": "git cat-file -t",
+		"build":    `scripts/release-notes.sh "$GITHUB_REF_NAME"`,
+	} {
+		text := jobBlock(t, release, job)
+		fetch := strings.Index(text, `git fetch --no-tags --force origin "refs/tags/`)
+		use := strings.Index(text, check)
+		if fetch < 0 || use < 0 || fetch > use {
+			t.Errorf("%s job must fetch the annotated tag object before %q", job, check)
+		}
+	}
+}
