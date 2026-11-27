@@ -114,10 +114,13 @@ func (a *App) addClient(cmd *cli.Command) error {
 		if cmd.Keenetic {
 			var asc *keenetic.ASC
 			if t.amnezia {
-				// KeeneticOS поддерживает ASC AmneziaWG 1.0/1.5/2.0 (4.2+/5.1+),
-				// но не защиту заголовка 3.1 (SPEC 6.13).
-				if ifc.Get("HeaderProtectionKey") != "" || ifc.Get("RandomTrailers") != "" || ifc.Get("DisableCookies") != "" {
-					return errs.Invalidf("--keenetic: KeeneticOS does not support AmneziaWG 3.1 (header protection) of interface %s", t.name)
+				// KeeneticOS поддерживает ASC AmneziaWG 1.0/1.5/2.0 (4.2+/5.1+), но не 3.x:
+				// ни метаданные, ни параметры конфига не должны указывать на 3.0/3.1
+				// (SPEC 3.2, 6.13).
+				for _, meta := range []string{ifc.Meta["type"], ""} {
+					if typ, ver := awg.Detect(true, meta, params(ifc)); typ == awg.TypeAWG3 {
+						return errs.Invalidf("--keenetic: interface %s uses AmneziaWG %s, which KeeneticOS does not support (supported: 1.0, 1.5, 2.0)", t.name, ver)
+					}
 				}
 				asc = &keenetic.ASC{
 					Jc: ifc.Get("Jc"), Jmin: ifc.Get("Jmin"), Jmax: ifc.Get("Jmax"),
