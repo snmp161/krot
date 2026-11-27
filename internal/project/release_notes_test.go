@@ -114,3 +114,20 @@ func TestReleaseFetchesAnnotatedTagObject(t *testing.T) {
 		}
 	}
 }
+
+// SPEC 9.2 T51: curated запись v0.7.4 описывает изменения поведения и совместимости
+// и указывает на текущую версию в шаблоне bug report.
+func TestReleaseNotes074(t *testing.T) {
+	changelog := readRepoFile(t, "CHANGELOG.md")
+	if !strings.HasPrefix(changelog, "0.7.4\n") {
+		t.Fatalf("CHANGELOG.md must start with the 0.7.4 entry:\n%.200s", changelog)
+	}
+	for _, want := range []string{"quadrant", "symlink", "--keenetic", "--udp-listener", "port_start", "attestation"} {
+		if !strings.Contains(changelog, want) {
+			t.Errorf("0.7.4 release notes miss %q", want)
+		}
+	}
+	if !strings.Contains(readRepoFile(t, ".github/ISSUE_TEMPLATE/bug.yml"), "krot v0.7.4 (") {
+		t.Error("bug report template does not show the current version")
+	}
+}
