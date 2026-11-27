@@ -28,6 +28,8 @@ jobs:
             echo "tag is not strict SemVer with v prefix: $TAG" >&2
             exit 1
           fi
+          # Shallow checkout may keep only the tagged commit: fetch the tag object itself.
+          git fetch --no-tags --force origin "refs/tags/$TAG:refs/tags/$TAG"
           if [ "$(git cat-file -t "$TAG")" != "tag" ]; then
             echo "release tag must be annotated: $TAG" >&2
             exit 1
@@ -60,10 +62,6 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: go.mod
-      - name: release notes
-        run: |
-          go install github.com/goreleaser/chglog/cmd/chglog@v0.7.6
-          scripts/release-notes.sh "$GITHUB_REF_NAME"
       - name: package metadata
         run: |
           DESCRIPTION="$(cat packaging/description.txt)"
@@ -76,6 +74,12 @@ jobs:
         run: |
           go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
           VERSION="${GITHUB_REF_NAME#v}" DISPLAY_VERSION="$GITHUB_REF_NAME" scripts/build-release.sh
+      # After the shared build: scripts/build-release.sh recreates dist/.
+      - name: release notes
+        run: |
+          git fetch --no-tags --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          go install github.com/goreleaser/chglog/cmd/chglog@v0.7.6
+          scripts/release-notes.sh "$GITHUB_REF_NAME"
       - name: package lint
         run: scripts/package-lint.sh dist
       - name: package lifecycle
