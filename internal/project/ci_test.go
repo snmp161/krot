@@ -42,6 +42,17 @@ func TestReproducibleWorkflows(t *testing.T) {
 	}
 }
 
+// SPEC 9.1, 9.2: push тега запускает CI только через release workflow.
+func TestCIDoesNotRunStandaloneOnTags(t *testing.T) {
+	ci := readRepoFile(t, ".github/workflows/ci.yml")
+	if !strings.Contains(ci, "push:\n    branches: [\"**\"]") {
+		t.Error("ci.yml must limit direct push triggers to branches")
+	}
+	if !strings.Contains(ci, "workflow_call:") {
+		t.Error("ci.yml must remain reusable from release.yml")
+	}
+}
+
 // SPEC 9.1 T29: теги AmneziaWG сверяются с неизменяемыми коммитами и ключами кэша.
 func TestAmneziaSourceRevisions(t *testing.T) {
 	ci := readRepoFile(t, ".github/workflows/ci.yml")
