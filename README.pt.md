@@ -62,6 +62,10 @@ Instale a partir de pacotes ou binários na página de releases
 <https://github.com/snmp161/krot/releases>, e sempre verifique a soma de
 verificação.
 
+`gh attestation verify` exige GitHub CLI 2.49 ou superior. Se sua distribuição
+oferecer uma versão mais antiga (por exemplo, Ubuntu 24.04), instale um `gh` atual
+nos [releases oficiais do GitHub CLI](https://github.com/cli/cli/releases).
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION

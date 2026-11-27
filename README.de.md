@@ -61,6 +61,10 @@ und krot macht die Änderungen rückgängig.
 Installieren Sie krot aus Paketen oder Binärdateien auf der Release-Seite
 <https://github.com/snmp161/krot/releases>, und prüfen Sie stets die Prüfsumme.
 
+`gh attestation verify` erfordert GitHub CLI 2.49 oder neuer. Wenn Ihre Distribution
+eine ältere Version bereitstellt (beispielsweise Ubuntu 24.04), installieren Sie ein
+aktuelles `gh` aus den [offiziellen GitHub-CLI-Releases](https://github.com/cli/cli/releases).
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION

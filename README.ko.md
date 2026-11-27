@@ -55,6 +55,10 @@ krot은 이러한 구성 요소를 직접 설치하지 않습니다. 필요한 �
 릴리스 페이지 <https://github.com/snmp161/krot/releases>에서 패키지 또는 바이너리를
 설치하고, 항상 체크섬을 검증하십시오.
 
+`gh attestation verify`에는 GitHub CLI 2.49 이상이 필요합니다. 배포판에서 더 오래된
+버전을 제공하는 경우(예: Ubuntu 24.04) [GitHub CLI 공식 릴리스](https://github.com/cli/cli/releases)에서
+최신 `gh`를 설치하십시오.
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION

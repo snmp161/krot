@@ -53,6 +53,10 @@ krot 不会自动安装上述任何组件。如果缺少必需程序，会以退
 请从发布页面 <https://github.com/snmp161/krot/releases> 下载软件包或
 二进制文件进行安装，并务必验证校验和。
 
+`gh attestation verify` 需要 GitHub CLI 2.49 或更高版本。如果发行版提供的是旧版本
+（例如 Ubuntu 24.04），请从 [GitHub CLI 官方发布页](https://github.com/cli/cli/releases)
+安装新版 `gh`。
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION

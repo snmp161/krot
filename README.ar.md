@@ -54,6 +54,10 @@
 ثبّت الحزم أو الملفات التنفيذية من صفحة الإصدارات
 <https://github.com/snmp161/krot/releases>، وتحقق دائمًا من المجموع الاختباري.
 
+يتطلب `gh attestation verify` الإصدار 2.49 أو أحدث من GitHub CLI. إذا كانت توزيعتك
+توفر إصدارًا أقدم (مثل Ubuntu 24.04)، فثبّت إصدار `gh` الحالي من
+[إصدارات GitHub CLI الرسمية](https://github.com/cli/cli/releases).
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION

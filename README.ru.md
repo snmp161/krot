@@ -53,6 +53,10 @@ krot сам ничего из этого не устанавливает. Есл
 Устанавливайте из пакетов или бинарей со страницы релизов
 <https://github.com/snmp161/krot/releases>, обязательно проверяя контрольную сумму.
 
+`gh attestation verify` требует GitHub CLI 2.49 или новее. Если дистрибутив
+предлагает более старую версию (например, Ubuntu 24.04), установите актуальный `gh`
+со [страницы официальных релизов GitHub CLI](https://github.com/cli/cli/releases).
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION

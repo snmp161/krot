@@ -61,6 +61,10 @@ le démarrage de l'unité échoue et krot annule les modifications.
 Effectuez l'installation depuis les paquets ou les binaires de la page des releases
 <https://github.com/snmp161/krot/releases>, et vérifiez toujours la somme de contrôle.
 
+`gh attestation verify` nécessite GitHub CLI 2.49 ou une version ultérieure. Si votre
+distribution fournit une version plus ancienne (par exemple, Ubuntu 24.04), installez
+un `gh` récent depuis les [releases officielles de GitHub CLI](https://github.com/cli/cli/releases).
+
 ```sh
 VERSION=0.7.4
 BASE=https://github.com/snmp161/krot/releases/download/v$VERSION
