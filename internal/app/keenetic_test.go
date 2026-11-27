@@ -129,3 +129,27 @@ func TestAddClientKeeneticIPv6(t *testing.T) {
 		t.Fatal("failed --keenetic must not change the config")
 	}
 }
+
+// SPEC 6.13: только IPv4 — IPv6-адрес клиента (туннель dual-stack) отклоняется
+// кодом 3 до изменений; клиент с явным IPv4-адресом допустим.
+func TestAddClientKeeneticDualStack(t *testing.T) {
+	e := newEnv(t)
+	e.mustRun(0, "--create", "--type", "wg", "--ip", "10.8.0.1/24,fd00:8::1/64", "--port", "51820", "--endpoint", "vpn.example.com")
+	path := e.wgConf("wg0")
+	before := e.read(path)
+	e.mustRun(3, "--add-client", "--interface", "wg0", "--id", "a", "--allowed-ips", "0.0.0.0/0", "--keenetic")
+	if got := e.read(path); got != before {
+		t.Fatalf("failed --keenetic must not change the config:\n%s", got)
+	}
+	if !strings.Contains(e.stderr.String(), "fd00:8::2") || !strings.Contains(e.stderr.String(), "--ip") {
+		t.Fatalf("error must name the IPv6 address and suggest --ip: %s", e.stderr)
+	}
+	if strings.Contains(e.stdout.String(), "PrivateKey") {
+		t.Fatalf("client config must not be printed:\n%s", e.stdout)
+	}
+
+	e.mustRun(0, "--add-client", "--interface", "wg0", "--id", "a", "--ip", "10.8.0.5/32", "--allowed-ips", "0.0.0.0/0", "--keenetic")
+	if !strings.Contains(e.stdout.String(), "ip address 10.8.0.5 255.255.255.255") {
+		t.Fatalf("explicit IPv4 client address must be accepted:\n%s", e.stdout)
+	}
+}
