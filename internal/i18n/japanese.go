@@ -73,6 +73,7 @@ var japaneseMessages = map[string]string{
 	"deletion of interface %s canceled":               "インターフェース %s の削除をキャンセルしました",
 	"interface %s not found (no %s.conf in %s or %s)": "インターフェース %s が見つかりません（%s.conf は %s と %s のどちらにもありません）",
 	"interface %s is configured in both %s and %s":    "インターフェース %s は %s と %s の両方で設定されています",
+	"skipping config %s: cannot follow symlink: %v":   "設定 %s をスキップします: シンボリックリンクをたどれません: %v",
 	"cannot list live interfaces: %w":                 "アクティブなインターフェースを一覧表示できません: %w",
 	"cannot read the state of %s: %w":                 "%s の状態を読み取れません: %w",
 	"write %s: %w":                                    "%s の書き込みエラー: %w",

@@ -73,6 +73,7 @@ var chineseSimplifiedMessages = map[string]string{
 	"deletion of interface %s canceled":               "已取消删除接口 %s",
 	"interface %s not found (no %s.conf in %s or %s)": "未找到接口 %s（%s 和 %s 中均无 %s.conf）",
 	"interface %s is configured in both %s and %s":    "接口 %s 同时在 %s 和 %s 中配置",
+	"skipping config %s: cannot follow symlink: %v":   "跳过配置 %s：无法跟随符号链接：%v",
 	"cannot list live interfaces: %w":                 "无法列出活动接口：%w",
 	"cannot read the state of %s: %w":                 "无法读取 %s 的状态：%w",
 	"write %s: %w":                                    "写入 %s 时出错：%w",

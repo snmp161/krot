@@ -73,6 +73,7 @@ var germanMessages = map[string]string{
 	"deletion of interface %s canceled":               "Löschen der Schnittstelle %s abgebrochen",
 	"interface %s not found (no %s.conf in %s or %s)": "Schnittstelle %s nicht gefunden (keine %s.conf in %s oder %s)",
 	"interface %s is configured in both %s and %s":    "Schnittstelle %s ist sowohl in %s als auch in %s konfiguriert",
+	"skipping config %s: cannot follow symlink: %v":   "Konfiguration %s wird übersprungen: symbolischer Link kann nicht aufgelöst werden: %v",
 	"cannot list live interfaces: %w":                 "aktive Schnittstellen können nicht aufgelistet werden: %w",
 	"cannot read the state of %s: %w":                 "Status von %s kann nicht gelesen werden: %w",
 	"write %s: %w":                                    "Fehler beim Schreiben von %s: %w",

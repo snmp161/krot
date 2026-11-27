@@ -73,6 +73,7 @@ var spanishMessages = map[string]string{
 	"deletion of interface %s canceled":               "eliminación de la interfaz %s cancelada",
 	"interface %s not found (no %s.conf in %s or %s)": "interfaz %s no encontrada (no existe %s.conf en %s ni en %s)",
 	"interface %s is configured in both %s and %s":    "la interfaz %s está configurada tanto en %s como en %s",
+	"skipping config %s: cannot follow symlink: %v":   "se omite la configuración %s: no se puede seguir el enlace simbólico: %v",
 	"cannot list live interfaces: %w":                 "no se pueden enumerar las interfaces activas: %w",
 	"cannot read the state of %s: %w":                 "no se puede leer el estado de %s: %w",
 	"write %s: %w":                                    "error al escribir %s: %w",

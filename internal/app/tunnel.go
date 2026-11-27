@@ -83,10 +83,11 @@ func (a *App) findTunnel(name string) (*tunnel, error) {
 	return nil, errs.Conflictf("interface %s is configured in both %s and %s", name, found[0].path, found[1].path)
 }
 
-// configExists — есть ли конфиг с таким именем в любом из каталогов.
+// configExists — есть ли конфиг с таким именем в любом из каталогов; битая ссылка
+// тоже занимает имя, чтобы --create не записал конфиг поверх неё (SPEC 5.4).
 func (a *App) configExists(name string) bool {
 	for _, d := range a.confDirs() {
-		if exists(filepath.Join(d.path, name+".conf")) {
+		if _, err := os.Lstat(filepath.Join(d.path, name+".conf")); err == nil {
 			return true
 		}
 	}
@@ -107,10 +108,30 @@ func (a *App) scanTunnels() ([]*tunnel, error) {
 		}
 		for _, e := range entries {
 			name, ok := strings.CutSuffix(e.Name(), ".conf")
-			if !ok || !e.Type().IsRegular() || !cli.ValidInterfaceName(name) {
+			if !ok || !cli.ValidInterfaceName(name) {
 				continue
 			}
-			t, err := readTunnel(filepath.Join(d.path, e.Name()), name, d.amnezia)
+			path := filepath.Join(d.path, e.Name())
+			if e.Type()&fs.ModeSymlink != 0 {
+				// Конфиг-ссылка, как в wg-quick: имя — по ссылке, содержимое — из
+				// целевого файла; битая ссылка пропускается с предупреждением (SPEC 5.4).
+				st, err := os.Stat(path)
+				if err != nil {
+					cause := err
+					var pe *fs.PathError
+					if errors.As(err, &pe) {
+						cause = pe.Err
+					}
+					a.warnf("skipping config %s: cannot follow symlink: %v", path, cause)
+					continue
+				}
+				if !st.Mode().IsRegular() {
+					continue
+				}
+			} else if !e.Type().IsRegular() {
+				continue
+			}
+			t, err := readTunnel(path, name, d.amnezia)
 			if err != nil {
 				return nil, err
 			}

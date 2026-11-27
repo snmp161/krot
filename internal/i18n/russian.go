@@ -73,6 +73,7 @@ var russianMessages = map[string]string{
 	"deletion of interface %s canceled":               "Удаление интерфейса %s отменено",
 	"interface %s not found (no %s.conf in %s or %s)": "интерфейс %s не найден (файл %s.conf отсутствует и в %s, и в %s)",
 	"interface %s is configured in both %s and %s":    "интерфейс %s настроен одновременно в %s и %s",
+	"skipping config %s: cannot follow symlink: %v":   "конфиг %s пропущен: не удаётся перейти по символической ссылке: %v",
 	"cannot list live interfaces: %w":                 "не удалось получить список активных интерфейсов: %w",
 	"cannot read the state of %s: %w":                 "не удалось прочитать состояние %s: %w",
 	"write %s: %w":                                    "ошибка записи %s: %w",

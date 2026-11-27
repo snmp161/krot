@@ -73,6 +73,7 @@ var arabicMessages = map[string]string{
 	"deletion of interface %s canceled":               "أُلغي حذف الواجهة %s",
 	"interface %s not found (no %s.conf in %s or %s)": "لم يُعثر على الواجهة %s (لا يوجد %s.conf في %s أو %s)",
 	"interface %s is configured in both %s and %s":    "الواجهة %s مُهيأة في كل من %s و%s",
+	"skipping config %s: cannot follow symlink: %v":   "تم تخطي الإعداد %s: يتعذر اتباع الرابط الرمزي: %v",
 	"cannot list live interfaces: %w":                 "تعذر سرد الواجهات النشطة: %w",
 	"cannot read the state of %s: %w":                 "تعذر قراءة حالة %s: %w",
 	"write %s: %w":                                    "خطأ في كتابة %s: %w",

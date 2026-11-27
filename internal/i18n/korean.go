@@ -73,6 +73,7 @@ var koreanMessages = map[string]string{
 	"deletion of interface %s canceled":               "인터페이스 %s 삭제를 취소했습니다",
 	"interface %s not found (no %s.conf in %s or %s)": "인터페이스 %s를 찾을 수 없습니다(%s 또는 %s에 %s.conf가 없음)",
 	"interface %s is configured in both %s and %s":    "인터페이스 %s가 %s와 %s 양쪽에 구성되어 있습니다",
+	"skipping config %s: cannot follow symlink: %v":   "구성 %s을(를) 건너뜁니다: 심볼릭 링크를 따라갈 수 없습니다: %v",
 	"cannot list live interfaces: %w":                 "활성 인터페이스를 나열할 수 없습니다: %w",
 	"cannot read the state of %s: %w":                 "%s의 상태를 읽을 수 없습니다: %w",
 	"write %s: %w":                                    "%s 쓰기 오류: %w",

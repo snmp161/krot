@@ -24,7 +24,16 @@ func step(name string) error {
 // WriteFileAtomic записывает файл атомарно: временный файл в том же каталоге (0600,
 // root:root при запуске от root) → fsync → rename поверх оригинала → fsync каталога.
 // При ошибке до rename оригинал не меняется, временный файл удаляется.
+// Если path — символическая ссылка, заменяется её целевой файл, а ссылка сохраняется,
+// как при SaveConfig в wg-quick; через битую ссылку запись не выполняется (SPEC 5.4).
 func WriteFileAtomic(path string, data []byte) (err error) {
+	if st, lerr := os.Lstat(path); lerr == nil && st.Mode()&os.ModeSymlink != 0 {
+		target, rerr := filepath.EvalSymlinks(path)
+		if rerr != nil {
+			return rerr
+		}
+		path = target
+	}
 	dir, base := filepath.Split(path)
 	if dir == "" {
 		dir = "."
