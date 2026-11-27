@@ -11,7 +11,7 @@ GOFMT := $(shell GOTOOLCHAIN=$(GOTOOLCHAIN) go env GOROOT)/bin/gofmt
 # koalaman/shellcheck v0.11.0.
 SHELLCHECK_IMAGE := koalaman/shellcheck@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
 
-.PHONY: all build build-arm64 fmt-check vet mod-check test fuzz-smoke gosec staticcheck shellcheck actionlint changelog changelog-check repro-check check integration package-preflight
+.PHONY: all build build-arm64 fmt-check vet mod-check test fuzz-smoke vulncheck gosec staticcheck shellcheck actionlint changelog changelog-check repro-check check integration package-preflight
 
 all: check build
 
@@ -34,14 +34,18 @@ mod-check:
 
 # -race требует cgo, поэтому CGO_ENABLED здесь не отключается.
 test:
-	go test -race -count=1 -shuffle=on ./...
+	go test -race -count=1 -shuffle=on -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+	@total="$$(go tool cover -func=coverage.out | awk '/^total:/ {gsub(/%/, "", $$3); print $$3}')"; \
+		echo "total coverage: $${total}%"; \
+		awk -v t="$$total" 'BEGIN { exit !(t >= 90.0) }'
 
 fuzz-smoke:
-	go test ./internal/cli -run='^$$' -fuzz=FuzzParse -fuzztime=10s
-	go test ./internal/awg -run='^$$' -fuzz=FuzzValidateCPS -fuzztime=10s
-	go test ./internal/awg -run='^$$' -fuzz=FuzzParseVersion -fuzztime=10s
-	go test ./internal/app -run='^$$' -fuzz=FuzzParseDump -fuzztime=10s
-	go test ./internal/conf -run='^$$' -fuzz=FuzzConfigRoundTrip -fuzztime=10s
+	./scripts/fuzz-smoke.sh
+
+vulncheck:
+	go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+	"$$(go env GOPATH)/bin/govulncheck" ./...
 
 gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
@@ -70,7 +74,7 @@ repro-check:
 	go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.48.0
 	./scripts/reproducible-check.sh
 
-check: fmt-check vet mod-check test gosec staticcheck shellcheck actionlint changelog-check repro-check
+check: fmt-check vet mod-check test vulncheck fuzz-smoke gosec staticcheck shellcheck actionlint changelog-check repro-check
 
 integration:
 	./scripts/integration-docker.sh

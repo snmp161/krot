@@ -71,8 +71,9 @@ go test -race -count=1 -shuffle=on ./...
 ```
 
 `make check` runs the complete standard suite, including formatting, vet,
-module hygiene, shuffled race-enabled unit tests, gosec, staticcheck, ShellCheck,
-and actionlint. Audit tools and the ShellCheck image are pinned by the repository.
+module hygiene, shuffled race-enabled unit tests with the 90% coverage threshold,
+govulncheck, bounded fuzzing of every discovered target, gosec, staticcheck,
+ShellCheck, and actionlint. Audit tools and the ShellCheck image are pinned by the repository.
 Formatting must be checked with the Go toolchain selected from `go.mod`.
 
 The underlying unit command is `go test -race ./...`; CI and the Makefile target
