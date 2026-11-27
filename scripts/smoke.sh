@@ -6,6 +6,20 @@ set -euo pipefail
 
 image="$1" dir="$(cd "$2" && pwd)" arch="$3"
 root="$(cd "$(dirname "$0")/.." && pwd)"
+expected_version="$(awk '/^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$/ { print; exit }' "$root/CHANGELOG.md")"
+expected_notes="$(awk -v version="$expected_version" '
+    $0 == version { current=1; next }
+    current && /^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$/ { exit }
+    current && /^\* / {
+        sub(/^\* /, "")
+        sub(/ \([0-9a-f]+\)$/, "")
+        print
+    }
+' "$root/CHANGELOG.md")"
+if [ -z "$expected_version" ] || [ -z "$expected_notes" ]; then
+    echo "current release notes are missing or empty" >&2
+    exit 1
+fi
 case "$image" in
     ubuntu:*|debian:*) pkg="$(cd "$dir" && ls krot_*_"$arch".deb)" ;;
     almalinux:*|rockylinux:*)
@@ -14,7 +28,9 @@ case "$image" in
     *) echo "unsupported image $image" >&2; exit 2 ;;
 esac
 
-docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -v "$root/packaging:/src:ro" -e PKG="/pkg/$pkg" "$image" sh -euc '
+docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -v "$root/packaging:/src:ro" \
+    -e PKG="/pkg/$pkg" -e EXPECTED_VERSION="$expected_version" -e EXPECTED_NOTES="$expected_notes" \
+    "$image" sh -euc '
     case "$PKG" in
         *.deb) dpkg "--path-include=/usr/share/man/*" "--path-include=/usr/share/doc/krot/*" -i "$PKG" ;;
         *.rpm) rpm -i "$PKG" ;;
@@ -31,12 +47,20 @@ docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -v "$root/packaging:/
     case "$PKG" in
         *.deb)
             actual_description="$(dpkg-query -W -f="\${Description}" krot | sed -e "s/^ //" -e "s/^\.$//")"
+            actual_version="$(dpkg-query -W -f="\${Version}" krot)"
+            expected_package_version="$EXPECTED_VERSION"
+            case "$expected_package_version" in
+                *-*) expected_package_version="${expected_package_version%%-*}~${expected_package_version#*-}" ;;
+            esac
+            test "$actual_version" = "$expected_package_version-1"
             changelog="$(gzip -dc /usr/share/doc/krot/changelog.Debian.gz | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//" | tr "\n" " ")"
             test -s /usr/share/doc/krot/copyright
             doc_paths="/usr/share/doc/krot/copyright /usr/share/doc/krot/changelog.Debian.gz /usr/share/lintian/overrides/krot"
             ;;
         *.rpm)
             actual_description="$(rpm -q --queryformat "%{DESCRIPTION}" krot)"
+            actual_version="$(rpm -q --queryformat "%{VERSION}" krot)"
+            test "$actual_version" = "$EXPECTED_VERSION"
             changelog="$(rpm -q --changelog krot | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//" | tr "\n" " ")"
             doc_paths=""
             ;;
@@ -45,10 +69,8 @@ docker run --rm --platform "linux/$arch" -v "$dir:/pkg:ro" -v "$root/packaging:/
         printf "description mismatch\n--- expected ---\n%s\n--- actual ---\n%s\n" "$expected_description" "$actual_description" >&2
         exit 1
     fi
-    for text in \
-        "Added application and manual page localization for all README languages." \
-        "Fixed tunnel deletion confirmation when the client set changes before confirmation."
-    do
+    printf "%s\n" "$EXPECTED_NOTES" | while IFS= read -r text; do
+        test -n "$text" || continue
         case "$changelog" in *"$text"*) ;; *) printf "changelog misses %s\n" "$text" >&2; exit 1 ;; esac
     done
     for path in /usr/share/doc/krot/README.md /usr/share/doc/krot/LICENSE /usr/share/doc/krot/THIRD_PARTY_NOTICES; do
