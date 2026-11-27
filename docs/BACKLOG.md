@@ -37,8 +37,6 @@
 3. **`make check` проверяет меньше, чем CI:** нет `govulncheck` и порога покрытия
    90%; список `fuzz-smoke` задан вручную и не подхватит новые fuzz-targets
    (SPEC 9.1 требует все).
-4. **`scripts/build-release.sh`** запускает `dist/krot-linux-amd64` для генерации
-   completion — на arm64-хосте сборка упадёт.
 
 ## Мелкие замечания по коду и документации
 

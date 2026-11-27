@@ -25,8 +25,8 @@ for arch in $arches; do
 done
 cp LICENSE THIRD_PARTY_NOTICES dist/
 
-dist/krot-linux-amd64 --completion bash > dist/krot.bash
-dist/krot-linux-amd64 --completion zsh > dist/_krot
+go run ./cmd/krot --completion bash > dist/krot.bash
+go run ./cmd/krot --completion zsh > dist/_krot
 bash -n dist/krot.bash
 scripts/compress-man.sh
 scripts/debian-changelog.sh
