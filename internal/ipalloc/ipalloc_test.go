@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/netip"
 	"testing"
-	"time"
 )
 
 func pfx(ss ...string) []netip.Prefix {
@@ -77,21 +76,32 @@ func TestAllocateOtherFamilyIgnored(t *testing.T) {
 	}
 }
 
-// Большая подсеть с тысячами клиентов — без квадратичного перебора.
-func TestAllocateManyClients(t *testing.T) {
-	var used []netip.Prefix
+func manyClients(n int) (netip.Prefix, []netip.Prefix, netip.Addr) {
+	used := make([]netip.Prefix, 0, n)
 	a := netip.MustParseAddr("10.0.0.2")
-	for i := 0; i < 60000; i++ {
+	for range n {
 		used = append(used, netip.PrefixFrom(a, 32))
 		a = a.Next()
 	}
-	start := time.Now()
-	got, err := Allocate(netip.MustParsePrefix("10.0.0.1/16"), used)
-	if err != nil || got != a {
-		t.Fatalf("got %v, %v; want %v", got, err, a)
+	return netip.MustParsePrefix("10.0.0.1/16"), used, a
+}
+
+// Большая подсеть с тысячами клиентов — корректный результат без зависимости от скорости машины.
+func TestAllocateManyClients(t *testing.T) {
+	server, used, want := manyClients(60000)
+	got, err := Allocate(server, used)
+	if err != nil || got != want {
+		t.Fatalf("got %v, %v; want %v", got, err, want)
 	}
-	if d := time.Since(start); d > 2*time.Second {
-		t.Fatalf("too slow: %v", d)
+}
+
+func BenchmarkAllocateManyClients(b *testing.B) {
+	server, used, want := manyClients(60000)
+	for b.Loop() {
+		got, err := Allocate(server, used)
+		if err != nil || got != want {
+			b.Fatalf("got %v, %v; want %v", got, err, want)
+		}
 	}
 }
 
