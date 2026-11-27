@@ -66,7 +66,7 @@ const usageTextChineseSimplified = `krot — 管理 WireGuard 和 AmneziaWG 隧�
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         （无选项；无需 root 即可运行）
-  --udp-listener   --port [--timeout] [--count] [--json] [--verbose]
+  --udp-listener   --port [--json] [--verbose]
   --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--workers] [--json] [--verbose]
 
 退出代码：

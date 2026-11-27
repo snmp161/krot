@@ -66,7 +66,7 @@ const usageTextRussian = `krot — управление туннелями WireG
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         (без флагов; работает без root)
-  --udp-listener   --port [--timeout] [--count] [--json] [--verbose]
+  --udp-listener   --port [--json] [--verbose]
   --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--workers] [--json] [--verbose]
 
 Коды выхода:

@@ -66,7 +66,7 @@ const usageTextArabic = `krot — إدارة أنفاق WireGuard وAmneziaWG
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         (دون خيارات؛ يعمل دون root)
-  --udp-listener   --port [--timeout] [--count] [--json] [--verbose]
+  --udp-listener   --port [--json] [--verbose]
   --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--workers] [--json] [--verbose]
 
 رموز الخروج:

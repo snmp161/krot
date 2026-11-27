@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -16,8 +17,21 @@ import (
 	"github.com/snmp161/krot/internal/portcheck"
 )
 
-// SPEC 6.14: --udp-listener.
+// listenerStart — стартовая строка `--udp-listener --json` (SPEC 6.14).
+type listenerStart struct {
+	PortStart int    `json:"port_start"`
+	PortEnd   int    `json:"port_end"`
+	Status    string `json:"status"`
+}
+
+// SPEC 6.14: --udp-listener работает до SIGINT/SIGTERM.
 func (a *App) udpListener(cmd *cli.Command) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return a.runUDPListener(ctx, cmd)
+}
+
+func (a *App) runUDPListener(ctx context.Context, cmd *cli.Command) error {
 	ports := cmd.PortRange.Ports()
 	if err := a.checkUDPListenerRoot(ports); err != nil {
 		return err
@@ -32,23 +46,18 @@ func (a *App) udpListener(cmd *cli.Command) error {
 			fmt.Fprint(a.Stderr, i18n.Sprintf("UDP request from %s to port %d: %s\n", client, port, request))
 		}
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sigCh
-		cancel()
-	}()
-
 	if cmd.JSON {
-		a.printf("{\"ports\":%s,\"status\":\"listening\"}\n", cmd.PortRange.String())
+		b, err := json.Marshal(listenerStart{PortStart: cmd.PortRange.Start, PortEnd: cmd.PortRange.End, Status: "listening"})
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(a.Stdout, "%s\n", b)
 	} else {
 		a.printf("Listening on UDP %s (Ctrl+C to stop)\n", cmd.PortRange.String())
 	}
 
-	if err := listener.Listen(ctx); err != nil && err != context.Canceled {
+	// После отмены ctx Listen возвращает ctx.Err() — это штатное завершение.
+	if err := listener.Listen(ctx); err != nil && ctx.Err() == nil {
 		return errs.Wrap(errs.Internal, err)
 	}
 	return nil

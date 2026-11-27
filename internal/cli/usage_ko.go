@@ -66,7 +66,7 @@ const usageTextKorean = `krot — WireGuard 및 AmneziaWG 터널 관리
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         (플래그 없음; root 없이 작동)
-  --udp-listener   --port [--timeout] [--count] [--json] [--verbose]
+  --udp-listener   --port [--json] [--verbose]
   --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--workers] [--json] [--verbose]
 
 종료 코드:

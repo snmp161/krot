@@ -66,7 +66,7 @@ const usageTextJapanese = `krot — WireGuard と AmneziaWG のトンネルを�
   --unlock-client  --interface --id
   --list-client    --interface [--id] [--json]
   --doctor         （フラグなし、root なしで動作）
-  --udp-listener   --port [--timeout] [--count] [--json] [--verbose]
+  --udp-listener   --port [--json] [--verbose]
   --udp-checker    --address --port [--timeout] [--count] [--echo-size] [--workers] [--json] [--verbose]
 
 終了コード:
