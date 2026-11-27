@@ -16,7 +16,8 @@ type Listener struct {
 	wg        sync.WaitGroup
 	requestMu sync.Mutex
 
-	OnRequest func(client *net.UDPAddr, port int, request string)
+	OnListening func()
+	OnRequest   func(client *net.UDPAddr, port int, request string)
 }
 
 // NewListener создаёт listener для заданных портов.
@@ -37,6 +38,9 @@ func (l *Listener) Listen(ctx context.Context) error {
 			return i18n.Errorf("listen udp :%d: %w", port, err)
 		}
 		l.conns = append(l.conns, conn)
+	}
+	if l.OnListening != nil {
+		l.OnListening()
 	}
 	for _, conn := range l.conns {
 		l.wg.Add(1)

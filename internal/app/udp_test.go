@@ -304,7 +304,9 @@ func TestUDPListenerJSONStart(t *testing.T) {
 			e := newEnv(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 			defer cancel()
-			_ = e.app.runUDPListener(ctx, cmd) // занятый соседний порт не влияет на стартовую строку
+			if err := e.app.runUDPListener(ctx, cmd); err != nil {
+				t.Fatal(err)
+			}
 
 			lines := strings.Split(strings.TrimRight(e.stdout.String(), "\n"), "\n")
 			if len(lines) != 1 {

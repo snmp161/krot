@@ -46,14 +46,20 @@ func (a *App) runUDPListener(ctx context.Context, cmd *cli.Command) error {
 			fmt.Fprint(a.Stderr, i18n.Sprintf("UDP request from %s to port %d: %s\n", client, port, request))
 		}
 	}
+	var startLine []byte
 	if cmd.JSON {
 		b, err := json.Marshal(listenerStart{PortStart: cmd.PortRange.Start, PortEnd: cmd.PortRange.End, Status: "listening"})
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(a.Stdout, "%s\n", b)
-	} else {
-		a.printf("Listening on UDP %s (Ctrl+C to stop)\n", cmd.PortRange.String())
+		startLine = b
+	}
+	listener.OnListening = func() {
+		if cmd.JSON {
+			fmt.Fprintf(a.Stdout, "%s\n", startLine)
+		} else {
+			a.printf("Listening on UDP %s (Ctrl+C to stop)\n", cmd.PortRange.String())
+		}
 	}
 
 	// После отмены ctx Listen возвращает ctx.Err() — это штатное завершение.
