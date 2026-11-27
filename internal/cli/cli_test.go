@@ -44,8 +44,8 @@ var specMatrix = map[string]map[Action]string{
 	"json":        {ActList: "н", ActListClient: "н", ActUDPListener: "н", ActUDPChecker: "н"},
 	"yes":         {ActDelete: "н"},
 	"address":     {ActUDPChecker: "О"},
-	"timeout":     {ActUDPListener: "н", ActUDPChecker: "н"},
-	"count":       {ActUDPListener: "н", ActUDPChecker: "н"},
+	"timeout":     {ActUDPChecker: "н"},
+	"count":       {ActUDPChecker: "н"},
 	"echo-size":   {ActUDPChecker: "н"},
 	"workers":     {ActUDPChecker: "н"},
 	"verbose":     {ActUDPListener: "н", ActUDPChecker: "н"},
@@ -458,14 +458,17 @@ func TestUDPValues(t *testing.T) {
 		{listener("port", "51822:51820"), 3},
 		{listener("port", "1:1025"), 3},
 		{listener("port", "abc"), 3},
-		{listener("timeout", "2s"), 0},
-		{listener("timeout", "500ms"), 0},
-		{listener("timeout", "0"), 3},
-		{listener("timeout", "abc"), 3},
-		{listener("count", "1"), 0},
-		{listener("count", "100"), 0},
-		{listener("count", "0"), 3},
-		{listener("count", "101"), 3},
+		// SPEC 4.3, 6.14: у listener нет ограничений времени и числа пакетов.
+		{listener("timeout", "2s"), 2},
+		{listener("count", "3"), 2},
+		{checker("timeout", "2s"), 0},
+		{checker("timeout", "500ms"), 0},
+		{checker("timeout", "0"), 3},
+		{checker("timeout", "abc"), 3},
+		{checker("count", "1"), 0},
+		{checker("count", "100"), 0},
+		{checker("count", "0"), 3},
+		{checker("count", "101"), 3},
 		{checker(), 0},
 		{checker("port", "51820:51822"), 0},
 		{checker("address", "2001:db8::1"), 0},
@@ -604,5 +607,25 @@ func TestKeeneticFlag(t *testing.T) {
 	}
 	if got := code(parseErr([]string{"--create", "--type", "wg", "--ip", "10.8.0.1/24", "--port", "51820", "--endpoint", "h", "--keenetic"})); got != errs.Usage {
 		t.Fatalf("create --keenetic: code %d; want 2", got)
+	}
+}
+
+// SPEC 4.3, 6.14: справка не предлагает для --udp-listener флаги, которые он не принимает.
+func TestUsageListenerSynopsis(t *testing.T) {
+	found := false
+	for _, line := range strings.Split(Usage(), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 || fields[0] != "--udp-listener" || fields[1] != "--port" {
+			continue
+		}
+		found = true
+		for _, flag := range []string{"--timeout", "--count"} {
+			if strings.Contains(line, flag) {
+				t.Errorf("usage synopsis offers %s for --udp-listener: %q", flag, line)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("usage text has no --udp-listener synopsis line")
 	}
 }

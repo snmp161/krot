@@ -257,3 +257,38 @@ func itoa(n int) string {
 	}
 	return string(buf[i:])
 }
+
+// SPEC 6.14: --udp-listener --json при старте выводит одну строку валидного JSON
+// {"port_start":N,"port_end":M,"status":"listening"}; для одного порта N = M.
+func TestUDPListenerJSONStart(t *testing.T) {
+	for _, span := range []int{0, 2} {
+		t.Run(fmt.Sprintf("span%d", span), func(t *testing.T) {
+			start := freeUDPPort(t)
+			ports := itoa(start)
+			if span > 0 {
+				ports += ":" + itoa(start+span)
+			}
+			cmd, err := cli.Parse([]string{"--udp-listener", "--port", ports, "--json"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			e := newEnv(t)
+			ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+			defer cancel()
+			_ = e.app.runUDPListener(ctx, cmd) // занятый соседний порт не влияет на стартовую строку
+
+			lines := strings.Split(strings.TrimRight(e.stdout.String(), "\n"), "\n")
+			if len(lines) != 1 {
+				t.Fatalf("want exactly one JSON line, got:\n%s", e.stdout)
+			}
+			var got map[string]any
+			if err := json.Unmarshal([]byte(lines[0]), &got); err != nil {
+				t.Fatalf("start line is not valid JSON: %v\n%s", err, lines[0])
+			}
+			want := map[string]any{"port_start": float64(start), "port_end": float64(start + span), "status": "listening"}
+			if fmt.Sprint(got) != fmt.Sprint(want) {
+				t.Fatalf("start line = %v; want %v", got, want)
+			}
+		})
+	}
+}
