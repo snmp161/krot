@@ -31,10 +31,7 @@
 1. **Двойной CI на тегах.** `ci.yml` запускается `on: push` без фильтра веток,
    поэтому на тег `v*` CI идёт дважды: сам и через `workflow_call` из
    `release.yml`.
-2. **Job `build` в `ci.yml`** собирает бинарь своей командой, а не через
-   `scripts/build-release.sh`/Makefile, и не передаёт `main.date` — бинарь
-   сообщает «built unknown».
-3. **`make check` проверяет меньше, чем CI:** нет `govulncheck` и порога покрытия
+2. **`make check` проверяет меньше, чем CI:** нет `govulncheck` и порога покрытия
    90%; список `fuzz-smoke` задан вручную и не подхватит новые fuzz-targets
    (SPEC 9.1 требует все).
 
