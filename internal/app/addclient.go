@@ -134,7 +134,7 @@ func (a *App) addClient(cmd *cli.Command) error {
 			var v4 netip.Addr
 			for _, p := range addrs {
 				if !p.Addr().Is4() {
-					return errs.Invalidf("--keenetic supports IPv4 only: client address %s is IPv6; pass --ip with an IPv4 address only", p)
+					return errs.Invalidf("--keenetic supports IPv4 only: client address %s is IPv6; use --ip to assign only an IPv4 address", p)
 				}
 				if !v4.IsValid() {
 					v4 = p.Addr()

@@ -104,7 +104,7 @@ var arabicMessages = map[string]string{
 	"--keenetic: interface %s uses AmneziaWG %s, which KeeneticOS does not support (supported: 1.0, 1.5, 2.0)": "--keenetic: تستخدم الواجهة %s إصدار AmneziaWG %s الذي لا يدعمه KeeneticOS (المدعوم: 1.0 و1.5 و2.0)",
 	"mimic profile %s cannot be used on interface %s: WireGuard (wg) does not support I1-I5":                   "لا يمكن استخدام ملف المحاكاة %s على الواجهة %s: لا يدعم WireGuard (wg) المعاملات I1-I5",
 	"--keenetic supports IPv4 only: %s is IPv6":                                                                "يدعم --keenetic IPv4 فقط: %s هو IPv6",
-	"--keenetic supports IPv4 only: client address %s is IPv6; pass --ip with an IPv4 address only":            "يدعم --keenetic IPv4 فقط: عنوان العميل %s هو IPv6؛ مرّر في --ip عنوان IPv4 فقط",
+	"--keenetic supports IPv4 only: client address %s is IPv6; use --ip to assign only an IPv4 address":        "يدعم --keenetic IPv4 فقط: عنوان العميل %s هو IPv6؛ مرّر في --ip عنوان IPv4 فقط",
 	"--keenetic supports IPv4 endpoints only: %s is IPv6":                                                      "يدعم --keenetic نقاط نهاية IPv4 فقط: %s هو IPv6",
 	"invalid --keenetic: %v": "قيمة --keenetic غير صالحة: %v",
 	"config too large for QR (client %s was added, use the text config above)":                                        "الإعداد كبير جدًا لرمز QR (أُضيف العميل %s؛ استخدم الإعداد النصي أعلاه)",

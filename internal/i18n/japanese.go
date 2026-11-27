@@ -104,7 +104,7 @@ var japaneseMessages = map[string]string{
 	"--keenetic: interface %s uses AmneziaWG %s, which KeeneticOS does not support (supported: 1.0, 1.5, 2.0)": "--keenetic: インターフェース %s は KeeneticOS がサポートしていない AmneziaWG %s を使用しています（サポート対象: 1.0、1.5、2.0）",
 	"mimic profile %s cannot be used on interface %s: WireGuard (wg) does not support I1-I5":                   "ミミクリープロファイル %s はインターフェース %s では使用できません: WireGuard (wg) は I1-I5 をサポートしていません",
 	"--keenetic supports IPv4 only: %s is IPv6":                                                                "--keenetic は IPv4 のみをサポートします: %s は IPv6 です",
-	"--keenetic supports IPv4 only: client address %s is IPv6; pass --ip with an IPv4 address only":            "--keenetic は IPv4 のみをサポートします: クライアントアドレス %s は IPv6 です。--ip には IPv4 アドレスのみを指定してください",
+	"--keenetic supports IPv4 only: client address %s is IPv6; use --ip to assign only an IPv4 address":        "--keenetic は IPv4 のみをサポートします: クライアントアドレス %s は IPv6 です。--ip には IPv4 アドレスのみを指定してください",
 	"--keenetic supports IPv4 endpoints only: %s is IPv6":                                                      "--keenetic は IPv4 エンドポイントのみをサポートします: %s は IPv6 です",
 	"invalid --keenetic: %v": "--keenetic が無効です: %v",
 	"config too large for QR (client %s was added, use the text config above)":                                        "設定が大きすぎて QR に収まりません（クライアント %s は追加されました。上記のテキスト設定を使用してください）",

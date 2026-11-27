@@ -104,7 +104,7 @@ var koreanMessages = map[string]string{
 	"--keenetic: interface %s uses AmneziaWG %s, which KeeneticOS does not support (supported: 1.0, 1.5, 2.0)": "--keenetic: 인터페이스 %s는 KeeneticOS가 지원하지 않는 AmneziaWG %s를 사용합니다(지원: 1.0, 1.5, 2.0)",
 	"mimic profile %s cannot be used on interface %s: WireGuard (wg) does not support I1-I5":                   "미믹 프로파일 %s은(는) 인터페이스 %s에서 사용할 수 없습니다: WireGuard (wg)는 I1-I5를 지원하지 않습니다",
 	"--keenetic supports IPv4 only: %s is IPv6":                                                                "--keenetic은 IPv4만 지원합니다: %s는 IPv6입니다",
-	"--keenetic supports IPv4 only: client address %s is IPv6; pass --ip with an IPv4 address only":            "--keenetic은 IPv4만 지원합니다: 클라이언트 주소 %s는 IPv6입니다. --ip에 IPv4 주소만 지정하세요",
+	"--keenetic supports IPv4 only: client address %s is IPv6; use --ip to assign only an IPv4 address":        "--keenetic은 IPv4만 지원합니다: 클라이언트 주소 %s는 IPv6입니다. --ip에 IPv4 주소만 지정하세요",
 	"--keenetic supports IPv4 endpoints only: %s is IPv6":                                                      "--keenetic은 IPv4 엔드포인트만 지원합니다: %s는 IPv6입니다",
 	"invalid --keenetic: %v": "잘못된 --keenetic: %v",
 	"config too large for QR (client %s was added, use the text config above)":                                        "구성이 너무 커서 QR로 만들 수 없습니다(클라이언트 %s는 추가되었습니다. 위의 텍스트 구성을 사용하세요)",

@@ -104,7 +104,7 @@ var frenchMessages = map[string]string{
 	"--keenetic: interface %s uses AmneziaWG %s, which KeeneticOS does not support (supported: 1.0, 1.5, 2.0)": "--keenetic : l’interface %s utilise AmneziaWG %s, que KeeneticOS ne prend pas en charge (versions prises en charge : 1.0, 1.5, 2.0)",
 	"mimic profile %s cannot be used on interface %s: WireGuard (wg) does not support I1-I5":                   "le profil de mimétisme %s ne peut pas être utilisé sur l’interface %s : WireGuard (wg) ne prend pas en charge I1-I5",
 	"--keenetic supports IPv4 only: %s is IPv6":                                                                "--keenetic prend uniquement en charge IPv4 : %s est IPv6",
-	"--keenetic supports IPv4 only: client address %s is IPv6; pass --ip with an IPv4 address only":            "--keenetic prend uniquement en charge IPv4 : l’adresse client %s est IPv6 ; indiquez uniquement une adresse IPv4 dans --ip",
+	"--keenetic supports IPv4 only: client address %s is IPv6; use --ip to assign only an IPv4 address":        "--keenetic prend uniquement en charge IPv4 : l’adresse client %s est IPv6 ; indiquez uniquement une adresse IPv4 dans --ip",
 	"--keenetic supports IPv4 endpoints only: %s is IPv6":                                                      "--keenetic prend uniquement en charge les endpoints IPv4 : %s est IPv6",
 	"invalid --keenetic: %v": "--keenetic non valide : %v",
 	"config too large for QR (client %s was added, use the text config above)":                                        "configuration trop volumineuse pour le QR (le client %s a été ajouté, utilisez la configuration texte ci-dessus)",
