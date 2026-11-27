@@ -153,3 +153,22 @@ func TestAddClientKeeneticDualStack(t *testing.T) {
 		t.Fatalf("explicit IPv4 client address must be accepted:\n%s", e.stdout)
 	}
 }
+
+// SPEC 3.2, 6.13: KeeneticOS не поддерживает AmneziaWG 3.x — чужой конфиг 3.0
+// (тайминги и ContentPaddingAddition без HeaderProtectionKey) отклоняется кодом 3.
+func TestAddClientKeeneticAWG30(t *testing.T) {
+	e := newEnv(t)
+	path := e.awgConf("awg9")
+	e.write(path, "# krot:endpoint=vpn.example.com\n[Interface]\n"+
+		"PrivateKey = yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=\nAddress = 10.8.0.1/24\nListenPort = 51820\n"+
+		"Jc = 4\nJmin = 64\nJmax = 200\nS1 = 20\nS2 = 30\nS3 = 20\nS4 = 10\nH1 = 1\nH2 = 2\nH3 = 3\nH4 = 4\n"+
+		"RekeyAfterTime = 100-130\nContentPaddingAddition = 0-32\n")
+	before := e.read(path)
+	e.mustRun(3, "--add-client", "--interface", "awg9", "--id", "a", "--allowed-ips", "0.0.0.0/0", "--keenetic")
+	if got := e.read(path); got != before {
+		t.Fatalf("failed --keenetic must not change the config:\n%s", got)
+	}
+	if !strings.Contains(e.stderr.String(), "3.0") {
+		t.Fatalf("error must name the detected AmneziaWG version: %s", e.stderr)
+	}
+}
