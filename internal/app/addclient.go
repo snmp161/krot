@@ -126,15 +126,16 @@ func (a *App) addClient(cmd *cli.Command) error {
 					I1: ifc.Get("I1"), I2: ifc.Get("I2"), I3: ifc.Get("I3"), I4: ifc.Get("I4"), I5: ifc.Get("I5"),
 				}
 			}
+			// Только IPv4: IPv6-адрес клиента (туннель dual-stack) — ошибка, а не
+			// молчаливый пропуск (SPEC 6.13).
 			var v4 netip.Addr
 			for _, p := range addrs {
-				if p.Addr().Is4() {
-					v4 = p.Addr()
-					break
+				if !p.Addr().Is4() {
+					return errs.Invalidf("--keenetic supports IPv4 only: client address %s is IPv6; pass --ip with an IPv4 address only", p)
 				}
-			}
-			if !v4.IsValid() {
-				return errs.Invalidf("--keenetic requires an IPv4 client address: %s has none", t.name)
+				if !v4.IsValid() {
+					v4 = p.Addr()
+				}
 			}
 			var allowed4 []netip.Prefix
 			for _, p := range cmd.AllowedIPs {
