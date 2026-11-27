@@ -40,3 +40,27 @@ func TestContributingGuide(t *testing.T) {
 		}
 	}
 }
+
+// SPEC 4.7, 6.10, 9.2: руководство для людей не мягче правил для агентов (AGENTS.md):
+// сторонние лицензии, коммиты без падающих тестов, незаметность для клиентов и
+// curated release notes.
+func TestContributingFollowsAgents(t *testing.T) {
+	guide := readRepoFile(t, "CONTRIBUTING.md")
+	for _, want := range []string{
+		"## Third-party licenses",
+		"THIRD_PARTY_NOTICES",
+		"packaging/copyright",
+		"a permissive license does not remove attribution obligations",
+		"never commit with failing tests",
+		"do not combine several tasks in one commit",
+		"(SPEC 6.10)",
+		"fake executor",
+		"disabled, skipped, or weakened",
+		"automatically generated commit list",
+		"UTC date must match the intended tag",
+	} {
+		if !strings.Contains(guide, want) {
+			t.Errorf("CONTRIBUTING.md misses AGENTS.md rule %q", want)
+		}
+	}
+}

@@ -32,9 +32,17 @@ func TestAllLocalizationSmoke(t *testing.T) {
 
 // SPEC 4.7: любое изменение документации и пользовательских текстов вычитывается
 // на уровне носителя для каждого языка в зафиксированном региональном варианте
-// со специализацией «разработка ПО и эксплуатация систем».
-func TestAgentsRequireNativeProofreading(t *testing.T) {
-	agents := readRepoFile(t, "AGENTS.md")
+// со специализацией «разработка ПО и эксплуатация систем». Правило одинаково для
+// агентов (AGENTS.md) и людей (CONTRIBUTING.md).
+func TestNativeProofreadingRules(t *testing.T) {
+	for _, name := range []string{"AGENTS.md", "CONTRIBUTING.md"} {
+		checkNativeProofreadingRule(t, name)
+	}
+}
+
+func checkNativeProofreadingRule(t *testing.T, name string) {
+	t.Helper()
+	text := readRepoFile(t, name)
 	for _, want := range []string{
 		"native-level proofreading",
 		"software development and systems operations",
@@ -51,8 +59,8 @@ func TestAgentsRequireNativeProofreading(t *testing.T) {
 		"German | Germany (`de_DE`)",
 		"Review: AI native-level technical proofreading",
 	} {
-		if !strings.Contains(agents, want) {
-			t.Errorf("AGENTS.md misses native proofreading rule %q", want)
+		if !strings.Contains(text, want) {
+			t.Errorf("%s misses native proofreading rule %q", name, want)
 		}
 	}
 }
