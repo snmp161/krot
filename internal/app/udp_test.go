@@ -104,6 +104,35 @@ func TestUDPListenerPortConflict(t *testing.T) {
 	}
 }
 
+// SPEC 6.14: стартовое сообщение выводится только после успешного открытия сокетов.
+func TestUDPListenerStartMessageAfterBind(t *testing.T) {
+	for _, mode := range []struct {
+		name string
+		json bool
+	}{{"text", false}, {"json", true}} {
+		t.Run(mode.name, func(t *testing.T) {
+			conn, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer conn.Close()
+			port := conn.LocalAddr().(*net.UDPAddr).Port
+
+			args := []string{"--udp-listener", "--port", itoa(port)}
+			if mode.json {
+				args = append(args, "--json")
+			}
+			e := newEnv(t)
+			if got := e.run(args...); got != errs.Internal {
+				t.Fatalf("exit code %d; want %d", got, errs.Internal)
+			}
+			if got := e.stdout.String(); got != "" {
+				t.Fatalf("startup output after bind error: %q", got)
+			}
+		})
+	}
+}
+
 // SPEC 6.15: --udp-checker выводит таблицу результатов.
 func TestUDPCheckerOutput(t *testing.T) {
 	port := freeUDPPort(t)
