@@ -934,7 +934,7 @@ upgrade → reinstall → remove/purge, версия и сохранность �
 версии, без `@latest`. Исполняемые jobs имеют `timeout-minutes`. Локальные команды
 и CI используют версию Go из `go.mod`, без принудительного `GOTOOLCHAIN=local`.
 
-### 9.1. `ci.yml` — на каждый push и pull request
+### 9.1. `ci.yml` — на каждый push ветки и pull request; на тегах — через `release.yml`
 
 1. `gofmt -l` (пусто), `go vet ./...` и `go vet -tags integration ./...`.
 2. Unit-тесты с `-race -count=1 -shuffle=on`, отчёт о покрытии в целом и по пакетам.
@@ -951,7 +951,7 @@ upgrade → reinstall → remove/purge, версия и сохранность �
 8. Package preflight: сборка `.deb`/`.rpm` для обеих архитектур и smoke на
    `ubuntu:24.04` (DEB/amd64) и `almalinux:9` (RPM/amd64). Полная матрица
    ОС и архитектур остаётся в release workflow.
-9. Для push и pull request настраивается `concurrency`: новый запуск на том же ref отменяет устаревший.
+9. Для push веток и pull request настраивается `concurrency`: новый запуск на том же ref отменяет устаревший.
 
 ### 9.2. `release.yml` — на тег `v*`
 
